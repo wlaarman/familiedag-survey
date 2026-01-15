@@ -37,7 +37,7 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
     );
   }
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('nl-NL', {
       day: '2-digit',
