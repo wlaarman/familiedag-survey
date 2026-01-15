@@ -26,12 +26,44 @@ const initialData: SurveyData = {
 export default function SurveyWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
-  const [data, setData] = useState<SurveyData>(initialData);
+  const [data, setData] = useState<SurveyData>(() => {
+    // Restore data from sessionStorage on initial load
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('surveyData');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return initialData;
+        }
+      }
+    }
+    return initialData;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Scroll to top when step changes
+  // Save data to sessionStorage whenever it changes
   useEffect(() => {
+    sessionStorage.setItem('surveyData', JSON.stringify(data));
+  }, [data]);
+
+  // Restore step from sessionStorage on mount
+  useEffect(() => {
+    const savedStep = sessionStorage.getItem('surveyStep');
+    if (savedStep) {
+      const step = parseInt(savedStep, 10);
+      if (!isNaN(step) && step >= 0 && step < STEP_LABELS.length) {
+        setCurrentStep(step);
+      }
+    }
+    // Set initial history state
+    window.history.replaceState({ step: currentStep }, '', window.location.href);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save step to sessionStorage and scroll to top when step changes
+  useEffect(() => {
+    sessionStorage.setItem('surveyStep', currentStep.toString());
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentStep]);
 
@@ -39,15 +71,10 @@ export default function SurveyWizard() {
   const handlePopState = useCallback((event: PopStateEvent) => {
     if (event.state && typeof event.state.step === 'number') {
       setCurrentStep(event.state.step);
-    } else if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
     }
-  }, [currentStep]);
+  }, []);
 
   useEffect(() => {
-    // Set initial state
-    window.history.replaceState({ step: 0 }, '', window.location.href);
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [handlePopState]);
@@ -112,6 +139,10 @@ export default function SurveyWizard() {
       if (!response.ok) {
         throw new Error('Verzenden mislukt');
       }
+
+      // Clear saved data on successful submit
+      sessionStorage.removeItem('surveyData');
+      sessionStorage.removeItem('surveyStep');
 
       router.push('/bedankt');
     } catch {
