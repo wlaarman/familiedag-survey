@@ -171,7 +171,7 @@ export default function SurveyWizard() {
         value={(data[name] as string) || ''}
         onChange={(e) => updateData({ [name]: e.target.value })}
         placeholder={placeholder}
-        className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 bg-white
+        className={`${type === 'date' ? 'w-auto min-w-[160px]' : 'w-full'} px-4 py-3 border-2 rounded-xl transition-all duration-200 bg-white
           focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:outline-none
           ${errors[name] ? 'border-rose-300 bg-rose-50' : 'border-gray-200 hover:border-gray-300'}`}
       />
