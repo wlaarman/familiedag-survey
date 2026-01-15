@@ -431,8 +431,8 @@ export default function SurveyWizard() {
                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
                   <span className="text-xl">❤️</span> Gegevens partner
                 </h3>
-                {renderInput('naam_2', 'Naam partner', 'text', true)}
-                {renderInput('geboortedatum_2', 'Geboortedatum partner', 'date', true)}
+                {renderInput('naam_2', 'Naam', 'text', true)}
+                {renderInput('geboortedatum_2', 'Geboortedatum', 'date', true)}
                 <PhotoUpload
                   label="Foto van vroeger (partner)"
                   value={data.foto_2_url}
