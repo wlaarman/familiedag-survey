@@ -126,7 +126,10 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
               <div className="text-center">
                 <p className="text-sm text-slate-500 mb-2">Persoon 1</p>
                 {response.foto_1_url ? (
-                  <img src={response.foto_1_url} alt="Foto 1" className="w-40 h-40 object-cover rounded-xl shadow-md" />
+                  <a href={response.foto_1_url} target="_blank" rel="noopener noreferrer" className="block group">
+                    <img src={response.foto_1_url} alt="Foto 1" className="w-40 h-40 object-cover rounded-xl shadow-md group-hover:ring-2 group-hover:ring-blue-400 transition-all" />
+                    <span className="text-xs text-blue-600 mt-1 block group-hover:underline">Bekijk volledig</span>
+                  </a>
                 ) : response.foto_1_later ? (
                   <div className="w-40 h-40 bg-amber-50 border-2 border-dashed border-amber-200 rounded-xl flex items-center justify-center text-amber-600 text-sm">
                     Stuurt later via app
@@ -141,7 +144,10 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
                 <div className="text-center">
                   <p className="text-sm text-slate-500 mb-2">Persoon 2</p>
                   {response.foto_2_url ? (
-                    <img src={response.foto_2_url} alt="Foto 2" className="w-40 h-40 object-cover rounded-xl shadow-md" />
+                    <a href={response.foto_2_url} target="_blank" rel="noopener noreferrer" className="block group">
+                      <img src={response.foto_2_url} alt="Foto 2" className="w-40 h-40 object-cover rounded-xl shadow-md group-hover:ring-2 group-hover:ring-pink-400 transition-all" />
+                      <span className="text-xs text-pink-600 mt-1 block group-hover:underline">Bekijk volledig</span>
+                    </a>
                   ) : response.foto_2_later ? (
                     <div className="w-40 h-40 bg-amber-50 border-2 border-dashed border-amber-200 rounded-xl flex items-center justify-center text-amber-600 text-sm">
                       Stuurt later via app
@@ -309,8 +315,8 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
         <Section title="Dit of dat?" icon="🎯">
           <div className={`grid gap-6 ${response.heeft_partner ? 'md:grid-cols-2' : ''}`}>
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <p className="font-semibold text-blue-800 text-sm mb-3">Persoon 1</p>
-              <div className="grid grid-cols-2 gap-3">
+              {response.heeft_partner && <p className="font-semibold text-blue-800 text-sm mb-3">Persoon 1</p>}
+              <div className={`grid gap-3 ${response.heeft_partner ? 'grid-cols-2' : 'grid-cols-4 md:grid-cols-7'}`}>
                 {[
                   { label: 'Koffie/Thee', value: response.koffie_thee_1 },
                   { label: 'Aardappels/Pasta', value: response.aardappel_pasta_1 },
