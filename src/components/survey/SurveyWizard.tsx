@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import ProgressBar from './ProgressBar';
 import PhotoUpload from './PhotoUpload';
@@ -29,6 +29,28 @@ export default function SurveyWizard() {
   const [data, setData] = useState<SurveyData>(initialData);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
+  // Handle browser back button
+  const handlePopState = useCallback((event: PopStateEvent) => {
+    if (event.state && typeof event.state.step === 'number') {
+      setCurrentStep(event.state.step);
+    } else if (currentStep > 0) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  }, [currentStep]);
+
+  useEffect(() => {
+    // Set initial state
+    window.history.replaceState({ step: 0 }, '', window.location.href);
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [handlePopState]);
 
   const updateData = (updates: Partial<SurveyData>) => {
     setData((prev) => ({ ...prev, ...updates }));
@@ -63,12 +85,17 @@ export default function SurveyWizard() {
 
   const nextStep = () => {
     if (validateStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, STEP_LABELS.length - 1));
+      const newStep = Math.min(currentStep + 1, STEP_LABELS.length - 1);
+      window.history.pushState({ step: newStep }, '', window.location.href);
+      setCurrentStep(newStep);
     }
   };
 
   const prevStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
+    // Use browser history to go back (triggers popstate)
+    if (currentStep > 0) {
+      window.history.back();
+    }
   };
 
   const handleSubmit = async () => {
