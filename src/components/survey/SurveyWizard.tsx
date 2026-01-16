@@ -104,6 +104,26 @@ export default function SurveyWizard() {
           if (!data.geboortedatum_2) newErrors.geboortedatum_2 = 'Geboortedatum partner is verplicht';
         }
         break;
+      case 6:
+        // Validate preference cards for person 1
+        if (!data.koffie_thee_1) newErrors.koffie_thee_1 = 'Maak een keuze';
+        if (!data.aardappel_pasta_1) newErrors.aardappel_pasta_1 = 'Maak een keuze';
+        if (!data.vlees_vis_1) newErrors.vlees_vis_1 = 'Maak een keuze';
+        if (!data.zomer_winter_1) newErrors.zomer_winter_1 = 'Maak een keuze';
+        if (!data.hond_kat_1) newErrors.hond_kat_1 = 'Maak een keuze';
+        if (!data.zwembad_zee_1) newErrors.zwembad_zee_1 = 'Maak een keuze';
+        if (!data.auto_fiets_1) newErrors.auto_fiets_1 = 'Maak een keuze';
+        // Validate preference cards for person 2 if they have a partner
+        if (data.heeft_partner) {
+          if (!data.koffie_thee_2) newErrors.koffie_thee_2 = 'Maak een keuze';
+          if (!data.aardappel_pasta_2) newErrors.aardappel_pasta_2 = 'Maak een keuze';
+          if (!data.vlees_vis_2) newErrors.vlees_vis_2 = 'Maak een keuze';
+          if (!data.zomer_winter_2) newErrors.zomer_winter_2 = 'Maak een keuze';
+          if (!data.hond_kat_2) newErrors.hond_kat_2 = 'Maak een keuze';
+          if (!data.zwembad_zee_2) newErrors.zwembad_zee_2 = 'Maak een keuze';
+          if (!data.auto_fiets_2) newErrors.auto_fiets_2 = 'Maak een keuze';
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -158,7 +178,8 @@ export default function SurveyWizard() {
     type: string = 'text',
     required: boolean = false,
     placeholder?: string,
-    subscript?: string
+    subscript?: string,
+    autoComplete?: string
   ) => (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-gray-700">
@@ -171,6 +192,7 @@ export default function SurveyWizard() {
         value={(data[name] as string) || ''}
         onChange={(e) => updateData({ [name]: e.target.value })}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         className={`${type === 'date' ? 'w-auto min-w-[160px]' : 'w-full'} px-4 py-3 border-2 rounded-xl transition-all duration-200 bg-white
           focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:outline-none
           ${errors[name] ? 'border-rose-300 bg-rose-50' : 'border-gray-200 hover:border-gray-300'}`}
@@ -342,10 +364,15 @@ export default function SurveyWizard() {
       bike: <span className="text-2xl">🚴</span>,
     };
 
+    const hasError = errors[name];
+
     return (
       <div className="space-y-3">
-        <label className="block text-sm font-semibold text-gray-700">{label}</label>
-        <div className="grid grid-cols-2 gap-3">
+        <label className="block text-sm font-semibold text-gray-700">
+          {label}
+          <span className="text-rose-500 ml-1">*</span>
+        </label>
+        <div className={`grid grid-cols-2 gap-3 ${hasError ? 'ring-2 ring-rose-300 rounded-xl p-1' : ''}`}>
           {options.map((opt, idx) => {
             const isSelected = data[name] === opt;
             const iconKey = icons?.[idx];
@@ -357,7 +384,9 @@ export default function SurveyWizard() {
                 className={`relative px-4 py-5 rounded-xl border-2 transition-all duration-200
                   ${isSelected
                     ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg shadow-blue-100 scale-[1.02]'
-                    : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                    : hasError
+                      ? 'border-rose-300 bg-rose-50 hover:border-rose-400'
+                      : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
                   }`}
               >
                 <div className="flex flex-col items-center gap-2">
@@ -383,6 +412,14 @@ export default function SurveyWizard() {
             );
           })}
         </div>
+        {hasError && (
+          <p className="text-sm text-rose-500 flex items-center gap-1">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            {errors[name]}
+          </p>
+        )}
       </div>
     );
   };
@@ -397,9 +434,9 @@ export default function SurveyWizard() {
               <h2 className="text-2xl font-bold text-gray-800 mt-2">Over jou</h2>
               <p className="text-gray-500 mt-1">Vertel ons wat meer over jezelf</p>
             </div>
-            {renderInput('naam_1', 'Naam', 'text', true)}
-            {renderInput('geboortedatum_1', 'Geboortedatum', 'date', true)}
-            {renderInput('adres', 'Adres', 'text', true)}
+            {renderInput('naam_1', 'Naam', 'text', true, undefined, undefined, 'name')}
+            {renderInput('geboortedatum_1', 'Geboortedatum', 'date', true, undefined, undefined, 'bday')}
+            {renderInput('adres', 'Adres', 'text', true, undefined, undefined, 'street-address')}
             <PhotoUpload
               label="Foto van vroeger"
               value={data.foto_1_url}
@@ -555,7 +592,7 @@ export default function SurveyWizard() {
                 </h3>
                 {renderInput('sport_1', 'Welke sport doe je?')}
                 {renderInput('muziek_1', 'Speel je een muziekinstrument?')}
-                {renderInput('vrijwilligerswerk_1', 'Doe je vrijwilligerswerk?')}
+                {renderInput('vrijwilligerswerk_1', 'Doe je vrijwilligerswerk?', 'text', false, undefined, 'Zo ja, wat?')}
                 {renderInput('auto_1', 'Welke auto rijd je?')}
               </div>
               {data.heeft_partner && (
@@ -566,7 +603,7 @@ export default function SurveyWizard() {
                   </h3>
                   {renderInput('sport_2', 'Welke sport doe je?')}
                   {renderInput('muziek_2', 'Speel je een muziekinstrument?')}
-                  {renderInput('vrijwilligerswerk_2', 'Doe je vrijwilligerswerk?')}
+                  {renderInput('vrijwilligerswerk_2', 'Doe je vrijwilligerswerk?', 'text', false, undefined, 'Zo ja, wat?')}
                   {renderInput('auto_2', 'Welke auto rijd je?')}
                 </div>
               )}
@@ -592,6 +629,7 @@ export default function SurveyWizard() {
                 {renderInput('vakantieland_1', 'Favoriete vakantieland')}
                 {renderInput('gerecht_1', 'Favoriete gerecht')}
                 {renderInput('drank_1', 'Favoriete drank')}
+                {renderInput('dieet_1', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...')}
                 {renderInput('schoenmaat_1', 'Schoenmaat')}
                 {renderTextarea('angst_1', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...')}
                 {renderInput('prijs_medaille_1', 'Prijs of medaille gewonnen?', 'text', false, undefined, 'Zo ja, waarvoor?')}
@@ -605,19 +643,11 @@ export default function SurveyWizard() {
                   {renderInput('vakantieland_2', 'Favoriete vakantieland')}
                   {renderInput('gerecht_2', 'Favoriete gerecht')}
                   {renderInput('drank_2', 'Favoriete drank')}
+                  {renderInput('dieet_2', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...')}
                   {renderInput('schoenmaat_2', 'Schoenmaat')}
                   {renderTextarea('angst_2', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...')}
                   {renderInput('prijs_medaille_2', 'Prijs of medaille gewonnen?', 'text', false, undefined, 'Zo ja, waarvoor?')}
                 </div>
-              )}
-            </div>
-
-            <div className="mt-6 p-5 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
-              <span className="text-xl mr-2">📖</span>
-              {renderTextarea(
-                'anekdote',
-                'Familie-anekdote of herinnering van vroeger',
-                'Deel een leuke herinnering of anekdote...'
               )}
             </div>
           </div>
@@ -630,6 +660,15 @@ export default function SurveyWizard() {
               <span className="text-4xl">🎯</span>
               <h2 className="text-2xl font-bold text-gray-800 mt-2">Dit of dat?</h2>
               <p className="text-gray-500 mt-1">De laatste vragen - maak je keuze!</p>
+            </div>
+
+            <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+              <span className="text-xl mr-2">📖</span>
+              {renderTextarea(
+                'anekdote',
+                'Familie-anekdote of herinnering van vroeger',
+                'Deel een leuke herinnering of anekdote...'
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

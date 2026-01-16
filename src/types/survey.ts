@@ -81,6 +81,10 @@ export interface SurveyData {
   angst_2?: string;
   prijs_medaille_1?: string;
   prijs_medaille_2?: string;
+
+  // Dietary preferences
+  dieet_1?: string;
+  dieet_2?: string;
 }
 
 export interface SurveyResponse extends SurveyData {
