@@ -78,6 +78,10 @@ export async function createTables() {
       expires_at TIMESTAMP NOT NULL
     )
   `;
+
+  // Add new columns to existing tables (safe to run multiple times)
+  await sql`ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS dieet_1 TEXT`;
+  await sql`ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS dieet_2 TEXT`;
 }
 
 export async function insertSurveyResponse(data: SurveyData): Promise<number> {
