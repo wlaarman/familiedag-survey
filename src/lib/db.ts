@@ -60,6 +60,8 @@ export async function createTables() {
       auto_fiets_2 VARCHAR(10),
       schoenmaat_1 VARCHAR(10),
       schoenmaat_2 VARCHAR(10),
+      dieet_1 TEXT,
+      dieet_2 TEXT,
       anekdote TEXT,
       angst_1 TEXT,
       angst_2 TEXT,
@@ -101,6 +103,7 @@ export async function insertSurveyResponse(data: SurveyData): Promise<number> {
       zwembad_zee_1, zwembad_zee_2,
       auto_fiets_1, auto_fiets_2,
       schoenmaat_1, schoenmaat_2,
+      dieet_1, dieet_2,
       anekdote, angst_1, angst_2,
       prijs_medaille_1, prijs_medaille_2
     ) VALUES (
@@ -124,6 +127,7 @@ export async function insertSurveyResponse(data: SurveyData): Promise<number> {
       ${data.zwembad_zee_1 || null}, ${data.zwembad_zee_2 || null},
       ${data.auto_fiets_1 || null}, ${data.auto_fiets_2 || null},
       ${data.schoenmaat_1 || null}, ${data.schoenmaat_2 || null},
+      ${data.dieet_1 || null}, ${data.dieet_2 || null},
       ${data.anekdote || null}, ${data.angst_1 || null}, ${data.angst_2 || null},
       ${data.prijs_medaille_1 || null}, ${data.prijs_medaille_2 || null}
     )

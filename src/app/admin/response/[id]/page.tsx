@@ -173,6 +173,7 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
                 'Naam': response.naam_1,
                 'Geboortedatum': formatDate(response.geboortedatum_1),
                 'Adres': response.adres,
+                'Diëten/allergieën': response.dieet_1,
               }}
             />
             {response.heeft_partner && (
@@ -182,6 +183,7 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
                 data={{
                   'Naam': response.naam_2,
                   'Geboortedatum': formatDate(response.geboortedatum_2),
+                  'Diëten/allergieën': response.dieet_2,
                 }}
               />
             )}
