@@ -104,6 +104,24 @@ export default function SurveyWizard() {
           if (!data.geboortedatum_2) newErrors.geboortedatum_2 = 'Geboortedatum partner is verplicht';
         }
         break;
+      case 5:
+        // Validate Favorieten & Weetjes fields for person 1
+        if (!data.vakantieland_1?.trim()) newErrors.vakantieland_1 = 'Vul dit veld in';
+        if (!data.gerecht_1?.trim()) newErrors.gerecht_1 = 'Vul dit veld in';
+        if (!data.drank_1?.trim()) newErrors.drank_1 = 'Vul dit veld in';
+        if (!data.schoenmaat_1?.trim()) newErrors.schoenmaat_1 = 'Vul dit veld in';
+        if (!data.angst_1?.trim()) newErrors.angst_1 = 'Vul dit veld in';
+        if (!data.prijs_medaille_1?.trim()) newErrors.prijs_medaille_1 = 'Vul dit veld in';
+        // Validate for person 2 if they have a partner
+        if (data.heeft_partner) {
+          if (!data.vakantieland_2?.trim()) newErrors.vakantieland_2 = 'Vul dit veld in';
+          if (!data.gerecht_2?.trim()) newErrors.gerecht_2 = 'Vul dit veld in';
+          if (!data.drank_2?.trim()) newErrors.drank_2 = 'Vul dit veld in';
+          if (!data.schoenmaat_2?.trim()) newErrors.schoenmaat_2 = 'Vul dit veld in';
+          if (!data.angst_2?.trim()) newErrors.angst_2 = 'Vul dit veld in';
+          if (!data.prijs_medaille_2?.trim()) newErrors.prijs_medaille_2 = 'Vul dit veld in';
+        }
+        break;
       case 6:
         // Validate preference cards for person 1
         if (!data.koffie_thee_1) newErrors.koffie_thee_1 = 'Maak een keuze';
@@ -212,11 +230,13 @@ export default function SurveyWizard() {
     name: keyof SurveyData,
     label: string,
     placeholder?: string,
-    subscript?: string
+    subscript?: string,
+    required?: boolean
   ) => (
     <div className="space-y-2">
       <label className="block text-sm font-semibold text-gray-700">
         {label}
+        {required && <span className="text-rose-500 ml-1">*</span>}
         {subscript && <span className="block text-xs font-normal text-gray-400 mt-0.5">{subscript}</span>}
       </label>
       <textarea
@@ -224,10 +244,18 @@ export default function SurveyWizard() {
         onChange={(e) => updateData({ [name]: e.target.value })}
         placeholder={placeholder}
         rows={3}
-        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl transition-all duration-200 bg-white
+        className={`w-full px-4 py-3 border-2 rounded-xl transition-all duration-200 bg-white
           focus:ring-4 focus:ring-blue-100 focus:border-blue-500 focus:outline-none
-          hover:border-gray-300 resize-none"
+          resize-none ${errors[name] ? 'border-rose-300 bg-rose-50' : 'border-gray-200 hover:border-gray-300'}`}
       />
+      {errors[name] && (
+        <p className="text-sm text-rose-500 flex items-center gap-1">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          {errors[name]}
+        </p>
+      )}
     </div>
   );
 
@@ -437,6 +465,7 @@ export default function SurveyWizard() {
             {renderInput('naam_1', 'Naam', 'text', true, undefined, undefined, 'name')}
             {renderInput('geboortedatum_1', 'Geboortedatum', 'date', true, undefined, undefined, 'bday')}
             {renderInput('adres', 'Adres', 'text', true, undefined, undefined, 'street-address')}
+            {renderInput('dieet_1', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...', 'Alvast voor het eten \'s avonds')}
             <PhotoUpload
               label="Foto van vroeger"
               value={data.foto_1_url}
@@ -470,6 +499,7 @@ export default function SurveyWizard() {
                 </h3>
                 {renderInput('naam_2', 'Naam', 'text', true)}
                 {renderInput('geboortedatum_2', 'Geboortedatum', 'date', true)}
+                {renderInput('dieet_2', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...', 'Alvast voor het eten \'s avonds')}
                 <PhotoUpload
                   label="Foto van vroeger (partner)"
                   value={data.foto_2_url}
@@ -620,19 +650,27 @@ export default function SurveyWizard() {
               <p className="text-gray-500 mt-1">Wat zijn jouw voorkeuren?</p>
             </div>
 
+            <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
+              <span className="text-xl mr-2">📖</span>
+              {renderTextarea(
+                'anekdote',
+                'Familie-anekdote of herinnering van vroeger',
+                'Deel een leuke herinnering of anekdote...'
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4 p-5 bg-gray-50 rounded-xl">
                 <h3 className="font-semibold text-gray-700 flex items-center gap-2">
                   <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">1</span>
                   Persoon 1
                 </h3>
-                {renderInput('vakantieland_1', 'Favoriete vakantieland')}
-                {renderInput('gerecht_1', 'Favoriete gerecht')}
-                {renderInput('drank_1', 'Favoriete drank')}
-                {renderInput('dieet_1', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...')}
-                {renderInput('schoenmaat_1', 'Schoenmaat')}
-                {renderTextarea('angst_1', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...')}
-                {renderInput('prijs_medaille_1', 'Prijs of medaille gewonnen?', 'text', false, undefined, 'Zo ja, waarvoor?')}
+                {renderInput('vakantieland_1', 'Favoriete vakantieland', 'text', true)}
+                {renderInput('gerecht_1', 'Favoriete gerecht', 'text', true)}
+                {renderInput('drank_1', 'Favoriete drank', 'text', true)}
+                {renderInput('schoenmaat_1', 'Schoenmaat', 'text', true)}
+                {renderTextarea('angst_1', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...', undefined, true)}
+                {renderInput('prijs_medaille_1', 'Prijs of medaille gewonnen?', 'text', true, undefined, 'Zo ja, waarvoor?')}
               </div>
               {data.heeft_partner && (
                 <div className="space-y-4 p-5 bg-pink-50 rounded-xl">
@@ -640,13 +678,12 @@ export default function SurveyWizard() {
                     <span className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 font-bold">2</span>
                     Persoon 2
                   </h3>
-                  {renderInput('vakantieland_2', 'Favoriete vakantieland')}
-                  {renderInput('gerecht_2', 'Favoriete gerecht')}
-                  {renderInput('drank_2', 'Favoriete drank')}
-                  {renderInput('dieet_2', 'Diëten/allergieën', 'text', false, 'Bijv. vegetarisch, glutenvrij, notenallergie...')}
-                  {renderInput('schoenmaat_2', 'Schoenmaat')}
-                  {renderTextarea('angst_2', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...')}
-                  {renderInput('prijs_medaille_2', 'Prijs of medaille gewonnen?', 'text', false, undefined, 'Zo ja, waarvoor?')}
+                  {renderInput('vakantieland_2', 'Favoriete vakantieland', 'text', true)}
+                  {renderInput('gerecht_2', 'Favoriete gerecht', 'text', true)}
+                  {renderInput('drank_2', 'Favoriete drank', 'text', true)}
+                  {renderInput('schoenmaat_2', 'Schoenmaat', 'text', true)}
+                  {renderTextarea('angst_2', 'Voor wie/wat ben je bang?', 'Bijv. vuurwerk, spinnen...', undefined, true)}
+                  {renderInput('prijs_medaille_2', 'Prijs of medaille gewonnen?', 'text', true, undefined, 'Zo ja, waarvoor?')}
                 </div>
               )}
             </div>
@@ -660,15 +697,6 @@ export default function SurveyWizard() {
               <span className="text-4xl">🎯</span>
               <h2 className="text-2xl font-bold text-gray-800 mt-2">Dit of dat?</h2>
               <p className="text-gray-500 mt-1">De laatste vragen - maak je keuze!</p>
-            </div>
-
-            <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100">
-              <span className="text-xl mr-2">📖</span>
-              {renderTextarea(
-                'anekdote',
-                'Familie-anekdote of herinnering van vroeger',
-                'Deel een leuke herinnering of anekdote...'
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
