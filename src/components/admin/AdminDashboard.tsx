@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes';
 
 interface Statistics {
   total: number;
@@ -32,6 +32,19 @@ interface Statistics {
   vacationCountries: string[];
   anekdotes: { name: string; text: string }[];
   photos: { name: string; url: string }[];
+}
+
+interface FunFact {
+  category: string;
+  icon: string;
+  title: string;
+  description: string;
+}
+
+interface MarriedCouple {
+  names: string;
+  date: Date;
+  dateStr: string;
 }
 
 export default function AdminDashboard() {
@@ -156,6 +169,161 @@ export default function AdminDashboard() {
       photos
     };
   }, [responses]);
+
+  // Calculate fun facts
+  const funFacts = useMemo<{ facts: FunFact[]; marriages: MarriedCouple[]; closestMarriages: { couple1: string; couple2: string; days: number } | null }>(() => {
+    const facts: FunFact[] = [];
+    const marriages: MarriedCouple[] = [];
+
+    // Collect all persons with their data
+    const persons: { name: string; schoenmaat?: number; angst?: string; prijs?: string; gerecht?: string; bijnaam?: string }[] = [];
+
+    responses.forEach(r => {
+      // Person 1
+      const schoen1 = r.schoenmaat_1 ? parseInt(r.schoenmaat_1.replace(/[^0-9]/g, '')) : undefined;
+      persons.push({
+        name: r.naam_1.trim(),
+        schoenmaat: schoen1 && !isNaN(schoen1) ? schoen1 : undefined,
+        angst: r.angst_1?.trim(),
+        prijs: r.prijs_medaille_1?.trim(),
+        gerecht: r.gerecht_1?.trim(),
+        bijnaam: r.bijnaam_1?.trim(),
+      });
+
+      // Person 2
+      if (r.heeft_partner && r.naam_2) {
+        const schoen2 = r.schoenmaat_2 ? parseInt(r.schoenmaat_2.replace(/[^0-9]/g, '')) : undefined;
+        persons.push({
+          name: r.naam_2.trim(),
+          schoenmaat: schoen2 && !isNaN(schoen2) ? schoen2 : undefined,
+          angst: r.angst_2?.trim(),
+          prijs: r.prijs_medaille_2?.trim(),
+          gerecht: r.gerecht_2?.trim(),
+          bijnaam: r.bijnaam_2?.trim(),
+        });
+      }
+
+      // Marriages
+      if (r.is_getrouwd === 'Ja' && r.trouwdatum && r.naam_2) {
+        const date = new Date(r.trouwdatum);
+        if (date.getFullYear() > 1900 && date.getFullYear() < 2030) {
+          marriages.push({
+            names: `${r.naam_1.trim()} & ${r.naam_2.trim()}`,
+            date,
+            dateStr: date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
+          });
+        }
+      }
+    });
+
+    // Sort marriages chronologically
+    marriages.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // Find closest marriages
+    let closestMarriages: { couple1: string; couple2: string; days: number } | null = null;
+    if (marriages.length >= 2) {
+      let minDays = Infinity;
+      for (let i = 0; i < marriages.length - 1; i++) {
+        const days = Math.abs(marriages[i + 1].date.getTime() - marriages[i].date.getTime()) / (1000 * 60 * 60 * 24);
+        if (days < minDays) {
+          minDays = days;
+          closestMarriages = {
+            couple1: marriages[i].names,
+            couple2: marriages[i + 1].names,
+            days: Math.round(days)
+          };
+        }
+      }
+    }
+
+    // Unanimous preferences
+    const totalPersons = persons.length;
+    if (stats.preferences.hond > 0 && stats.preferences.kat === 0) {
+      facts.push({ category: 'Unaniem', icon: '🐕', title: '100% Team Hond', description: `Alle ${stats.preferences.hond} familieleden kiezen voor hond boven kat!` });
+    }
+    if (stats.preferences.zomer > 0 && stats.preferences.winter === 0) {
+      facts.push({ category: 'Unaniem', icon: '☀️', title: '100% Team Zomer', description: `Niemand in de familie kiest voor winter!` });
+    }
+    if (stats.preferences.kat > 0 && stats.preferences.hond === 0) {
+      facts.push({ category: 'Unaniem', icon: '🐱', title: '100% Team Kat', description: `Alle familieleden kiezen voor kat!` });
+    }
+
+    // Shoe sizes
+    const validSchoenmaten = persons.filter(p => p.schoenmaat && p.schoenmaat >= 30 && p.schoenmaat <= 50);
+    if (validSchoenmaten.length >= 2) {
+      const biggest = validSchoenmaten.reduce((a, b) => (a.schoenmaat! > b.schoenmaat! ? a : b));
+      const smallest = validSchoenmaten.reduce((a, b) => (a.schoenmaat! < b.schoenmaat! ? a : b));
+      if (biggest.schoenmaat !== smallest.schoenmaat) {
+        facts.push({
+          category: 'Extremen',
+          icon: '👟',
+          title: 'Schoenmaten',
+          description: `Grootste: ${biggest.name} (${biggest.schoenmaat}) • Kleinste: ${smallest.name} (${smallest.schoenmaat}) • Verschil: ${biggest.schoenmaat! - smallest.schoenmaat!} maten!`
+        });
+      }
+    }
+
+    // Notable achievements (kampioenen)
+    persons.forEach(p => {
+      if (p.prijs && p.prijs.toLowerCase().includes('kampioen')) {
+        facts.push({ category: 'Kampioen', icon: '🏆', title: p.name, description: p.prijs });
+      }
+    });
+
+    // Unusual fears
+    const funnyFears = persons.filter(p =>
+      p.angst &&
+      !['nee', 'niet', 'geen', 'nergens', 'x', '-', 'n.v.t'].some(x => p.angst!.toLowerCase().includes(x)) &&
+      p.angst.length > 3
+    );
+    funnyFears.forEach(p => {
+      if (p.angst!.toLowerCase().includes('vrouw') || p.angst!.toLowerCase().includes('man')) {
+        facts.push({ category: 'Grappig', icon: '😅', title: `${p.name}'s angst`, description: p.angst! });
+      }
+      if (p.angst!.toLowerCase().includes('kat') || p.angst!.toLowerCase().includes('muis') || p.angst!.toLowerCase().includes('veren')) {
+        facts.push({ category: 'Angsten', icon: '😨', title: `${p.name}`, description: `Bang voor: ${p.angst}` });
+      }
+    });
+
+    // Unusual foods
+    const unusualFoods = ['brood', 'hazepeper', 'zuurkool'];
+    persons.forEach(p => {
+      if (p.gerecht && unusualFoods.some(f => p.gerecht!.toLowerCase().includes(f))) {
+        facts.push({ category: 'Eten', icon: '🍽️', title: `${p.name}'s lievelingsgerecht`, description: p.gerecht });
+      }
+    });
+
+    // Funny nicknames
+    const funnyNicknames = persons.filter(p => p.bijnaam && p.bijnaam.length > 2 && !['geen', 'nee', '-'].includes(p.bijnaam.toLowerCase()));
+    if (funnyNicknames.length > 0) {
+      const nickList = funnyNicknames.map(p => `${p.name}: "${p.bijnaam}"`).slice(0, 5);
+      facts.push({ category: 'Bijnamen', icon: '🏷️', title: 'Bijnamen in de familie', description: nickList.join(' • ') });
+    }
+
+    // Marriage facts
+    if (closestMarriages) {
+      const years = Math.floor(closestMarriages.days / 365);
+      const months = Math.floor((closestMarriages.days % 365) / 30);
+      const timeStr = years > 0 ? `${years} jaar en ${months} maanden` : `${months} maanden`;
+      facts.push({
+        category: 'Huwelijken',
+        icon: '💒',
+        title: 'Dichtst bij elkaar getrouwd',
+        description: `${closestMarriages.couple1} en ${closestMarriages.couple2} trouwden met slechts ${timeStr} verschil!`
+      });
+    }
+
+    if (marriages.length > 0) {
+      facts.push({
+        category: 'Huwelijken',
+        icon: '💍',
+        title: 'Langst getrouwd',
+        description: `${marriages[0].names} - getrouwd op ${marriages[0].dateStr}`
+      });
+    }
+
+    return { facts, marriages, closestMarriages };
+  }, [responses, stats.preferences]);
 
   const handleLogout = async () => {
     await fetch('/api/auth', { method: 'DELETE' });
@@ -327,6 +495,7 @@ export default function AdminDashboard() {
                 { id: 'statistics', label: 'Statistieken', icon: '📊' },
                 { id: 'photos', label: `Foto's (${stats.photos.length})`, icon: '📷' },
                 { id: 'anekdotes', label: `Anekdotes (${stats.anekdotes.length})`, icon: '💬' },
+                { id: 'feitjes', label: `Feitjes (${funFacts.facts.length})`, icon: '✨' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -650,6 +819,57 @@ export default function AdminDashboard() {
                       <p className="text-sm text-slate-500">— {anekdote.name}</p>
                     </div>
                   ))
+                )}
+              </div>
+            )}
+
+            {/* Feitjes Tab */}
+            {activeTab === 'feitjes' && (
+              <div className="space-y-8">
+                {/* Fun Facts Grid */}
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Interessante Feitjes</h3>
+                  {funFacts.facts.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">Nog niet genoeg data voor feitjes</p>
+                  ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {funFacts.facts.map((fact, idx) => (
+                        <div key={idx} className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
+                          <div className="flex items-start gap-3">
+                            <span className="text-2xl">{fact.icon}</span>
+                            <div>
+                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">{fact.category}</span>
+                              <h4 className="font-semibold text-slate-800">{fact.title}</h4>
+                              <p className="text-sm text-slate-600 mt-1">{fact.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Marriage Timeline */}
+                {funFacts.marriages.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Huwelijken Tijdlijn</h3>
+                    <div className="relative">
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-pink-200" />
+                      <div className="space-y-4">
+                        {funFacts.marriages.map((marriage, idx) => (
+                          <div key={idx} className="flex items-center gap-4 relative">
+                            <div className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold z-10">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1 bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+                              <p className="font-medium text-slate-800">{marriage.names}</p>
+                              <p className="text-sm text-slate-500">{marriage.dateStr}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
