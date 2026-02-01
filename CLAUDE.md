@@ -1,130 +1,61 @@
-# Familiedag Survey - Project Knowledge
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Overview
-A Dutch family quiz survey ("Familiequiz") for collecting family information, deployed on Vercel.
 
-## Tech Stack
-- **Framework**: Next.js 14 with App Router, TypeScript
-- **Database**: Neon (serverless Postgres) via `@vercel/postgres`
-- **File Storage**: Vercel Blob for photo uploads
-- **Styling**: Tailwind CSS
-- **Deployment**: Vercel (auto-deploys from GitHub)
+Dutch family quiz survey ("Familiequiz") for collecting family information, deployed on Vercel. Next.js 16 App Router with TypeScript, Neon Postgres via `@vercel/postgres`, Vercel Blob for photos, Tailwind CSS v4.
 
-## Repository
-- GitHub: `wlaarman/familiedag-survey`
-- Main branch: `main`
+## Commands
 
-## Key URLs
-- Survey: https://familiedag-survey.vercel.app (or custom domain if configured)
-- Admin: /admin (password protected via ADMIN_PASSWORD env var)
-- Admin login: /admin/login
-
-## Project Structure
-```
-src/
-├── app/
-│   ├── page.tsx                    # Main survey page
-│   ├── bedankt/page.tsx            # Thank you page after submission
-│   ├── admin/
-│   │   ├── page.tsx                # Admin dashboard
-│   │   ├── login/page.tsx          # Admin login
-│   │   └── response/[id]/page.tsx  # Response detail view
-│   └── api/
-│       ├── submit/route.ts         # Submit survey response
-│       ├── upload/route.ts         # Upload photo to Vercel Blob
-│       ├── responses/route.ts      # Get/delete responses (admin)
-│       └── auth/route.ts           # Admin authentication
-├── components/
-│   ├── survey/
-│   │   ├── SurveyWizard.tsx        # Main 7-step wizard
-│   │   ├── ProgressBar.tsx         # Step progress indicator
-│   │   └── PhotoUpload.tsx         # File upload with "send later" option
-│   └── admin/
-│       └── AdminDashboard.tsx      # Admin table view
-├── lib/
-│   ├── db.ts                       # Database functions
-│   ├── auth.ts                     # Session authentication
-│   └── blob.ts                     # Vercel Blob helpers
-└── types/
-    └── survey.ts                   # TypeScript interfaces
+```bash
+npm run dev      # Start dev server at http://localhost:3000
+npm run build    # Production build
+npm run lint     # ESLint
 ```
 
-## Survey Steps (7 total)
-1. **Persoon 1** - Name, birthdate, address, photo upload
-2. **Partner** - Yes/No toggle, partner details if yes
-3. **Werk & Studie** - Marriage status, jobs, education
-4. **Jeugd** - Elementary school, nicknames, side jobs
-5. **Huisdieren & Hobby's** - Pets, sports, music, volunteer work
-6. **Favorieten & Weetjes** - Vacation, food, drinks, fears, anecdote
-7. **Dit of dat?** - Preference choices (coffee/tea, summer/winter, etc.)
+## Architecture
 
-## Key Features
-- Multi-step wizard with validation
-- Conditional fields (partner info only shown if has partner)
-- Photo upload with "send later via app" option
-- Form data persisted in sessionStorage (survives refresh/navigation)
-- Browser back button navigates to previous step
-- Scroll to top on step change
-- Admin dashboard with CSV export
-- Response detail page opens in new tab
+**Survey Flow**: 7-step wizard (`SurveyWizard.tsx`) collecting person info, partner details (conditional), work/education, childhood memories, hobbies, favorites, and "this or that" preferences. Form state persists in sessionStorage.
 
-## Environment Variables (Vercel)
-- `POSTGRES_URL` - Neon database connection string
+**Admin Panel**: Password-protected dashboard at `/admin` with 4 tabs: responses table, statistics, photo gallery, and anekdotes. Login via `/admin/login`, session tokens stored in `admin_sessions` table.
+
+**API Routes**:
+- `POST /api/submit` - Save survey response
+- `POST /api/upload` - Upload photo to Vercel Blob
+- `GET/DELETE /api/responses` - Admin: list/delete responses
+- `POST /api/auth` - Admin login/logout
+
+**Database**: Single `survey_responses` table with 60+ columns (person 1 & 2 fields suffixed `_1`/`_2`). Schema in `src/lib/db.ts` includes auto-migration for new columns.
+
+## Key Patterns
+
+- Partner fields only shown when `heeft_partner` is true
+- Photos can be uploaded or marked "send later" (`foto_X_later` boolean)
+- CSV export includes UTF-8 BOM for Excel compatibility
+- Response detail view opens in new tab from admin
+
+## Environment Variables
+
+- `POSTGRES_URL` - Neon database connection
 - `BLOB_READ_WRITE_TOKEN` - Vercel Blob token
 - `ADMIN_PASSWORD` - Admin panel password
 
-## Database Tables
-- `survey_responses` - All survey data with 60+ columns
-- `admin_sessions` - Session tokens for admin auth
+## Uploading Local Photos
 
-## Recent Changes (2026-02-01)
+Photos from `C:\Users\WillemLaarman\iCloudDrive\Verbouwing\Familiedag\foto` can be bulk-uploaded to Vercel Blob and linked to database records:
 
-### Admin Dashboard Overhaul
-Complete redesign of `AdminDashboard.tsx` with tabbed interface:
-
-**Quick Stats Cards** (always visible):
-- Totaal Inzendingen
-- Getrouwde Stellen
-- Met Huisdieren
-- Foto's Geupload
-
-**4 Tabs:**
-1. **Alle Inzendingen** - Table with all responses (existing functionality)
-2. **Statistieken** - Preference bars for "Dit of Dat" choices + lists of schools and vacation countries
-3. **Foto's** - Photo gallery grid with:
-   - Click to view full size in modal
-   - "Download Alle Foto's" button (downloads each photo sequentially)
-   - Photo name labels
-4. **Anekdotes** - All family stories in card format
-
-**Technical details:**
-- Statistics calculated with `useMemo` for performance
-- Photo modal with download button
-- CSV export includes UTF-8 BOM for Excel compatibility
-
-### Previous Changes
-- Photos in admin clickable to view full size
-- Single person layout uses full width
-- "Send later" option hidden when photo already uploaded
-- Date input fields smaller on mobile
-- Partner field labels shortened
-
-## Development
 ```bash
-cd C:\Sandbox\familiedag-survey
-npm run dev
-# Opens at http://localhost:3000
+node --env-file=.env.local scripts/upload-local-photos.mjs
 ```
 
+To add new photo mappings, edit `scripts/upload-local-photos.mjs` and add to `MAPPINGS`:
+```javascript
+{ pattern: /^bestandsnaam\.jpeg$/i, id: XX, field: 'foto_1_url', name: 'Naam' },
+```
+- `foto_1_url` = persoon 1, `foto_2_url` = partner
+- Script skips photos that already exist in database
+
 ## Deployment
+
 Push to `main` branch auto-deploys to Vercel.
-
-## Future Improvements (Ideas)
-- ZIP download for all photos (requires server-side API route)
-- Print-friendly view for the quiz/game
-- Filter responses by date range
-- Search functionality in admin
-- Export anekdotes to printable format
-
-## Related Files (ignore)
-There's a separate project at `C:\Sandbox\familiedag_enquete` (FastAPI/Docker) that was created by mistake. It has similar functionality but is NOT connected to this Vercel app. The survey data lives in the Neon Postgres database, not in CSV files.

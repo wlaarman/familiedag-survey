@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'statistics' | 'photos' | 'anekdotes';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes';
 
 interface Statistics {
   total: number;
@@ -323,6 +323,7 @@ export default function AdminDashboard() {
             <nav className="flex gap-1">
               {[
                 { id: 'responses', label: 'Alle Inzendingen', icon: '👥' },
+                { id: 'overview', label: 'Overzicht', icon: '📋' },
                 { id: 'statistics', label: 'Statistieken', icon: '📊' },
                 { id: 'photos', label: `Foto's (${stats.photos.length})`, icon: '📷' },
                 { id: 'anekdotes', label: `Anekdotes (${stats.anekdotes.length})`, icon: '💬' },
@@ -419,6 +420,147 @@ export default function AdminDashboard() {
                       ))}
                     </tbody>
                   </table>
+                )}
+              </div>
+            )}
+
+            {/* Overview Tab */}
+            {activeTab === 'overview' && (
+              <div className="space-y-8">
+                {responses.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">Nog geen inzendingen</p>
+                ) : (
+                  responses.map((r) => (
+                    <div key={r.id} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                      {/* Header with names and photos */}
+                      <div className={`grid gap-6 mb-6 ${r.heeft_partner ? 'md:grid-cols-2' : 'grid-cols-1 max-w-md'}`}>
+                        {/* Person 1 */}
+                        <div className="flex items-center gap-4">
+                          {r.foto_1_url ? (
+                            <img src={r.foto_1_url} alt={r.naam_1} className="w-20 h-20 rounded-full object-cover border-2 border-white shadow" />
+                          ) : (
+                            <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl text-slate-400">?</div>
+                          )}
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-800">{r.naam_1}</h3>
+                            {r.geboortedatum_1 && <p className="text-sm text-slate-500">{new Date(r.geboortedatum_1).toLocaleDateString('nl-NL')}</p>}
+                          </div>
+                        </div>
+                        {/* Person 2 */}
+                        {r.heeft_partner && r.naam_2 && (
+                          <div className="flex items-center gap-4">
+                            {r.foto_2_url ? (
+                              <img src={r.foto_2_url} alt={r.naam_2} className="w-20 h-20 rounded-full object-cover border-2 border-white shadow" />
+                            ) : (
+                              <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center text-2xl text-slate-400">?</div>
+                            )}
+                            <div>
+                              <h3 className="text-xl font-bold text-slate-800">{r.naam_2}</h3>
+                              {r.geboortedatum_2 && <p className="text-sm text-slate-500">{new Date(r.geboortedatum_2).toLocaleDateString('nl-NL')}</p>}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info grid */}
+                      <div className="grid md:grid-cols-2 gap-x-8 gap-y-1 text-sm">
+                        {/* Adres */}
+                        <div className="col-span-full mb-2">
+                          <span className="text-slate-500">Adres:</span> <span className="text-slate-700">{r.adres || '-'}</span>
+                        </div>
+
+                        {/* Getrouwd */}
+                        {r.heeft_partner && (
+                          <div className="col-span-full mb-2">
+                            <span className="text-slate-500">Getrouwd:</span> <span className="text-slate-700">{r.is_getrouwd || '-'}</span>
+                            {r.trouwdatum && <span className="text-slate-500 ml-2">({new Date(r.trouwdatum).toLocaleDateString('nl-NL')})</span>}
+                          </div>
+                        )}
+
+                        {/* Section: Werk & Opleiding */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Werk & Opleiding</div>
+                        <div><span className="text-slate-500">Werk:</span> <span className="text-slate-700">{r.werk_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Werk:</span> <span className="text-slate-700">{r.werk_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Opleiding:</span> <span className="text-slate-700">{r.opleiding_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Opleiding:</span> <span className="text-slate-700">{r.opleiding_2 || '-'}</span></div>}
+
+                        {/* Section: Jeugd */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Jeugd</div>
+                        <div><span className="text-slate-500">Basisschool:</span> <span className="text-slate-700">{r.basisschool_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Basisschool:</span> <span className="text-slate-700">{r.basisschool_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Bijnaam:</span> <span className="text-slate-700">{r.bijnaam_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Bijnaam:</span> <span className="text-slate-700">{r.bijnaam_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Bijbaantjes:</span> <span className="text-slate-700">{r.bijbaantjes_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Bijbaantjes:</span> <span className="text-slate-700">{r.bijbaantjes_2 || '-'}</span></div>}
+
+                        {/* Section: Hobby's */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Hobby's & Vrije tijd</div>
+                        <div><span className="text-slate-500">Sport:</span> <span className="text-slate-700">{r.sport_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Sport:</span> <span className="text-slate-700">{r.sport_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Muziek:</span> <span className="text-slate-700">{r.muziek_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Muziek:</span> <span className="text-slate-700">{r.muziek_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Vrijwilligerswerk:</span> <span className="text-slate-700">{r.vrijwilligerswerk_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Vrijwilligerswerk:</span> <span className="text-slate-700">{r.vrijwilligerswerk_2 || '-'}</span></div>}
+
+                        {/* Huisdieren */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Huisdieren</div>
+                        <div className="col-span-full"><span className="text-slate-500">Huisdieren:</span> <span className="text-slate-700">{r.heeft_huisdieren ? (r.huisdieren_info || 'Ja') : 'Nee'}</span></div>
+
+                        {/* Section: Favorieten */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Favorieten</div>
+                        <div><span className="text-slate-500">Auto:</span> <span className="text-slate-700">{r.auto_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Auto:</span> <span className="text-slate-700">{r.auto_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Vakantieland:</span> <span className="text-slate-700">{r.vakantieland_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Vakantieland:</span> <span className="text-slate-700">{r.vakantieland_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Lievelingsgerecht:</span> <span className="text-slate-700">{r.gerecht_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Lievelingsgerecht:</span> <span className="text-slate-700">{r.gerecht_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Drank:</span> <span className="text-slate-700">{r.drank_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Drank:</span> <span className="text-slate-700">{r.drank_2 || '-'}</span></div>}
+
+                        {/* Section: Dit of Dat */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Dit of Dat</div>
+                        <div className="flex flex-wrap gap-2">
+                          {r.koffie_thee_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.koffie_thee_1}</span>}
+                          {r.aardappel_pasta_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.aardappel_pasta_1}</span>}
+                          {r.vlees_vis_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.vlees_vis_1}</span>}
+                          {r.zomer_winter_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.zomer_winter_1}</span>}
+                          {r.hond_kat_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.hond_kat_1}</span>}
+                          {r.zwembad_zee_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.zwembad_zee_1}</span>}
+                          {r.auto_fiets_1 && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">{r.auto_fiets_1}</span>}
+                        </div>
+                        {r.heeft_partner && (
+                          <div className="flex flex-wrap gap-2">
+                            {r.koffie_thee_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.koffie_thee_2}</span>}
+                            {r.aardappel_pasta_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.aardappel_pasta_2}</span>}
+                            {r.vlees_vis_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.vlees_vis_2}</span>}
+                            {r.zomer_winter_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.zomer_winter_2}</span>}
+                            {r.hond_kat_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.hond_kat_2}</span>}
+                            {r.zwembad_zee_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.zwembad_zee_2}</span>}
+                            {r.auto_fiets_2 && <span className="px-2 py-0.5 bg-pink-100 text-pink-700 rounded text-xs">{r.auto_fiets_2}</span>}
+                          </div>
+                        )}
+
+                        {/* Section: Weetjes */}
+                        <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Weetjes</div>
+                        <div><span className="text-slate-500">Schoenmaat:</span> <span className="text-slate-700">{r.schoenmaat_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Schoenmaat:</span> <span className="text-slate-700">{r.schoenmaat_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Angst:</span> <span className="text-slate-700">{r.angst_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Angst:</span> <span className="text-slate-700">{r.angst_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Prijs/medaille:</span> <span className="text-slate-700">{r.prijs_medaille_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Prijs/medaille:</span> <span className="text-slate-700">{r.prijs_medaille_2 || '-'}</span></div>}
+                        <div><span className="text-slate-500">Dieet:</span> <span className="text-slate-700">{r.dieet_1 || '-'}</span></div>
+                        {r.heeft_partner && <div><span className="text-slate-500">Dieet:</span> <span className="text-slate-700">{r.dieet_2 || '-'}</span></div>}
+
+                        {/* Anekdote */}
+                        {r.anekdote && (
+                          <>
+                            <div className="col-span-full mt-3 mb-1 font-semibold text-slate-600 border-b border-slate-200 pb-1">Anekdote</div>
+                            <div className="col-span-full text-slate-700 italic">"{r.anekdote}"</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             )}
