@@ -119,7 +119,7 @@ const BEDRIJVEN: Bedrijf[] = [
   { naam: 'Brodshoes', website: 'https://www.brodshoes.nl/', categorie: 'Schoenen' },
   { naam: 'Schuurman Schoenen', website: 'https://www.schuurmanschoenen.nl/', categorie: 'Schoenen' },
   { naam: 'Steenbergen Schoenen', website: 'https://www.steenbergenschoenen.nl/', categorie: 'Schoenen' },
-  { naam: 'Ziengs Schoenen', website: 'https://www.ziengs.nl/', categorie: 'Schoenen', logo: 'https://www.ziengs.nl/logo-114.png' },
+  { naam: 'Ziengs Schoenen', website: 'https://www.ziengs.nl/', categorie: 'Schoenen' },
   // Juweliers
   { naam: 'Juwelier Asbroek', website: 'https://www.juwelierasbroek.nl/', categorie: 'Juwelier' },
   { naam: 'Saffier Juwelier', website: 'https://www.saffierjuwelier.nl/', categorie: 'Juwelier' },
@@ -197,6 +197,8 @@ export default function AdminDashboard() {
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
+  const [customLogos, setCustomLogos] = useState<Record<string, string>>({});
+  const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -212,7 +214,49 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchResponses();
+    // Load custom logos from localStorage
+    const stored = localStorage.getItem('customLogos');
+    if (stored) {
+      try {
+        setCustomLogos(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse customLogos', e);
+      }
+    }
   }, []);
+
+  const handleLogoUpload = async (bedrijfNaam: string, file: File) => {
+    setUploadingLogo(bedrijfNaam);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('filename', `logo-${bedrijfNaam.replace(/[^a-zA-Z0-9]/g, '_')}`);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      const { url } = await response.json();
+
+      const newCustomLogos = { ...customLogos, [bedrijfNaam]: url };
+      setCustomLogos(newCustomLogos);
+      localStorage.setItem('customLogos', JSON.stringify(newCustomLogos));
+    } catch (err) {
+      alert('Logo upload mislukt: ' + (err instanceof Error ? err.message : 'Onbekende fout'));
+    } finally {
+      setUploadingLogo(null);
+    }
+  };
+
+  const removeCustomLogo = (bedrijfNaam: string) => {
+    const newCustomLogos = { ...customLogos };
+    delete newCustomLogos[bedrijfNaam];
+    setCustomLogos(newCustomLogos);
+    localStorage.setItem('customLogos', JSON.stringify(newCustomLogos));
+  };
 
   const fetchResponses = async () => {
     try {
@@ -1075,21 +1119,23 @@ export default function AdminDashboard() {
                         return (
                           <div
                             key={bedrijf.naam}
-                            onClick={() => {
-                              const newSet = new Set(selectedLogos);
-                              if (isSelected) newSet.delete(bedrijf.naam);
-                              else newSet.add(bedrijf.naam);
-                              setSelectedLogos(newSet);
-                            }}
-                            className={`bg-white rounded-xl p-3 border-2 cursor-pointer transition-all hover:shadow-lg ${
+                            className={`bg-white rounded-xl p-3 border-2 transition-all hover:shadow-lg ${
                               isSelected ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200'
                             }`}
                           >
-                            <div className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
-                              {bedrijf.logo ? (
-                                /* Custom logo */
+                            <div
+                              className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative cursor-pointer group"
+                              onClick={() => {
+                                const newSet = new Set(selectedLogos);
+                                if (isSelected) newSet.delete(bedrijf.naam);
+                                else newSet.add(bedrijf.naam);
+                                setSelectedLogos(newSet);
+                              }}
+                            >
+                              {(customLogos[bedrijf.naam] || bedrijf.logo) ? (
+                                /* Custom or predefined logo */
                                 <img
-                                  src={bedrijf.logo}
+                                  src={customLogos[bedrijf.naam] || bedrijf.logo}
                                   alt={bedrijf.naam}
                                   className="max-w-full max-h-full object-contain p-2"
                                 />
@@ -1115,9 +1161,41 @@ export default function AdminDashboard() {
                                   />
                                 </>
                               )}
+                              {uploadingLogo === bedrijf.naam && (
+                                <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600" />
+                                </div>
+                              )}
                             </div>
                             <p className="text-xs text-center font-medium text-slate-700 truncate">{bedrijf.naam}</p>
-                            <p className="text-xs text-center text-slate-400">{bedrijf.categorie}</p>
+                            <p className="text-xs text-center text-slate-400 mb-1">{bedrijf.categorie}</p>
+                            <div className="flex justify-center gap-1">
+                              <label className="text-[10px] text-blue-600 hover:text-blue-800 cursor-pointer">
+                                📷
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) handleLogoUpload(bedrijf.naam, file);
+                                    e.target.value = '';
+                                  }}
+                                />
+                              </label>
+                              {customLogos[bedrijf.naam] && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeCustomLogo(bedrijf.naam);
+                                  }}
+                                  className="text-[10px] text-red-500 hover:text-red-700"
+                                  title="Verwijder custom logo"
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
@@ -1149,10 +1227,10 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
                           <h3 className="text-xl font-semibold text-slate-800 mb-6">Van welk bedrijf is dit logo?</h3>
                           <div className="w-32 h-32 mx-auto bg-slate-100 rounded-xl flex items-center justify-center mb-6 overflow-hidden relative">
-                            {currentBedrijf.logo ? (
+                            {(customLogos[currentBedrijf.naam] || currentBedrijf.logo) ? (
                               /* Custom logo */
                               <img
-                                src={currentBedrijf.logo}
+                                src={customLogos[currentBedrijf.naam] || currentBedrijf.logo}
                                 alt="Logo"
                                 className="max-w-full max-h-full object-contain p-2"
                               />
@@ -1253,10 +1331,10 @@ export default function AdminDashboard() {
                             <div key={naam} className="text-center p-4 border border-slate-200 rounded-lg">
                               <div className="text-sm text-slate-400 mb-2">#{idx + 1}</div>
                               <div className="w-20 h-20 mx-auto bg-slate-100 rounded-lg flex items-center justify-center mb-3 overflow-hidden relative">
-                                {bedrijf.logo ? (
+                                {(customLogos[bedrijf.naam] || bedrijf.logo) ? (
                                   /* Custom logo */
                                   <img
-                                    src={bedrijf.logo}
+                                    src={customLogos[bedrijf.naam] || bedrijf.logo}
                                     alt="Logo"
                                     className="max-w-full max-h-full object-contain p-1"
                                   />
