@@ -77,7 +77,32 @@ src/
 - `survey_responses` - All survey data with 60+ columns
 - `admin_sessions` - Session tokens for admin auth
 
-## Recent Changes
+## Recent Changes (2026-02-01)
+
+### Admin Dashboard Overhaul
+Complete redesign of `AdminDashboard.tsx` with tabbed interface:
+
+**Quick Stats Cards** (always visible):
+- Totaal Inzendingen
+- Getrouwde Stellen
+- Met Huisdieren
+- Foto's Geupload
+
+**4 Tabs:**
+1. **Alle Inzendingen** - Table with all responses (existing functionality)
+2. **Statistieken** - Preference bars for "Dit of Dat" choices + lists of schools and vacation countries
+3. **Foto's** - Photo gallery grid with:
+   - Click to view full size in modal
+   - "Download Alle Foto's" button (downloads each photo sequentially)
+   - Photo name labels
+4. **Anekdotes** - All family stories in card format
+
+**Technical details:**
+- Statistics calculated with `useMemo` for performance
+- Photo modal with download button
+- CSV export includes UTF-8 BOM for Excel compatibility
+
+### Previous Changes
 - Photos in admin clickable to view full size
 - Single person layout uses full width
 - "Send later" option hidden when photo already uploaded
@@ -93,3 +118,13 @@ npm run dev
 
 ## Deployment
 Push to `main` branch auto-deploys to Vercel.
+
+## Future Improvements (Ideas)
+- ZIP download for all photos (requires server-side API route)
+- Print-friendly view for the quiz/game
+- Filter responses by date range
+- Search functionality in admin
+- Export anekdotes to printable format
+
+## Related Files (ignore)
+There's a separate project at `C:\Sandbox\familiedag_enquete` (FastAPI/Docker) that was created by mistake. It has similar functionality but is NOT connected to this Vercel app. The survey data lives in the Neon Postgres database, not in CSV files.
