@@ -82,6 +82,16 @@ export async function createTables() {
   // Add new columns to existing tables (safe to run multiple times)
   await sql`ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS dieet_1 TEXT`;
   await sql`ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS dieet_2 TEXT`;
+
+  // Custom logos table for logo quiz
+  await sql`
+    CREATE TABLE IF NOT EXISTS custom_logos (
+      id SERIAL PRIMARY KEY,
+      bedrijf_naam VARCHAR(255) UNIQUE NOT NULL,
+      logo_url TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
 }
 
 export async function insertSurveyResponse(data: SurveyData): Promise<number> {
@@ -149,4 +159,27 @@ export async function getAllResponses(): Promise<SurveyResponse[]> {
 
 export async function deleteResponse(id: number): Promise<void> {
   await sql`DELETE FROM survey_responses WHERE id = ${id}`;
+}
+
+// Custom logos functions
+export async function getCustomLogos(): Promise<Record<string, string>> {
+  const result = await sql`SELECT bedrijf_naam, logo_url FROM custom_logos`;
+  const logos: Record<string, string> = {};
+  for (const row of result.rows) {
+    logos[row.bedrijf_naam] = row.logo_url;
+  }
+  return logos;
+}
+
+export async function setCustomLogo(bedrijfNaam: string, logoUrl: string): Promise<void> {
+  await sql`
+    INSERT INTO custom_logos (bedrijf_naam, logo_url)
+    VALUES (${bedrijfNaam}, ${logoUrl})
+    ON CONFLICT (bedrijf_naam)
+    DO UPDATE SET logo_url = ${logoUrl}
+  `;
+}
+
+export async function deleteCustomLogo(bedrijfNaam: string): Promise<void> {
+  await sql`DELETE FROM custom_logos WHERE bedrijf_naam = ${bedrijfNaam}`;
 }

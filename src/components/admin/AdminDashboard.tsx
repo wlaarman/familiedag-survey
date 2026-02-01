@@ -214,36 +214,48 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchResponses();
-    // Load custom logos from localStorage
-    const stored = localStorage.getItem('customLogos');
-    if (stored) {
-      try {
-        setCustomLogos(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse customLogos', e);
-      }
-    }
+    fetchCustomLogos();
   }, []);
+
+  const fetchCustomLogos = async () => {
+    try {
+      const response = await fetch('/api/logos');
+      if (response.ok) {
+        const { logos } = await response.json();
+        setCustomLogos(logos || {});
+      }
+    } catch (err) {
+      console.error('Failed to fetch custom logos:', err);
+    }
+  };
 
   const handleLogoUpload = async (bedrijfNaam: string, file: File) => {
     setUploadingLogo(bedrijfNaam);
     try {
+      // Upload file to Vercel Blob
       const formData = new FormData();
       formData.append('file', file);
       formData.append('filename', `logo-${bedrijfNaam.replace(/[^a-zA-Z0-9]/g, '_')}`);
 
-      const response = await fetch('/api/upload', {
+      const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!uploadResponse.ok) throw new Error('Upload failed');
 
-      const { url } = await response.json();
+      const { url } = await uploadResponse.json();
 
-      const newCustomLogos = { ...customLogos, [bedrijfNaam]: url };
-      setCustomLogos(newCustomLogos);
-      localStorage.setItem('customLogos', JSON.stringify(newCustomLogos));
+      // Save to database
+      const saveResponse = await fetch('/api/logos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bedrijfNaam, logoUrl: url }),
+      });
+
+      if (!saveResponse.ok) throw new Error('Save to database failed');
+
+      setCustomLogos(prev => ({ ...prev, [bedrijfNaam]: url }));
     } catch (err) {
       alert('Logo upload mislukt: ' + (err instanceof Error ? err.message : 'Onbekende fout'));
     } finally {
@@ -251,11 +263,24 @@ export default function AdminDashboard() {
     }
   };
 
-  const removeCustomLogo = (bedrijfNaam: string) => {
-    const newCustomLogos = { ...customLogos };
-    delete newCustomLogos[bedrijfNaam];
-    setCustomLogos(newCustomLogos);
-    localStorage.setItem('customLogos', JSON.stringify(newCustomLogos));
+  const removeCustomLogo = async (bedrijfNaam: string) => {
+    try {
+      const response = await fetch('/api/logos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bedrijfNaam }),
+      });
+
+      if (!response.ok) throw new Error('Delete failed');
+
+      setCustomLogos(prev => {
+        const newLogos = { ...prev };
+        delete newLogos[bedrijfNaam];
+        return newLogos;
+      });
+    } catch (err) {
+      alert('Verwijderen mislukt: ' + (err instanceof Error ? err.message : 'Onbekende fout'));
+    }
   };
 
   const fetchResponses = async () => {

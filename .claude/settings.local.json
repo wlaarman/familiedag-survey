@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\WillemLaarman\\\\iCloudDrive\\\\Verbouwing\\\\Familiedag\\\\foto\" /b)",
+      "Bash(npx tsx:*)",
+      "Bash(node scripts/check-db.mjs:*)",
+      "Bash(vercel env:*)",
+      "Bash(npx vercel:*)",
+      "Bash(node --env-file=.env.local scripts/check-db.mjs:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd overview tab to admin dashboard with detailed person profiles\n\n- New \"Overzicht\" tab showing all data per person in scrollable cards\n- Profile cards with photos, personal info, work, hobbies, favorites\n- Dit of Dat preferences shown as colored tags \\(blue/pink per person\\)\n- Add local photo upload script for bulk importing photos\n- Update CLAUDE.md with photo upload instructions\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Feitjes tab with auto-generated fun facts from survey data\n\n- Unanimous preferences \\(100% hond, 100% zomer, etc.\\)\n- Shoe size extremes \\(biggest/smallest\\)\n- Champions \\(anyone with ''kampioen'' in achievements\\)\n- Notable fears and unusual food preferences\n- Family nicknames collection\n- Marriage timeline with chronological order\n- Closest marriages calculation\n\nFacts are recalculated automatically when data changes.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "WebSearch",
+      "WebFetch(domain:www.kringwerkgeversrijssen.nl)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd Rijssen businesses page for logo quiz selection\n\n- Grid of 33 traditional Rijssen family businesses\n- Filter by category \\(Bouw, Transport, Industrie, etc.\\)\n- Click to select/deselect companies\n- Auto-fetch logos via Clearbit API\n- Fallback to initial letter if logo unavailable\n- Selection summary at bottom\n\nAccess via /bedrijven\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "WebFetch(domain:www.winkeleninrijssen.nl)",
+      "Bash(curl:*)",
+      "Bash(powershell -Command \"\\(Invoke-WebRequest -Uri ''https://logo.clearbit.com/ziengs.nl'' -Method Head -UseBasicParsing\\).StatusCode\")",
+      "WebFetch(domain:www.ziengs.nl)"
+    ]
+  }
+}
