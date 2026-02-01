@@ -527,28 +527,29 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="border-b border-slate-200 px-2">
-            <nav className="flex gap-1">
+          <div className="border-b border-slate-200 overflow-x-auto">
+            <nav className="flex gap-1 px-2 min-w-max">
               {[
-                { id: 'responses', label: 'Alle Inzendingen', icon: '👥' },
+                { id: 'responses', label: 'Inzendingen', icon: '👥' },
                 { id: 'overview', label: 'Overzicht', icon: '📋' },
-                { id: 'statistics', label: 'Statistieken', icon: '📊' },
-                { id: 'photos', label: `Foto's (${stats.photos.length})`, icon: '📷' },
-                { id: 'anekdotes', label: `Anekdotes (${stats.anekdotes.length})`, icon: '💬' },
-                { id: 'feitjes', label: `Feitjes (${funFacts.facts.length})`, icon: '✨' },
+                { id: 'statistics', label: 'Stats', icon: '📊' },
+                { id: 'photos', label: `Foto's`, icon: '📷', count: stats.photos.length },
+                { id: 'anekdotes', label: 'Anekdotes', icon: '💬', count: stats.anekdotes.length },
+                { id: 'feitjes', label: 'Feitjes', icon: '✨', count: funFacts.facts.length },
                 { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  className={`px-3 py-3 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-slate-500 hover:text-slate-700'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
-                  {tab.label}
+                  <span className="mr-1">{tab.icon}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  {'count' in tab && <span className="sm:hidden">{tab.count}</span>}
                 </button>
               ))}
             </nav>
@@ -920,35 +921,35 @@ export default function AdminDashboard() {
               <div>
                 {quizMode === 'select' && (
                   <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-800">Selecteer Logo's voor de Quiz</h3>
-                        <p className="text-sm text-slate-500">{selectedLogos.size} geselecteerd</p>
-                      </div>
-                      <div className="flex gap-2">
-                        {selectedLogos.size >= 4 && (
-                          <>
-                            <button
-                              onClick={() => { setQuizMode('play'); setCurrentQuizIndex(0); setScore(0); setShowAnswer(false); }}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
-                            >
-                              ▶ Start Quiz
-                            </button>
-                            <button
-                              onClick={() => setQuizMode('print')}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                            >
-                              🖨 Print Quiz
-                            </button>
-                          </>
-                        )}
-                        <a
-                          href="/bedrijven"
-                          target="_blank"
-                          className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium"
-                        >
-                          Uitgebreid overzicht →
-                        </a>
+                    <div className="mb-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-slate-800">Selecteer Logo's voor de Quiz</h3>
+                          <p className="text-sm text-slate-500">{selectedLogos.size} geselecteerd {selectedLogos.size < 2 && '(min. 2)'}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => { setQuizMode('play'); setCurrentQuizIndex(0); setScore(0); setShowAnswer(false); }}
+                            disabled={selectedLogos.size < 2}
+                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            ▶ Start Quiz
+                          </button>
+                          <button
+                            onClick={() => setQuizMode('print')}
+                            disabled={selectedLogos.size < 2}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            🖨 Print
+                          </button>
+                          <a
+                            href="/bedrijven"
+                            target="_blank"
+                            className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium text-center"
+                          >
+                            Meer →
+                          </a>
+                        </div>
                       </div>
                     </div>
 
