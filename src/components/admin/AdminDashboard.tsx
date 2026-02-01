@@ -51,6 +51,7 @@ interface Bedrijf {
   naam: string;
   website: string;
   categorie: string;
+  logo?: string; // Custom logo URL (optional) - takes priority over auto-fetched logos
 }
 
 // Rijssense bedrijven voor logo quiz
@@ -118,7 +119,7 @@ const BEDRIJVEN: Bedrijf[] = [
   { naam: 'Brodshoes', website: 'https://www.brodshoes.nl/', categorie: 'Schoenen' },
   { naam: 'Schuurman Schoenen', website: 'https://www.schuurmanschoenen.nl/', categorie: 'Schoenen' },
   { naam: 'Steenbergen Schoenen', website: 'https://www.steenbergenschoenen.nl/', categorie: 'Schoenen' },
-  { naam: 'Ziengs Schoenen', website: 'https://www.ziengs.nl/', categorie: 'Schoenen' },
+  { naam: 'Ziengs Schoenen', website: 'https://www.ziengs.nl/', categorie: 'Schoenen', logo: 'https://www.ziengs.nl/logo-114.png' },
   // Juweliers
   { naam: 'Juwelier Asbroek', website: 'https://www.juwelierasbroek.nl/', categorie: 'Juwelier' },
   { naam: 'Saffier Juwelier', website: 'https://www.saffierjuwelier.nl/', categorie: 'Juwelier' },
@@ -1085,24 +1086,35 @@ export default function AdminDashboard() {
                             }`}
                           >
                             <div className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
-                              {/* Clearbit logo (higher quality) */}
-                              <img
-                                src={`https://logo.clearbit.com/${domain}`}
-                                alt={bedrijf.naam}
-                                className="max-w-full max-h-full object-contain p-2 absolute inset-0 m-auto"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                              {/* Google favicon fallback */}
-                              <img
-                                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
-                                alt={bedrijf.naam}
-                                className="w-12 h-12 object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
+                              {bedrijf.logo ? (
+                                /* Custom logo */
+                                <img
+                                  src={bedrijf.logo}
+                                  alt={bedrijf.naam}
+                                  className="max-w-full max-h-full object-contain p-2"
+                                />
+                              ) : (
+                                <>
+                                  {/* Clearbit logo (higher quality) */}
+                                  <img
+                                    src={`https://logo.clearbit.com/${domain}`}
+                                    alt={bedrijf.naam}
+                                    className="max-w-full max-h-full object-contain p-2 absolute inset-0 m-auto"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                  {/* Google favicon fallback */}
+                                  <img
+                                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                                    alt={bedrijf.naam}
+                                    className="w-12 h-12 object-contain"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).style.display = 'none';
+                                    }}
+                                  />
+                                </>
+                              )}
                             </div>
                             <p className="text-xs text-center font-medium text-slate-700 truncate">{bedrijf.naam}</p>
                             <p className="text-xs text-center text-slate-400">{bedrijf.categorie}</p>
@@ -1137,24 +1149,35 @@ export default function AdminDashboard() {
                         <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
                           <h3 className="text-xl font-semibold text-slate-800 mb-6">Van welk bedrijf is dit logo?</h3>
                           <div className="w-32 h-32 mx-auto bg-slate-100 rounded-xl flex items-center justify-center mb-6 overflow-hidden relative">
-                            {/* Clearbit logo (higher quality) */}
-                            <img
-                              src={`https://logo.clearbit.com/${domain}`}
-                              alt="Logo"
-                              className="max-w-full max-h-full object-contain p-2 absolute inset-0 m-auto"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
-                            {/* Google favicon fallback */}
-                            <img
-                              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
-                              alt="Logo"
-                              className="w-24 h-24 object-contain"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).style.display = 'none';
-                              }}
-                            />
+                            {currentBedrijf.logo ? (
+                              /* Custom logo */
+                              <img
+                                src={currentBedrijf.logo}
+                                alt="Logo"
+                                className="max-w-full max-h-full object-contain p-2"
+                              />
+                            ) : (
+                              <>
+                                {/* Clearbit logo (higher quality) */}
+                                <img
+                                  src={`https://logo.clearbit.com/${domain}`}
+                                  alt="Logo"
+                                  className="max-w-full max-h-full object-contain p-2 absolute inset-0 m-auto"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                                {/* Google favicon fallback */}
+                                <img
+                                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                                  alt="Logo"
+                                  className="w-24 h-24 object-contain"
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              </>
+                            )}
                           </div>
 
                           {showAnswer ? (
@@ -1230,24 +1253,35 @@ export default function AdminDashboard() {
                             <div key={naam} className="text-center p-4 border border-slate-200 rounded-lg">
                               <div className="text-sm text-slate-400 mb-2">#{idx + 1}</div>
                               <div className="w-20 h-20 mx-auto bg-slate-100 rounded-lg flex items-center justify-center mb-3 overflow-hidden relative">
-                                {/* Clearbit logo (higher quality) */}
-                                <img
-                                  src={`https://logo.clearbit.com/${domain}`}
-                                  alt="Logo"
-                                  className="max-w-full max-h-full object-contain p-1 absolute inset-0 m-auto"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                                {/* Google favicon fallback */}
-                                <img
-                                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
-                                  alt="Logo"
-                                  className="w-16 h-16 object-contain"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
+                                {bedrijf.logo ? (
+                                  /* Custom logo */
+                                  <img
+                                    src={bedrijf.logo}
+                                    alt="Logo"
+                                    className="max-w-full max-h-full object-contain p-1"
+                                  />
+                                ) : (
+                                  <>
+                                    {/* Clearbit logo (higher quality) */}
+                                    <img
+                                      src={`https://logo.clearbit.com/${domain}`}
+                                      alt="Logo"
+                                      className="max-w-full max-h-full object-contain p-1 absolute inset-0 m-auto"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                    {/* Google favicon fallback */}
+                                    <img
+                                      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                                      alt="Logo"
+                                      className="w-16 h-16 object-contain"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                  </>
+                                )}
                               </div>
                               <div className="h-8 border-b border-dashed border-slate-300"></div>
                             </div>
