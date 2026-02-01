@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
@@ -182,18 +182,32 @@ const BEDRIJVEN: Bedrijf[] = [
   { naam: 'Welkoop Rijssen', website: 'https://www.welkoop.nl/', categorie: 'Bouwmarkt' },
 ];
 
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz'];
+
 export default function AdminDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState<TabType>('responses');
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [selectedLogos, setSelectedLogos] = useState<Set<string>>(new Set());
   const [quizMode, setQuizMode] = useState<'select' | 'play' | 'print'>('select');
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
+
+  // Get active tab from URL or default to 'responses'
+  const tabParam = searchParams.get('tab');
+  const activeTab: TabType = tabParam && VALID_TABS.includes(tabParam as TabType)
+    ? (tabParam as TabType)
+    : 'responses';
+
+  const setActiveTab = (tab: TabType) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.push(`/admin?${params.toString()}`, { scroll: false });
+  };
 
   useEffect(() => {
     fetchResponses();
