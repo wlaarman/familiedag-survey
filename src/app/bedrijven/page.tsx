@@ -180,6 +180,16 @@ export default function BedrijvenPage() {
   const getLogoUrl = (website: string) => {
     try {
       const domain = new URL(website).hostname;
+      // Use Google's favicon service as primary (works for most sites)
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    } catch {
+      return null;
+    }
+  };
+
+  const getClearbitLogo = (website: string) => {
+    try {
+      const domain = new URL(website).hostname;
       return `https://logo.clearbit.com/${domain}`;
     } catch {
       return null;
@@ -234,15 +244,26 @@ export default function BedrijvenPage() {
                   : 'border-slate-200 hover:border-slate-300'
               }`}
             >
-              <div className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+              <div className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden relative">
+                {/* Try Clearbit logo first (higher quality) */}
                 <img
-                  src={getLogoUrl(bedrijf.website) || ''}
+                  src={getClearbitLogo(bedrijf.website) || ''}
                   alt={bedrijf.naam}
-                  className="max-w-full max-h-full object-contain p-2"
+                  className="max-w-full max-h-full object-contain p-2 absolute inset-0 m-auto"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
-                    target.parentElement!.innerHTML = `<span class="text-3xl font-bold text-slate-300">${bedrijf.naam.charAt(0)}</span>`;
+                  }}
+                />
+                {/* Google favicon as fallback (always works) */}
+                <img
+                  src={getLogoUrl(bedrijf.website) || ''}
+                  alt={bedrijf.naam}
+                  className="w-16 h-16 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.parentElement!.innerHTML += `<span class="text-3xl font-bold text-slate-300">${bedrijf.naam.charAt(0)}</span>`;
                   }}
                 />
               </div>
