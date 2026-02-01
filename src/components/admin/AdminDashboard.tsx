@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz';
 
 interface Statistics {
   total: number;
@@ -47,6 +47,41 @@ interface MarriedCouple {
   dateStr: string;
 }
 
+interface Bedrijf {
+  naam: string;
+  website: string;
+  categorie: string;
+}
+
+// Rijssense bedrijven voor logo quiz
+const BEDRIJVEN: Bedrijf[] = [
+  { naam: 'Ter Steege Groep', website: 'https://www.tersteegegroep.nl/', categorie: 'Bouw' },
+  { naam: 'VolkerWessels', website: 'https://www.volkerwessels.com/', categorie: 'Bouw' },
+  { naam: 'Nijhuis Bouw', website: 'https://www.nijhuis.nl/', categorie: 'Bouw' },
+  { naam: 'Voortman Steel Group', website: 'https://www.voortmansteelgroup.com/nl/', categorie: 'Industrie' },
+  { naam: 'Reginox', website: 'https://www.reginox.nl/', categorie: 'Industrie' },
+  { naam: 'Nijhof-Wassink', website: 'https://www.nijhof-wassink.com/', categorie: 'Transport' },
+  { naam: 'Harbers Trucks', website: 'https://www.harberstrucks.nl/', categorie: 'Transport' },
+  { naam: 'Munsterhuis', website: 'https://www.munsterhuis.nl/', categorie: 'Auto' },
+  { naam: 'Knobben Caravans', website: 'https://www.knobbencaravans.nl/', categorie: 'Auto' },
+  { naam: 'Bakkerij Otten', website: 'https://www.bakkerij-otten.nl/', categorie: 'Bakker' },
+  { naam: 'Meinders De Echte Bakker', website: 'https://bakkermeinders.nl/', categorie: 'Bakker' },
+  { naam: 'Keurslager Beverdam', website: 'https://beverdam.keurslager.nl/', categorie: 'Slager' },
+  { naam: 'Gildeslager Goossen', website: 'https://www.slagerijgoossen.nl/', categorie: 'Slager' },
+  { naam: 'VIF Jeans', website: 'https://vifjeans.nl/', categorie: 'Mode' },
+  { naam: 'Sans Mode', website: 'https://www.sans.nl/', categorie: 'Mode' },
+  { naam: 'Unique Mode', website: 'https://www.uniquemode.nl/', categorie: 'Mode' },
+  { naam: 'Brodshoes', website: 'https://www.brodshoes.nl/', categorie: 'Schoenen' },
+  { naam: 'Restaurant De Kroon', website: 'https://www.dekroonrijssen.nl/', categorie: 'Horeca' },
+  { naam: 'De Markies', website: 'https://www.demarkies.com/', categorie: 'Horeca' },
+  { naam: 'Tuincentrum Veeneslagen', website: 'https://www.tuincentrumveeneslagen.nl/', categorie: 'Tuin' },
+  { naam: 'Voortman Keukens', website: 'https://www.voortmankeukens.nl/', categorie: 'Wonen' },
+  { naam: 'Reggeborgh', website: 'https://reggeborgh.nl/', categorie: 'Investering' },
+  { naam: 'Gamma Rijssen', website: 'https://www.gamma.nl/', categorie: 'Bouwmarkt' },
+  { naam: 'Juwelier Asbroek', website: 'https://www.juwelierasbroek.nl/', categorie: 'Juwelier' },
+  { naam: 'Apotheek de Weijerd', website: 'https://www.apotheekdeweijerd.nl/', categorie: 'Apotheek' },
+];
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
@@ -54,6 +89,11 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('responses');
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [selectedLogos, setSelectedLogos] = useState<Set<string>>(new Set());
+  const [quizMode, setQuizMode] = useState<'select' | 'play' | 'print'>('select');
+  const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [score, setScore] = useState(0);
 
   useEffect(() => {
     fetchResponses();
@@ -496,6 +536,7 @@ export default function AdminDashboard() {
                 { id: 'photos', label: `Foto's (${stats.photos.length})`, icon: '📷' },
                 { id: 'anekdotes', label: `Anekdotes (${stats.anekdotes.length})`, icon: '💬' },
                 { id: 'feitjes', label: `Feitjes (${funFacts.facts.length})`, icon: '✨' },
+                { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -867,6 +908,209 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Logo Quiz Tab */}
+            {activeTab === 'logoquiz' && (
+              <div>
+                {quizMode === 'select' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Selecteer Logo's voor de Quiz</h3>
+                        <p className="text-sm text-slate-500">{selectedLogos.size} geselecteerd</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {selectedLogos.size >= 4 && (
+                          <>
+                            <button
+                              onClick={() => { setQuizMode('play'); setCurrentQuizIndex(0); setScore(0); setShowAnswer(false); }}
+                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                            >
+                              ▶ Start Quiz
+                            </button>
+                            <button
+                              onClick={() => setQuizMode('print')}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                            >
+                              🖨 Print Quiz
+                            </button>
+                          </>
+                        )}
+                        <a
+                          href="/bedrijven"
+                          target="_blank"
+                          className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium"
+                        >
+                          Uitgebreid overzicht →
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {BEDRIJVEN.map((bedrijf) => {
+                        const domain = new URL(bedrijf.website).hostname;
+                        const isSelected = selectedLogos.has(bedrijf.naam);
+                        return (
+                          <div
+                            key={bedrijf.naam}
+                            onClick={() => {
+                              const newSet = new Set(selectedLogos);
+                              if (isSelected) newSet.delete(bedrijf.naam);
+                              else newSet.add(bedrijf.naam);
+                              setSelectedLogos(newSet);
+                            }}
+                            className={`bg-white rounded-xl p-3 border-2 cursor-pointer transition-all hover:shadow-lg ${
+                              isSelected ? 'border-green-500 ring-2 ring-green-200' : 'border-slate-200'
+                            }`}
+                          >
+                            <div className="aspect-square bg-slate-50 rounded-lg mb-2 flex items-center justify-center">
+                              <img
+                                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                                alt={bedrijf.naam}
+                                className="w-12 h-12 object-contain"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-center font-medium text-slate-700 truncate">{bedrijf.naam}</p>
+                            <p className="text-xs text-center text-slate-400">{bedrijf.categorie}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {quizMode === 'play' && (
+                  <div className="max-w-2xl mx-auto">
+                    <div className="flex items-center justify-between mb-6">
+                      <button
+                        onClick={() => setQuizMode('select')}
+                        className="text-slate-600 hover:text-slate-800"
+                      >
+                        ← Terug
+                      </button>
+                      <div className="text-sm text-slate-600">
+                        Vraag {currentQuizIndex + 1} / {selectedLogos.size} • Score: {score}
+                      </div>
+                    </div>
+
+                    {(() => {
+                      const selectedArray = Array.from(selectedLogos);
+                      const currentBedrijf = BEDRIJVEN.find(b => b.naam === selectedArray[currentQuizIndex]);
+                      if (!currentBedrijf) return null;
+                      const domain = new URL(currentBedrijf.website).hostname;
+
+                      return (
+                        <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
+                          <h3 className="text-xl font-semibold text-slate-800 mb-6">Van welk bedrijf is dit logo?</h3>
+                          <div className="w-32 h-32 mx-auto bg-slate-100 rounded-xl flex items-center justify-center mb-6">
+                            <img
+                              src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                              alt="Logo"
+                              className="w-24 h-24 object-contain"
+                            />
+                          </div>
+
+                          {showAnswer ? (
+                            <div>
+                              <p className="text-2xl font-bold text-green-600 mb-4">{currentBedrijf.naam}</p>
+                              <p className="text-slate-500 mb-6">{currentBedrijf.categorie}</p>
+                              {currentQuizIndex < selectedArray.length - 1 ? (
+                                <button
+                                  onClick={() => { setCurrentQuizIndex(i => i + 1); setShowAnswer(false); }}
+                                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                                >
+                                  Volgende →
+                                </button>
+                              ) : (
+                                <div>
+                                  <p className="text-lg font-semibold text-slate-800 mb-4">Quiz voltooid! Score: {score}/{selectedArray.length}</p>
+                                  <button
+                                    onClick={() => setQuizMode('select')}
+                                    className="px-6 py-3 bg-slate-600 text-white rounded-lg hover:bg-slate-700 font-medium"
+                                  >
+                                    Opnieuw
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex gap-3 justify-center">
+                              <button
+                                onClick={() => { setShowAnswer(true); setScore(s => s + 1); }}
+                                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                              >
+                                ✓ Wist ik!
+                              </button>
+                              <button
+                                onClick={() => setShowAnswer(true)}
+                                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                              >
+                                ✗ Toon antwoord
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {quizMode === 'print' && (
+                  <div>
+                    <div className="flex items-center justify-between mb-6 print:hidden">
+                      <button
+                        onClick={() => setQuizMode('select')}
+                        className="text-slate-600 hover:text-slate-800"
+                      >
+                        ← Terug
+                      </button>
+                      <button
+                        onClick={() => window.print()}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      >
+                        🖨 Printen
+                      </button>
+                    </div>
+
+                    <div className="bg-white rounded-xl p-6 border border-slate-200">
+                      <h2 className="text-2xl font-bold text-center mb-8">Logo Quiz - Rijssense Bedrijven</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                        {Array.from(selectedLogos).map((naam, idx) => {
+                          const bedrijf = BEDRIJVEN.find(b => b.naam === naam);
+                          if (!bedrijf) return null;
+                          const domain = new URL(bedrijf.website).hostname;
+                          return (
+                            <div key={naam} className="text-center p-4 border border-slate-200 rounded-lg">
+                              <div className="text-sm text-slate-400 mb-2">#{idx + 1}</div>
+                              <div className="w-20 h-20 mx-auto bg-slate-100 rounded-lg flex items-center justify-center mb-3">
+                                <img
+                                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
+                                  alt="Logo"
+                                  className="w-16 h-16 object-contain"
+                                />
+                              </div>
+                              <div className="h-8 border-b border-dashed border-slate-300"></div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-12 pt-8 border-t border-slate-200">
+                        <h3 className="font-semibold mb-4">Antwoorden:</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          {Array.from(selectedLogos).map((naam, idx) => (
+                            <div key={naam}>#{idx + 1}: {naam}</div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
