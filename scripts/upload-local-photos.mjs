@@ -12,6 +12,7 @@ const MAPPINGS = [
   { pattern: /^marieke \(1\)\.jpeg$/i, id: 17, field: 'foto_1_url', name: 'Marieke' },
   { pattern: /^oom gerrit \(1\)\.jpeg$/i, id: 16, field: 'foto_1_url', name: 'Gerrit' },
   { pattern: /^aleida\.jpeg$/i, id: 16, field: 'foto_2_url', name: 'Aleida' },
+  { pattern: /^nienke \(1\)\.jpeg$/i, id: 21, field: 'foto_1_url', name: 'Nienke' },
 ];
 
 async function uploadPhoto(filePath, filename) {
