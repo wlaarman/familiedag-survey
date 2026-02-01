@@ -46,6 +46,17 @@ const bedrijven: Bedrijf[] = [
   { naam: 'Brodshoes', website: 'https://www.brodshoes.nl/', categorie: 'Retail' },
   { naam: 'Pongers', website: 'https://www.pongers.nl/', categorie: 'Retail' },
 
+  // Bakkerijen
+  { naam: 'Bakkerij Otten', website: 'https://www.bakkerij-otten.nl/', categorie: 'Bakker' },
+  { naam: 'Meinders De Echte Bakker', website: 'https://bakkermeinders.nl/', categorie: 'Bakker' },
+  { naam: 'Van Otten Patissier', website: 'https://www.vanotten.nl/', categorie: 'Bakker' },
+
+  // Slagerijen
+  { naam: 'Keurslager Beverdam', website: 'https://beverdam.keurslager.nl/', categorie: 'Slager' },
+  { naam: 'Gildeslager Goossen', website: 'https://www.slagerijgoossen.nl/', categorie: 'Slager' },
+  { naam: 'Slagerij Beimer', website: 'https://www.beimermeat.nl/', categorie: 'Slager' },
+  { naam: 'Huiskes Slagerij', website: 'https://www.huiskesslagerij.nl/', categorie: 'Slager' },
+
   // Overig
   { naam: 'Teunis Groep', website: 'https://www.teunis.nl/', categorie: 'Diensten' },
   { naam: 'Reggeborgh', website: 'https://reggeborgh.nl/', categorie: 'Investering' },
