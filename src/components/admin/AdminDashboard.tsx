@@ -1453,30 +1453,51 @@ export default function AdminDashboard() {
                   <div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-800">Raad de Straat!</h3>
-                        <p className="text-sm text-slate-500">{streetviewItems.length} street view foto's</p>
+                        <h3 className="text-lg font-semibold text-slate-800">Quiz Rondes</h3>
+                        <p className="text-sm text-slate-500">{streetviewItems.length} straten &bull; {stats.photos.length} portretfoto's</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <a
                           href="/admin/quiz/straat?mode=quiz&variant=normaal"
                           target="_blank"
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center"
+                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center text-sm"
                         >
-                          Quiz (normaal)
+                          Straat (normaal)
                         </a>
                         <a
                           href="/admin/quiz/straat?mode=quiz&variant=moeilijk"
                           target="_blank"
-                          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-center"
+                          className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-center text-sm"
                         >
-                          Quiz (moeilijk)
+                          Straat (moeilijk)
+                        </a>
+                        <a
+                          href="/admin/quiz/fotos?mode=quiz&variant=normaal"
+                          target="_blank"
+                          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-center text-sm"
+                        >
+                          Foto's (kleur)
+                        </a>
+                        <a
+                          href="/admin/quiz/fotos?mode=quiz&variant=moeilijk"
+                          target="_blank"
+                          className="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 font-medium text-center text-sm"
+                        >
+                          Foto's (zwart-wit)
                         </a>
                         <a
                           href="/admin/quiz/straat?mode=antwoorden"
                           target="_blank"
-                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center"
+                          className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
                         >
-                          Antwoordblad
+                          Antwoorden straat
+                        </a>
+                        <a
+                          href="/admin/quiz/fotos?mode=antwoorden"
+                          target="_blank"
+                          className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
+                        >
+                          Antwoorden foto's
                         </a>
                       </div>
                     </div>
