@@ -1020,19 +1020,42 @@ export default function AdminDashboard() {
             {/* Photos Tab */}
             {activeTab === 'photos' && (
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold text-slate-800">{stats.photos.length} Foto's</h3>
-                  {stats.photos.length > 0 && (
-                    <button
-                      onClick={downloadAllPhotos}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center gap-2"
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <h3 className="text-lg font-semibold text-slate-800">{stats.photos.length} Foto&apos;s</h3>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href="/admin/quiz/fotos?mode=quiz&variant=normaal"
+                      target="_blank"
+                      className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-sm"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      Download Alle Foto's
-                    </button>
-                  )}
+                      Quiz (kleur)
+                    </a>
+                    <a
+                      href="/admin/quiz/fotos?mode=quiz&variant=moeilijk"
+                      target="_blank"
+                      className="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 font-medium text-sm"
+                    >
+                      Quiz (zwart-wit)
+                    </a>
+                    <a
+                      href="/admin/quiz/fotos?mode=antwoorden"
+                      target="_blank"
+                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
+                    >
+                      Antwoorden
+                    </a>
+                    {stats.photos.length > 0 && (
+                      <button
+                        onClick={downloadAllPhotos}
+                        className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center gap-2 text-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download alle
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {stats.photos.length === 0 ? (
                   <p className="text-slate-500 text-center py-8">Nog geen foto's geupload</p>
@@ -1453,8 +1476,8 @@ export default function AdminDashboard() {
                   <div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-800">Quiz Rondes</h3>
-                        <p className="text-sm text-slate-500">{streetviewItems.length} straten &bull; {stats.photos.length} portretfoto's</p>
+                        <h3 className="text-lg font-semibold text-slate-800">Raad de Straat!</h3>
+                        <p className="text-sm text-slate-500">{streetviewItems.length} street view foto's</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <a
@@ -1462,42 +1485,21 @@ export default function AdminDashboard() {
                           target="_blank"
                           className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center text-sm"
                         >
-                          Straat (normaal)
+                          Quiz (normaal)
                         </a>
                         <a
                           href="/admin/quiz/straat?mode=quiz&variant=moeilijk"
                           target="_blank"
                           className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-center text-sm"
                         >
-                          Straat (moeilijk)
-                        </a>
-                        <a
-                          href="/admin/quiz/fotos?mode=quiz&variant=normaal"
-                          target="_blank"
-                          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-center text-sm"
-                        >
-                          Foto's (kleur)
-                        </a>
-                        <a
-                          href="/admin/quiz/fotos?mode=quiz&variant=moeilijk"
-                          target="_blank"
-                          className="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 font-medium text-center text-sm"
-                        >
-                          Foto's (zwart-wit)
+                          Quiz (moeilijk)
                         </a>
                         <a
                           href="/admin/quiz/straat?mode=antwoorden"
                           target="_blank"
                           className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
                         >
-                          Antwoorden straat
-                        </a>
-                        <a
-                          href="/admin/quiz/fotos?mode=antwoorden"
-                          target="_blank"
-                          className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
-                        >
-                          Antwoorden foto's
+                          Antwoorden
                         </a>
                       </div>
                     </div>
