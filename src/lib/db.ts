@@ -92,6 +92,19 @@ export async function createTables() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+
+  // Streetview quiz table
+  await sql`
+    CREATE TABLE IF NOT EXISTS streetview_quiz (
+      id SERIAL PRIMARY KEY,
+      question_number INTEGER NOT NULL,
+      response_id INTEGER,
+      blob_url TEXT NOT NULL,
+      address TEXT NOT NULL,
+      names TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
 }
 
 export async function insertSurveyResponse(data: SurveyData): Promise<number> {
@@ -190,4 +203,19 @@ export async function setCustomLogo(bedrijfNaam: string, logoUrl: string): Promi
 
 export async function deleteCustomLogo(bedrijfNaam: string): Promise<void> {
   await sql`DELETE FROM custom_logos WHERE bedrijf_naam = ${bedrijfNaam}`;
+}
+
+// Streetview quiz functions
+export interface StreetviewQuizItem {
+  id: number;
+  question_number: number;
+  response_id: number | null;
+  blob_url: string;
+  address: string;
+  names: string;
+}
+
+export async function getStreetviewQuiz(): Promise<StreetviewQuizItem[]> {
+  const result = await sql`SELECT * FROM streetview_quiz ORDER BY question_number ASC`;
+  return result.rows as StreetviewQuizItem[];
 }

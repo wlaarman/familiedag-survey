@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz';
 
 interface Statistics {
   total: number;
@@ -183,7 +183,15 @@ const BEDRIJVEN: Bedrijf[] = [
   { naam: 'Welkoop Rijssen', website: 'https://www.welkoop.nl/', categorie: 'Bouwmarkt' },
 ];
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz'];
+interface StreetviewQuizItem {
+  id: number;
+  question_number: number;
+  blob_url: string;
+  address: string;
+  names: string;
+}
+
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -199,6 +207,8 @@ export default function AdminDashboard() {
   const [score, setScore] = useState(0);
   const [customLogos, setCustomLogos] = useState<Record<string, string>>({});
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
+  const [streetviewItems, setStreetviewItems] = useState<StreetviewQuizItem[]>([]);
+  const [streetviewLoading, setStreetviewLoading] = useState(false);
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -226,6 +236,21 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error('Failed to fetch custom logos:', err);
+    }
+  };
+
+  const fetchStreetviewQuiz = async () => {
+    setStreetviewLoading(true);
+    try {
+      const response = await fetch('/api/quiz/streetview');
+      if (response.ok) {
+        const { items } = await response.json();
+        setStreetviewItems(items || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch streetview quiz:', err);
+    } finally {
+      setStreetviewLoading(false);
     }
   };
 
@@ -721,6 +746,7 @@ export default function AdminDashboard() {
                 { id: 'anekdotes', label: 'Anekdotes', icon: '💬', count: stats.anekdotes.length },
                 { id: 'feitjes', label: 'Feitjes', icon: '✨', count: funFacts.facts.length },
                 { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
+                { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1400,6 +1426,73 @@ export default function AdminDashboard() {
                           ))}
                         </div>
                       </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Straat Quiz Tab */}
+            {activeTab === 'straatquiz' && (
+              <div>
+                {streetviewItems.length === 0 && !streetviewLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500 mb-4">Nog geen streetview foto's geladen.</p>
+                    <button
+                      onClick={fetchStreetviewQuiz}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                    >
+                      Laden
+                    </button>
+                  </div>
+                ) : streetviewLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Raad de Straat!</h3>
+                        <p className="text-sm text-slate-500">{streetviewItems.length} street view foto's</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href="/admin/quiz/straat?mode=quiz"
+                          target="_blank"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center"
+                        >
+                          Open quiz (voor scherm)
+                        </a>
+                        <a
+                          href="/admin/quiz/straat?mode=antwoorden"
+                          target="_blank"
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center"
+                        >
+                          Open antwoordblad
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {streetviewItems.map((item) => (
+                        <div key={item.id} className="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                          <div className="aspect-[16/10] bg-slate-100 relative">
+                            <img
+                              src={item.blob_url}
+                              alt={`Vraag ${item.question_number}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute top-2 left-2 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow">
+                              {item.question_number}
+                            </div>
+                          </div>
+                          <div className="p-3">
+                            <p className="font-medium text-slate-800 text-sm truncate">{item.names}</p>
+                            <p className="text-xs text-slate-500 truncate">{item.address}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
