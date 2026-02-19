@@ -161,6 +161,14 @@ export async function deleteResponse(id: number): Promise<void> {
   await sql`DELETE FROM survey_responses WHERE id = ${id}`;
 }
 
+export async function updateResponsePhoto(id: number, field: 'foto_1_url' | 'foto_2_url', url: string | null): Promise<void> {
+  if (field === 'foto_1_url') {
+    await sql`UPDATE survey_responses SET foto_1_url = ${url}, foto_1_later = false WHERE id = ${id}`;
+  } else {
+    await sql`UPDATE survey_responses SET foto_2_url = ${url}, foto_2_later = false WHERE id = ${id}`;
+  }
+}
+
 // Custom logos functions
 export async function getCustomLogos(): Promise<Record<string, string>> {
   const result = await sql`SELECT bedrijf_naam, logo_url FROM custom_logos`;

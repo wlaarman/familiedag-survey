@@ -3,6 +3,7 @@ import { isAuthenticated } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 import { SurveyResponse } from '@/types/survey';
 import Link from 'next/link';
+import AdminPhotoUpload from '@/components/admin/AdminPhotoUpload';
 
 async function getResponse(id: string): Promise<SurveyResponse | null> {
   try {
@@ -120,48 +121,24 @@ export default async function ResponseDetailPage({ params }: { params: Promise<{
 
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
         {/* Photos */}
-        {(response.foto_1_url || response.foto_2_url || response.foto_1_later || response.foto_2_later) && (
-          <Section title="Foto's" icon="📸">
-            <div className="flex gap-6 flex-wrap">
-              <div className="text-center">
-                <p className="text-sm text-slate-500 mb-2">Persoon 1</p>
-                {response.foto_1_url ? (
-                  <a href={response.foto_1_url} target="_blank" rel="noopener noreferrer" className="block group">
-                    <img src={response.foto_1_url} alt="Foto 1" className="w-40 h-40 object-cover rounded-xl shadow-md group-hover:ring-2 group-hover:ring-blue-400 transition-all" />
-                    <span className="text-xs text-blue-600 mt-1 block group-hover:underline">Bekijk volledig</span>
-                  </a>
-                ) : response.foto_1_later ? (
-                  <div className="w-40 h-40 bg-amber-50 border-2 border-dashed border-amber-200 rounded-xl flex items-center justify-center text-amber-600 text-sm">
-                    Stuurt later via app
-                  </div>
-                ) : (
-                  <div className="w-40 h-40 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
-                    Geen foto
-                  </div>
-                )}
-              </div>
-              {response.heeft_partner && (
-                <div className="text-center">
-                  <p className="text-sm text-slate-500 mb-2">Persoon 2</p>
-                  {response.foto_2_url ? (
-                    <a href={response.foto_2_url} target="_blank" rel="noopener noreferrer" className="block group">
-                      <img src={response.foto_2_url} alt="Foto 2" className="w-40 h-40 object-cover rounded-xl shadow-md group-hover:ring-2 group-hover:ring-pink-400 transition-all" />
-                      <span className="text-xs text-pink-600 mt-1 block group-hover:underline">Bekijk volledig</span>
-                    </a>
-                  ) : response.foto_2_later ? (
-                    <div className="w-40 h-40 bg-amber-50 border-2 border-dashed border-amber-200 rounded-xl flex items-center justify-center text-amber-600 text-sm">
-                      Stuurt later via app
-                    </div>
-                  ) : (
-                    <div className="w-40 h-40 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400">
-                      Geen foto
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </Section>
-        )}
+        <Section title="Foto's" icon="📸">
+          <div className="flex gap-6 flex-wrap">
+            <AdminPhotoUpload
+              responseId={response.id}
+              field="foto_1_url"
+              currentUrl={response.foto_1_url}
+              label="Persoon 1"
+            />
+            {response.heeft_partner && (
+              <AdminPhotoUpload
+                responseId={response.id}
+                field="foto_2_url"
+                currentUrl={response.foto_2_url}
+                label="Persoon 2"
+              />
+            )}
+          </div>
+        </Section>
 
         {/* Personal Info */}
         <Section title="Persoonlijke gegevens" icon="👤">
