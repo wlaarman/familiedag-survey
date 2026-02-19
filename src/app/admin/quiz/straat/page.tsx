@@ -6,14 +6,17 @@ import PrintButton from './PrintButton';
 export default async function StreetviewQuizPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; variant?: string }>;
 }) {
   const authenticated = await isAuthenticated();
   if (!authenticated) redirect('/admin/login');
 
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
+  const variant = params.variant === 'moeilijk' ? 'moeilijk' : 'normaal';
   const items = await getStreetviewQuiz();
+
+  const hasHardVariant = items.some(i => i.blob_url_hard);
 
   return (
     <div className="min-h-screen bg-white">
@@ -27,9 +30,21 @@ export default async function StreetviewQuizPage({
             &larr; Terug naar admin
           </a>
           <div className="flex items-center gap-3">
+            {hasHardVariant && (
+              <a
+                href={`/admin/quiz/straat?mode=${mode}&variant=${variant === 'normaal' ? 'moeilijk' : 'normaal'}`}
+                className={`px-3 py-2 rounded-lg font-medium text-sm ${
+                  variant === 'moeilijk'
+                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {variant === 'normaal' ? 'Moeilijke variant' : 'Normale variant'}
+              </a>
+            )}
             <a
-              href={`/admin/quiz/straat?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}`}
-              className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium"
+              href={`/admin/quiz/straat?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}&variant=${variant}`}
+              className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
             >
               {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk quiz'}
             </a>
@@ -45,6 +60,11 @@ export default async function StreetviewQuizPage({
           <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
             Raad de Straat!
           </h1>
+          {variant === 'moeilijk' && (
+            <span className="inline-block mt-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium print:bg-orange-50">
+              Moeilijke variant
+            </span>
+          )}
           <p className="text-slate-500 mt-2 print:text-sm">
             {mode === 'quiz'
               ? 'Bij welk familielid hoort deze straat? Schrijf de naam op de stippellijn.'
@@ -61,45 +81,51 @@ export default async function StreetviewQuizPage({
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-6 print:gap-4 print:grid-cols-2">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="border border-slate-200 rounded-xl overflow-hidden print:rounded-lg print:break-inside-avoid"
-              >
-                {/* Photo */}
-                <div className="aspect-[16/10] bg-slate-100 relative">
-                  <img
-                    src={item.blob_url}
-                    alt={`Vraag ${item.question_number}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg print:w-6 print:h-6 print:text-xs">
-                    {item.question_number}
+            {items.map((item) => {
+              const photoUrl = variant === 'moeilijk' && item.blob_url_hard
+                ? item.blob_url_hard
+                : item.blob_url;
+
+              return (
+                <div
+                  key={item.id}
+                  className="border border-slate-200 rounded-xl overflow-hidden print:rounded-lg print:break-inside-avoid"
+                >
+                  {/* Photo */}
+                  <div className="aspect-[16/10] bg-slate-100 relative">
+                    <img
+                      src={photoUrl}
+                      alt={`Vraag ${item.question_number}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg print:w-6 print:h-6 print:text-xs">
+                      {item.question_number}
+                    </div>
+                  </div>
+
+                  {/* Answer area */}
+                  <div className="p-4 print:p-3">
+                    {mode === 'quiz' ? (
+                      <div>
+                        <p className="text-xs text-slate-400 mb-2 print:mb-1">
+                          Wie woont hier?
+                        </p>
+                        <div className="border-b-2 border-dashed border-slate-300 h-8 print:h-6" />
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="font-semibold text-slate-800 text-sm">
+                          {item.names}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {item.address}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-
-                {/* Answer area */}
-                <div className="p-4 print:p-3">
-                  {mode === 'quiz' ? (
-                    <div>
-                      <p className="text-xs text-slate-400 mb-2 print:mb-1">
-                        Wie woont hier?
-                      </p>
-                      <div className="border-b-2 border-dashed border-slate-300 h-8 print:h-6" />
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="font-semibold text-slate-800 text-sm">
-                        {item.names}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {item.address}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

@@ -100,11 +100,13 @@ export async function createTables() {
       question_number INTEGER NOT NULL,
       response_id INTEGER,
       blob_url TEXT NOT NULL,
+      blob_url_hard TEXT,
       address TEXT NOT NULL,
       names TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_hard TEXT`;
 }
 
 export async function insertSurveyResponse(data: SurveyData): Promise<number> {
@@ -211,6 +213,7 @@ export interface StreetviewQuizItem {
   question_number: number;
   response_id: number | null;
   blob_url: string;
+  blob_url_hard: string | null;
   address: string;
   names: string;
 }

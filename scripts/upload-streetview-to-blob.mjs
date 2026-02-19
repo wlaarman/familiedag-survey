@@ -1,9 +1,10 @@
 import { sql } from '@vercel/postgres';
 import { put } from '@vercel/blob';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const STREETVIEW_DIR = 'streetview-photos';
+const HARD_DIR = join(STREETVIEW_DIR, 'hard');
 const OVERZICHT_PATH = join(STREETVIEW_DIR, '_overzicht.json');
 
 function normalizeAddress(addr) {
@@ -11,10 +12,8 @@ function normalizeAddress(addr) {
 }
 
 function countNames(nameStr) {
-  // Count the number of individual names (split by & and count non-empty parts)
   return nameStr.split('&').filter(s => s.trim().length > 0).length +
     nameStr.split('&').reduce((acc, part) => {
-      // Count words in each part (first + last name = more specific)
       return acc + part.trim().split(/\s+/).filter(w => w.length > 1).length;
     }, 0);
 }
@@ -26,17 +25,19 @@ async function createTable() {
       question_number INTEGER NOT NULL,
       response_id INTEGER,
       blob_url TEXT NOT NULL,
+      blob_url_hard TEXT,
       address TEXT NOT NULL,
       names TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_hard TEXT`;
   console.log('✅ Tabel streetview_quiz aangemaakt/gecontroleerd');
 }
 
-async function uploadPhoto(filePath, filename) {
+async function uploadPhoto(filePath, prefix, filename) {
   const fileBuffer = readFileSync(filePath);
-  const blobFilename = `streetview/${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+  const blobFilename = `streetview/${prefix}${Date.now()}-${filename.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
 
   const blob = await put(blobFilename, fileBuffer, {
     access: 'public',
@@ -47,7 +48,6 @@ async function uploadPhoto(filePath, filename) {
 }
 
 async function main() {
-  // Read overzicht
   const overzicht = JSON.parse(readFileSync(OVERZICHT_PATH, 'utf-8'));
   console.log(`📋 ${overzicht.length} entries geladen uit _overzicht.json`);
 
@@ -64,7 +64,6 @@ async function main() {
   console.log(`🏠 ${addressGroups.size} unieke adressen gevonden`);
   console.log('---');
 
-  // Pick best entry per address (most names = most complete)
   const deduplicated = [];
   for (const [addr, entries] of addressGroups) {
     if (entries.length > 1) {
@@ -74,29 +73,34 @@ async function main() {
     deduplicated.push(entries[0]);
   }
 
-  console.log(`\n📸 ${deduplicated.length} foto's te uploaden`);
+  const hasHard = existsSync(HARD_DIR);
+  console.log(`\n📸 ${deduplicated.length} foto's te uploaden ${hasHard ? '(normaal + moeilijk)' : '(alleen normaal)'}`);
   console.log('---');
 
-  // Create table
   await createTable();
 
-  // Clear existing quiz data
   await sql`DELETE FROM streetview_quiz`;
   console.log('🗑️  Bestaande quiz data gewist');
 
-  // Upload and insert
   let questionNumber = 1;
   for (const entry of deduplicated) {
     const filePath = join(STREETVIEW_DIR, entry.filename);
+    const hardPath = join(HARD_DIR, entry.filename);
     console.log(`📤 #${questionNumber}: ${entry.name} (${entry.address})...`);
 
     try {
-      const url = await uploadPhoto(filePath, entry.filename);
-      console.log(`   ✅ Uploaded: ${url}`);
+      const url = await uploadPhoto(filePath, '', entry.filename);
+      console.log(`   ✅ Normaal: ${url}`);
+
+      let hardUrl = null;
+      if (hasHard && existsSync(hardPath)) {
+        hardUrl = await uploadPhoto(hardPath, 'hard-', entry.filename);
+        console.log(`   ✅ Moeilijk: ${hardUrl}`);
+      }
 
       await sql`
-        INSERT INTO streetview_quiz (question_number, response_id, blob_url, address, names)
-        VALUES (${questionNumber}, ${entry.id}, ${url}, ${entry.address.trim()}, ${entry.name.trim()})
+        INSERT INTO streetview_quiz (question_number, response_id, blob_url, blob_url_hard, address, names)
+        VALUES (${questionNumber}, ${entry.id}, ${url}, ${hardUrl}, ${entry.address.trim()}, ${entry.name.trim()})
       `;
       console.log(`   ✅ Database opgeslagen`);
 

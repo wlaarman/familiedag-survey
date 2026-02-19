@@ -1458,18 +1458,25 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <a
-                          href="/admin/quiz/straat?mode=quiz"
+                          href="/admin/quiz/straat?mode=quiz&variant=normaal"
                           target="_blank"
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center"
                         >
-                          Open quiz (voor scherm)
+                          Quiz (normaal)
+                        </a>
+                        <a
+                          href="/admin/quiz/straat?mode=quiz&variant=moeilijk"
+                          target="_blank"
+                          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-center"
+                        >
+                          Quiz (moeilijk)
                         </a>
                         <a
                           href="/admin/quiz/straat?mode=antwoorden"
                           target="_blank"
                           className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center"
                         >
-                          Open antwoordblad
+                          Antwoordblad
                         </a>
                       </div>
                     </div>
