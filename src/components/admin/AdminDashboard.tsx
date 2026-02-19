@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz';
 
 interface Statistics {
   total: number;
@@ -191,7 +191,7 @@ interface StreetviewQuizItem {
   names: string;
 }
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz'];
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -747,6 +747,7 @@ export default function AdminDashboard() {
                 { id: 'feitjes', label: 'Feitjes', icon: '✨', count: funFacts.facts.length },
                 { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
                 { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
+                { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1526,6 +1527,38 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Cijfer Quiz Tab */}
+            {activeTab === 'cijferquiz' && (
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Cijferronde</h3>
+                    <p className="text-sm text-slate-500">Automatisch gegenereerd uit {responses.length} inzendingen</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href="/admin/quiz/cijfers?mode=quiz"
+                      target="_blank"
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
+                    >
+                      Open quiz
+                    </a>
+                    <a
+                      href="/admin/quiz/cijfers?mode=antwoorden"
+                      target="_blank"
+                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
+                    >
+                      Antwoorden
+                    </a>
+                  </div>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                  <p className="font-medium mb-1">Dynamisch gegenereerd</p>
+                  <p>De vragen worden automatisch gegenereerd uit de huidige enquêtedata. Als er nieuwe inzendingen binnenkomen, veranderen de vragen en antwoorden mee. Open de quiz opnieuw voor de laatste versie.</p>
+                </div>
               </div>
             )}
           </div>
