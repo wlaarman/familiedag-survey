@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3';
 
 interface Statistics {
   total: number;
@@ -191,7 +191,7 @@ interface StreetviewQuizItem {
   names: string;
 }
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz'];
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -748,6 +748,7 @@ export default function AdminDashboard() {
                 { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
                 { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
                 { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
+                { id: 'wievande3', label: 'Wie van de 3', icon: '🤔' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1558,6 +1559,38 @@ export default function AdminDashboard() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
                   <p className="font-medium mb-1">Dynamisch gegenereerd</p>
                   <p>De vragen worden automatisch gegenereerd uit de huidige enquêtedata. Als er nieuwe inzendingen binnenkomen, veranderen de vragen en antwoorden mee. Open de quiz opnieuw voor de laatste versie.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Wie van de 3 Tab */}
+            {activeTab === 'wievande3' && (
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-800">Wie van de 3?</h3>
+                    <p className="text-sm text-slate-500">3 namen, 1 juist antwoord - automatisch gegenereerd</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href="/admin/quiz/wie-van-de-3?mode=quiz"
+                      target="_blank"
+                      className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
+                    >
+                      Open quiz
+                    </a>
+                    <a
+                      href="/admin/quiz/wie-van-de-3?mode=antwoorden"
+                      target="_blank"
+                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
+                    >
+                      Antwoorden
+                    </a>
+                  </div>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                  <p className="font-medium mb-1">Dynamisch gegenereerd</p>
+                  <p>Vragen worden samengesteld uit unieke feiten: vakantielanden, angsten, lievelingsgerechten, bijnamen, auto&apos;s, sport, etc. Alleen feiten die bij precies 1 persoon horen worden gebruikt. Open opnieuw na nieuwe inzendingen.</p>
                 </div>
               </div>
             )}
