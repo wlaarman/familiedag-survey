@@ -107,6 +107,20 @@ export async function createTables() {
     )
   `;
   await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_hard TEXT`;
+
+  // Participants table for groepsindeling
+  await sql`
+    CREATE TABLE IF NOT EXISTS participants (
+      id SERIAL PRIMARY KEY,
+      naam VARCHAR(255) NOT NULL,
+      familie VARCHAR(100) NOT NULL,
+      gezin VARCHAR(100),
+      generatie INTEGER NOT NULL,
+      geslacht VARCHAR(1) NOT NULL,
+      groep INTEGER,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
 }
 
 export async function insertSurveyResponse(data: SurveyData): Promise<number> {
@@ -222,4 +236,45 @@ export interface StreetviewQuizItem {
 export async function getStreetviewQuiz(): Promise<StreetviewQuizItem[]> {
   const result = await sql`SELECT * FROM streetview_quiz ORDER BY question_number ASC`;
   return result.rows as StreetviewQuizItem[];
+}
+
+// Participants / groepsindeling
+export interface Participant {
+  id: number;
+  naam: string;
+  familie: string;
+  gezin: string | null;
+  generatie: number; // 1=jong, 2=oud
+  geslacht: string;  // M/V
+  groep: number | null;
+  created_at: string;
+}
+
+export async function getParticipants(): Promise<Participant[]> {
+  const result = await sql`SELECT * FROM participants ORDER BY familie, naam`;
+  return result.rows as Participant[];
+}
+
+export async function updateParticipant(
+  id: number,
+  fields: Partial<Pick<Participant, 'naam' | 'familie' | 'gezin' | 'generatie' | 'geslacht'>>
+): Promise<void> {
+  if (fields.naam !== undefined) await sql`UPDATE participants SET naam = ${fields.naam} WHERE id = ${id}`;
+  if (fields.familie !== undefined) await sql`UPDATE participants SET familie = ${fields.familie} WHERE id = ${id}`;
+  if (fields.gezin !== undefined) await sql`UPDATE participants SET gezin = ${fields.gezin} WHERE id = ${id}`;
+  if (fields.generatie !== undefined) await sql`UPDATE participants SET generatie = ${fields.generatie} WHERE id = ${id}`;
+  if (fields.geslacht !== undefined) await sql`UPDATE participants SET geslacht = ${fields.geslacht} WHERE id = ${id}`;
+}
+
+export async function updateParticipantGroup(id: number, groep: number | null): Promise<void> {
+  await sql`UPDATE participants SET groep = ${groep} WHERE id = ${id}`;
+}
+
+export async function updateAllParticipantGroups(assignments: { id: number; groep: number }[]): Promise<void> {
+  // Reset all groups first
+  await sql`UPDATE participants SET groep = NULL`;
+  // Then assign
+  for (const a of assignments) {
+    await sql`UPDATE participants SET groep = ${a.groep} WHERE id = ${a.id}`;
+  }
 }

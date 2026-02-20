@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'groepen';
 
 interface Statistics {
   total: number;
@@ -191,7 +191,27 @@ interface StreetviewQuizItem {
   names: string;
 }
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3'];
+interface ParticipantData {
+  id: number;
+  naam: string;
+  familie: string;
+  gezin: string | null;
+  generatie: number;
+  geslacht: string;
+  groep: number | null;
+}
+
+const FAMILIE_KLEUREN: Record<string, string> = {
+  'Laarman': 'bg-blue-100 text-blue-800 border-blue-300',
+  'Otten': 'bg-green-100 text-green-800 border-green-300',
+  'Jan Beltman': 'bg-purple-100 text-purple-800 border-purple-300',
+  'Gerrit Beltman': 'bg-orange-100 text-orange-800 border-orange-300',
+  'Erik Beltman': 'bg-pink-100 text-pink-800 border-pink-300',
+};
+
+const ORGANISATIE_NAMEN = ['Jandirk', 'Linda', 'Willem', 'Mirjam'];
+
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'groepen'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -209,6 +229,11 @@ export default function AdminDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
   const [streetviewItems, setStreetviewItems] = useState<StreetviewQuizItem[]>([]);
   const [streetviewLoading, setStreetviewLoading] = useState(false);
+  const [participants, setParticipants] = useState<ParticipantData[]>([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [aantalGroepen, setAantalGroepen] = useState(4);
+  const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
+  const [metOrganisatie, setMetOrganisatie] = useState(true);
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -251,6 +276,67 @@ export default function AdminDashboard() {
       console.error('Failed to fetch streetview quiz:', err);
     } finally {
       setStreetviewLoading(false);
+    }
+  };
+
+  const fetchParticipants = async () => {
+    setParticipantsLoading(true);
+    try {
+      const response = await fetch('/api/participants');
+      if (response.ok) {
+        const data = await response.json();
+        setParticipants(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch participants:', err);
+    } finally {
+      setParticipantsLoading(false);
+    }
+  };
+
+  const handleVerdeel = async () => {
+    try {
+      const excludeIds = !metOrganisatie
+        ? participants.filter(p => ORGANISATIE_NAMEN.includes(p.naam)).map(p => p.id)
+        : [];
+      const response = await fetch('/api/participants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aantalGroepen, excludeIds }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setParticipants(data);
+      }
+    } catch (err) {
+      console.error('Failed to distribute groups:', err);
+    }
+  };
+
+  const handleGroupChange = async (id: number, groep: number | null) => {
+    try {
+      await fetch('/api/participants', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, groep }),
+      });
+      setParticipants(prev => prev.map(p => p.id === id ? { ...p, groep } : p));
+    } catch (err) {
+      console.error('Failed to update group:', err);
+    }
+  };
+
+  const handleParticipantUpdate = async (id: number, fields: Partial<ParticipantData>) => {
+    try {
+      await fetch('/api/participants', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...fields }),
+      });
+      setParticipants(prev => prev.map(p => p.id === id ? { ...p, ...fields } : p));
+      setEditingParticipant(null);
+    } catch (err) {
+      console.error('Failed to update participant:', err);
     }
   };
 
@@ -749,6 +835,7 @@ export default function AdminDashboard() {
                 { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
                 { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
                 { id: 'wievande3', label: 'Wie van de 3', icon: '🤔' },
+                { id: 'groepen', label: 'Groepen', icon: '👥' },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1599,6 +1686,217 @@ export default function AdminDashboard() {
                   <p className="font-medium mb-1">Dynamisch gegenereerd</p>
                   <p>Vragen worden samengesteld uit unieke feiten: vakantielanden, angsten, lievelingsgerechten, bijnamen, auto&apos;s, sport, etc. Alleen feiten die bij precies 1 persoon horen worden gebruikt. Open opnieuw na nieuwe inzendingen.</p>
                 </div>
+              </div>
+            )}
+
+            {/* Groepen Tab */}
+            {activeTab === 'groepen' && (
+              <div>
+                {participants.length === 0 && !participantsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500 mb-4">Nog geen deelnemers geladen.</p>
+                    <button
+                      onClick={fetchParticipants}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                    >
+                      Deelnemers laden
+                    </button>
+                  </div>
+                ) : participantsLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-slate-500">Laden...</p>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Controls */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Groepsindeling</h3>
+                        <p className="text-sm text-slate-500">{participants.length} deelnemers uit {new Set(participants.map(p => p.familie)).size} families</p>
+                      </div>
+                      <div className="flex items-center gap-3 sm:ml-auto">
+                        <label className="text-sm font-medium text-slate-600">Aantal groepen:</label>
+                        <input
+                          type="number"
+                          min={2}
+                          max={10}
+                          value={aantalGroepen}
+                          onChange={e => setAantalGroepen(parseInt(e.target.value) || 2)}
+                          className="w-16 px-2 py-1.5 border border-slate-300 rounded-lg text-center text-sm"
+                        />
+                        <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={metOrganisatie}
+                            onChange={e => setMetOrganisatie(e.target.checked)}
+                            className="rounded border-slate-300"
+                          />
+                          Met organisatie
+                        </label>
+                        <button
+                          onClick={handleVerdeel}
+                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
+                        >
+                          Verdeel
+                        </button>
+                        <button
+                          onClick={fetchParticipants}
+                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm"
+                        >
+                          Herlaad
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Group stats */}
+                    {participants.some(p => p.groep) && (() => {
+                      const maxGroep = Math.max(...participants.filter(p => p.groep).map(p => p.groep!));
+                      const groepen = Array.from({ length: maxGroep }, (_, i) => {
+                        const members = participants.filter(p => p.groep === i + 1);
+                        const families = new Set(members.map(m => m.familie));
+                        const jong = members.filter(m => m.generatie === 1).length;
+                        const man = members.filter(m => m.geslacht === 'M').length;
+                        return { nr: i + 1, members, families: families.size, jong, oud: members.length - jong, man, vrouw: members.length - man };
+                      });
+                      return (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+                          {groepen.map(g => (
+                            <div key={g.nr} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                              <div className="font-semibold text-slate-800 mb-1">Groep {g.nr} <span className="text-slate-400 font-normal">({g.members.length})</span></div>
+                              <div className="text-xs text-slate-500 space-y-0.5">
+                                <div>{g.jong} jong / {g.oud} oud</div>
+                                <div>{g.man} M / {g.vrouw} V</div>
+                                <div>{g.families} families</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Group columns view */}
+                    {participants.some(p => p.groep) && (() => {
+                      const maxGroep = Math.max(...participants.filter(p => p.groep).map(p => p.groep!));
+                      return (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
+                          {Array.from({ length: maxGroep }, (_, i) => {
+                            const members = participants.filter(p => p.groep === i + 1);
+                            return (
+                              <div key={i + 1} className="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                                <div className="bg-slate-800 text-white px-3 py-2 font-semibold text-sm">Groep {i + 1}</div>
+                                <div className="p-2 space-y-1">
+                                  {members.map(m => (
+                                    <div
+                                      key={m.id}
+                                      className={`px-2 py-1 rounded text-xs border ${FAMILIE_KLEUREN[m.familie] || 'bg-gray-100 text-gray-800 border-gray-300'}`}
+                                    >
+                                      <span className="font-medium">{m.naam}</span>
+                                      <span className="opacity-60 ml-1">{m.generatie === 2 ? '(oud)' : ''}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+
+                    {/* Niet-ingedeeld */}
+                    {participants.some(p => !p.groep) && (
+                      <div className="mb-6">
+                        <h4 className="text-sm font-semibold text-slate-500 uppercase mb-2">Niet ingedeeld ({participants.filter(p => !p.groep).length})</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {participants.filter(p => !p.groep).map(m => (
+                            <span key={m.id} className={`px-2 py-1 rounded text-xs border ${FAMILIE_KLEUREN[m.familie] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                              {m.naam}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Deelnemers tabel */}
+                    <h4 className="text-sm font-semibold text-slate-500 uppercase mb-2 mt-8">Alle deelnemers</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200">
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Naam</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Familie</th>
+                            <th className="px-3 py-2 text-left text-xs font-semibold text-slate-500">Gezin</th>
+                            <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Gen.</th>
+                            <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">M/V</th>
+                            <th className="px-3 py-2 text-center text-xs font-semibold text-slate-500">Groep</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {participants.map(p => (
+                            <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50">
+                              <td className="px-3 py-2">
+                                <span className={`inline-block px-2 py-0.5 rounded text-xs border ${FAMILIE_KLEUREN[p.familie] || 'bg-gray-100 text-gray-800 border-gray-300'}`}>
+                                  {p.naam}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2 text-slate-600">{p.familie}</td>
+                              <td className="px-3 py-2 text-slate-500">{p.gezin || '-'}</td>
+                              <td className="px-3 py-2 text-center">
+                                {editingParticipant === p.id ? (
+                                  <select
+                                    defaultValue={p.generatie}
+                                    onChange={e => handleParticipantUpdate(p.id, { generatie: parseInt(e.target.value) })}
+                                    className="text-xs border rounded px-1 py-0.5"
+                                  >
+                                    <option value={1}>Jong</option>
+                                    <option value={2}>Oud</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className={`cursor-pointer text-xs px-1.5 py-0.5 rounded ${p.generatie === 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}
+                                    onClick={() => setEditingParticipant(p.id)}
+                                  >
+                                    {p.generatie === 1 ? 'Jong' : 'Oud'}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                {editingParticipant === p.id ? (
+                                  <select
+                                    defaultValue={p.geslacht}
+                                    onChange={e => handleParticipantUpdate(p.id, { geslacht: e.target.value })}
+                                    className="text-xs border rounded px-1 py-0.5"
+                                  >
+                                    <option value="M">M</option>
+                                    <option value="V">V</option>
+                                  </select>
+                                ) : (
+                                  <span
+                                    className="cursor-pointer text-xs"
+                                    onClick={() => setEditingParticipant(p.id)}
+                                  >
+                                    {p.geslacht}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-center">
+                                <select
+                                  value={p.groep || ''}
+                                  onChange={e => handleGroupChange(p.id, e.target.value ? parseInt(e.target.value) : null)}
+                                  className="text-xs border border-slate-300 rounded px-1.5 py-0.5"
+                                >
+                                  <option value="">-</option>
+                                  {Array.from({ length: 10 }, (_, i) => (
+                                    <option key={i + 1} value={i + 1}>Groep {i + 1}</option>
+                                  ))}
+                                </select>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
