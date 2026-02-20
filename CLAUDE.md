@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Dutch family quiz survey ("Familiequiz") for collecting family information, deployed on Vercel. Next.js 16 App Router with TypeScript, Neon Postgres via `@vercel/postgres`, Vercel Blob for photos, Tailwind CSS v4.
+Dutch family quiz survey ("Familiequiz") for collecting family information, deployed on Vercel. Next.js 16 App Router with TypeScript, Neon Postgres via `@vercel/postgres`, Vercel Blob for photos, Tailwind CSS v4. UI text is in Dutch, commit messages in English.
 
 ## Commands
 
@@ -14,47 +14,65 @@ npm run build    # Production build
 npm run lint     # ESLint
 ```
 
+Scripts run with `node --env-file=.env.local scripts/<script>.mjs`.
+
 ## Architecture
 
-**Survey Flow**: 7-step wizard (`SurveyWizard.tsx`) collecting person info, partner details (conditional), work/education, childhood memories, hobbies, favorites, and "this or that" preferences. Form state persists in sessionStorage.
+### Survey Flow
 
-**Admin Panel**: Password-protected dashboard at `/admin` with 4 tabs: responses table, statistics, photo gallery, and anekdotes. Login via `/admin/login`, session tokens stored in `admin_sessions` table.
+7-step wizard (`src/components/SurveyWizard.tsx`) collecting person info, partner details (conditional on `heeft_partner`), work/education, childhood memories, hobbies, favorites, and "this or that" preferences. Form state persists in sessionStorage. Submits to `/api/submit`, photos via `/api/upload`.
 
-**API Routes**:
+### Admin Panel
+
+Password-protected dashboard at `/admin` (`src/components/admin/AdminDashboard.tsx`) with **10 tabs**: responses, overview, statistics, photos, anekdotes, feitjes, logoquiz, straatquiz, cijferquiz, wievande3. Login via `/admin/login`, session tokens in `admin_sessions` table.
+
+### Quiz Rounds
+
+All quiz pages are server components (except shared `PrintButton.tsx`) that auto-generate from the database. Each supports `?mode=quiz` and `?mode=antwoorden` URL params.
+
+| Quiz | Route | Logic | Description |
+|------|-------|-------|-------------|
+| Raad de Straat | `/admin/quiz/straat` | DB `streetview_quiz` table | Streetview photos, guess who lives there. Normal + hard (wider angle, no house numbers) variants |
+| Wie is Wie? | `/admin/quiz/fotos` | DB portrait photos | Portrait photos, guess the name. Color + grayscale (CSS filter) variants |
+| Cijferronde | `/admin/quiz/cijfers` | `src/lib/quiz-questions.ts` | Auto-generated numeric questions from survey data (ages, shoe sizes, wedding dates, etc.) |
+| Wie van de 3? | `/admin/quiz/wie-van-de-3` | `src/lib/quiz-wie-van-de-3.ts` | 3 names shown, guess who matches the fact. Sources: vakantielanden, angsten, gerechten, sport, bijnamen, etc. Max 15 questions |
+
+### API Routes
+
 - `POST /api/submit` - Save survey response
 - `POST /api/upload` - Upload photo to Vercel Blob
 - `GET/DELETE /api/responses` - Admin: list/delete responses
 - `POST /api/auth` - Admin login/logout
+- `GET /api/logos` - Get custom logos for logo quiz
+- `GET /api/quiz/streetview` - Get streetview quiz items
 
-**Database**: Single `survey_responses` table with 60+ columns (person 1 & 2 fields suffixed `_1`/`_2`). Schema in `src/lib/db.ts` includes auto-migration for new columns.
+### Database
+
+Three main tables in Neon Postgres (`src/lib/db.ts`):
+- **`survey_responses`** - 60+ columns, person 1 & 2 fields suffixed `_1`/`_2`. Auto-migration for new columns.
+- **`streetview_quiz`** - Streetview photos with `blob_url` (normal) and `blob_url_hard` (hard variant)
+- **`custom_logos`** - Custom logo overrides for the logo quiz
 
 ## Key Patterns
 
 - Partner fields only shown when `heeft_partner` is true
 - Photos can be uploaded or marked "send later" (`foto_X_later` boolean)
 - CSV export includes UTF-8 BOM for Excel compatibility
-- Response detail view opens in new tab from admin
+- Quiz pages use `@media print` + `print:` Tailwind classes for print-friendly output
+- Shared `PrintButton` at `src/app/admin/quiz/straat/PrintButton.tsx` is reused by all quiz pages
+
+## Scripts
+
+- `upload-local-photos.mjs` - Bulk upload photos from local disk to Blob, link to DB records
+- `upload-streetview-to-blob.mjs` - Upload streetview photos to Blob
+- `_download-hard-variant.mjs` - Download hard variant streetview photos (fov=100, stripped house numbers)
+- `download-streetview.mjs` - Download Google Street View images (requires `GOOGLE_MAPS_API_KEY`)
 
 ## Environment Variables
 
 - `POSTGRES_URL` - Neon database connection
 - `BLOB_READ_WRITE_TOKEN` - Vercel Blob token
 - `ADMIN_PASSWORD` - Admin panel password
-
-## Uploading Local Photos
-
-Photos from `C:\Users\WillemLaarman\iCloudDrive\Verbouwing\Familiedag\foto` can be bulk-uploaded to Vercel Blob and linked to database records:
-
-```bash
-node --env-file=.env.local scripts/upload-local-photos.mjs
-```
-
-To add new photo mappings, edit `scripts/upload-local-photos.mjs` and add to `MAPPINGS`:
-```javascript
-{ pattern: /^bestandsnaam\.jpeg$/i, id: XX, field: 'foto_1_url', name: 'Naam' },
-```
-- `foto_1_url` = persoon 1, `foto_2_url` = partner
-- Script skips photos that already exist in database
 
 ## Deployment
 

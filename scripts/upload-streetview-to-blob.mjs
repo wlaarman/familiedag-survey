@@ -5,6 +5,7 @@ import { join } from 'path';
 
 const STREETVIEW_DIR = 'streetview-photos';
 const HARD_DIR = join(STREETVIEW_DIR, 'hard');
+const STREET_DIR = join(STREETVIEW_DIR, 'street');
 const OVERZICHT_PATH = join(STREETVIEW_DIR, '_overzicht.json');
 
 function normalizeAddress(addr) {
@@ -26,12 +27,14 @@ async function createTable() {
       response_id INTEGER,
       blob_url TEXT NOT NULL,
       blob_url_hard TEXT,
+      blob_url_street TEXT,
       address TEXT NOT NULL,
       names TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
   await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_hard TEXT`;
+  await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_street TEXT`;
   console.log('✅ Tabel streetview_quiz aangemaakt/gecontroleerd');
 }
 
@@ -74,7 +77,9 @@ async function main() {
   }
 
   const hasHard = existsSync(HARD_DIR);
-  console.log(`\n📸 ${deduplicated.length} foto's te uploaden ${hasHard ? '(normaal + moeilijk)' : '(alleen normaal)'}`);
+  const hasStreet = existsSync(STREET_DIR);
+  const variants = ['normaal', hasHard && 'moeilijk', hasStreet && 'straat'].filter(Boolean).join(' + ');
+  console.log(`\n📸 ${deduplicated.length} foto's te uploaden (${variants})`);
   console.log('---');
 
   await createTable();
@@ -86,6 +91,7 @@ async function main() {
   for (const entry of deduplicated) {
     const filePath = join(STREETVIEW_DIR, entry.filename);
     const hardPath = join(HARD_DIR, entry.filename);
+    const streetPath = join(STREET_DIR, entry.filename);
     console.log(`📤 #${questionNumber}: ${entry.name} (${entry.address})...`);
 
     try {
@@ -98,9 +104,15 @@ async function main() {
         console.log(`   ✅ Moeilijk: ${hardUrl}`);
       }
 
+      let streetUrl = null;
+      if (hasStreet && existsSync(streetPath)) {
+        streetUrl = await uploadPhoto(streetPath, 'street-', entry.filename);
+        console.log(`   ✅ Straat: ${streetUrl}`);
+      }
+
       await sql`
-        INSERT INTO streetview_quiz (question_number, response_id, blob_url, blob_url_hard, address, names)
-        VALUES (${questionNumber}, ${entry.id}, ${url}, ${hardUrl}, ${entry.address.trim()}, ${entry.name.trim()})
+        INSERT INTO streetview_quiz (question_number, response_id, blob_url, blob_url_hard, blob_url_street, address, names)
+        VALUES (${questionNumber}, ${entry.id}, ${url}, ${hardUrl}, ${streetUrl}, ${entry.address.trim()}, ${entry.name.trim()})
       `;
       console.log(`   ✅ Database opgeslagen`);
 

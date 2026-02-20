@@ -214,6 +214,7 @@ export interface StreetviewQuizItem {
   response_id: number | null;
   blob_url: string;
   blob_url_hard: string | null;
+  blob_url_street: string | null;
   address: string;
   names: string;
 }

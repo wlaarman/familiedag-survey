@@ -13,10 +13,11 @@ export default async function StreetviewQuizPage({
 
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
-  const variant = params.variant === 'moeilijk' ? 'moeilijk' : 'normaal';
+  const variant = params.variant === 'moeilijk' ? 'moeilijk' : params.variant === 'straat' ? 'straat' : 'normaal';
   const items = await getStreetviewQuiz();
 
   const hasHardVariant = items.some(i => i.blob_url_hard);
+  const hasStreetVariant = items.some(i => i.blob_url_street);
 
   return (
     <div className="min-h-screen bg-white">
@@ -30,17 +31,26 @@ export default async function StreetviewQuizPage({
             &larr; Terug naar admin
           </a>
           <div className="flex items-center gap-3">
-            {hasHardVariant && (
-              <a
-                href={`/admin/quiz/straat?mode=${mode}&variant=${variant === 'normaal' ? 'moeilijk' : 'normaal'}`}
-                className={`px-3 py-2 rounded-lg font-medium text-sm ${
-                  variant === 'moeilijk'
-                    ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                {variant === 'normaal' ? 'Moeilijke variant' : 'Normale variant'}
-              </a>
+            {(hasHardVariant || hasStreetVariant) && (
+              <div className="flex items-center gap-1.5">
+                {(['normaal', 'moeilijk', 'straat'] as const).filter(v =>
+                  v === 'normaal' || (v === 'moeilijk' && hasHardVariant) || (v === 'straat' && hasStreetVariant)
+                ).map(v => (
+                  <a
+                    key={v}
+                    href={`/admin/quiz/straat?mode=${mode}&variant=${v}`}
+                    className={`px-3 py-2 rounded-lg font-medium text-sm ${
+                      variant === v
+                        ? v === 'moeilijk' ? 'bg-orange-100 text-orange-700'
+                          : v === 'straat' ? 'bg-purple-100 text-purple-700'
+                          : 'bg-blue-100 text-blue-700'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    }`}
+                  >
+                    {v === 'normaal' ? 'Normaal' : v === 'moeilijk' ? 'Moeilijk' : 'Straat'}
+                  </a>
+                ))}
+              </div>
             )}
             <a
               href={`/admin/quiz/straat?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}&variant=${variant}`}
@@ -60,9 +70,13 @@ export default async function StreetviewQuizPage({
           <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
             Raad de Straat!
           </h1>
-          {variant === 'moeilijk' && (
-            <span className="inline-block mt-2 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium print:bg-orange-50">
-              Moeilijke variant
+          {variant !== 'normaal' && (
+            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
+              variant === 'moeilijk'
+                ? 'bg-orange-100 text-orange-700 print:bg-orange-50'
+                : 'bg-purple-100 text-purple-700 print:bg-purple-50'
+            }`}>
+              {variant === 'moeilijk' ? 'Moeilijke variant' : 'Straat-variant'}
             </span>
           )}
           <p className="text-slate-500 mt-2 print:text-sm">
@@ -84,6 +98,8 @@ export default async function StreetviewQuizPage({
             {items.map((item) => {
               const photoUrl = variant === 'moeilijk' && item.blob_url_hard
                 ? item.blob_url_hard
+                : variant === 'straat' && item.blob_url_street
+                ? item.blob_url_street
                 : item.blob_url;
 
               return (

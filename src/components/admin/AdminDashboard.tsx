@@ -1497,6 +1497,13 @@ export default function AdminDashboard() {
                           Quiz (moeilijk)
                         </a>
                         <a
+                          href="/admin/quiz/straat?mode=quiz&variant=straat"
+                          target="_blank"
+                          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-center text-sm"
+                        >
+                          Quiz (straat)
+                        </a>
+                        <a
                           href="/admin/quiz/straat?mode=antwoorden"
                           target="_blank"
                           className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
