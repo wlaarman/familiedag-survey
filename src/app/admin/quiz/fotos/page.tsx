@@ -101,7 +101,7 @@ export default async function FotoQuizPage({
             Nog geen foto&apos;s geupload.
           </p>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-5 print:grid-cols-4 print:gap-3">
+          <div className="grid grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
             {photos.map((photo, idx) => (
               <div
                 key={`${photo.responseId}-${photo.name}`}
@@ -116,17 +116,17 @@ export default async function FotoQuizPage({
                       variant === 'moeilijk' ? 'grayscale sepia-[0.15]' : ''
                     }`}
                   />
-                  <div className="absolute top-1.5 left-1.5 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow print:w-5 print:h-5 print:text-[10px]">
+                  <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow print:w-6 print:h-6 print:text-xs">
                     {idx + 1}
                   </div>
                 </div>
 
                 {/* Answer area */}
-                <div className="mt-2 print:mt-1">
+                <div className="mt-3 print:mt-2">
                   {mode === 'quiz' ? (
-                    <div className="border-b-2 border-dashed border-slate-300 h-6 mx-2 print:h-5" />
+                    <div className="border-b-2 border-dashed border-slate-300 h-7 mx-2 print:h-6" />
                   ) : (
-                    <p className="font-medium text-slate-800 text-xs print:text-[10px]">
+                    <p className="font-semibold text-slate-800 text-sm print:text-xs">
                       {photo.name}
                     </p>
                   )}
