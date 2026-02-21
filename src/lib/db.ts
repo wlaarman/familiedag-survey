@@ -108,6 +108,15 @@ export async function createTables() {
   `;
   await sql`ALTER TABLE streetview_quiz ADD COLUMN IF NOT EXISTS blob_url_hard TEXT`;
 
+  // Logo selection table
+  await sql`
+    CREATE TABLE IF NOT EXISTS logo_selection (
+      id SERIAL PRIMARY KEY,
+      bedrijf_naam VARCHAR(255) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   // Participants table for groepsindeling
   await sql`
     CREATE TABLE IF NOT EXISTS participants (
@@ -236,6 +245,19 @@ export interface StreetviewQuizItem {
 export async function getStreetviewQuiz(): Promise<StreetviewQuizItem[]> {
   const result = await sql`SELECT * FROM streetview_quiz ORDER BY question_number ASC`;
   return result.rows as StreetviewQuizItem[];
+}
+
+// Logo selection functions
+export async function getLogoSelection(): Promise<string[]> {
+  const result = await sql`SELECT bedrijf_naam FROM logo_selection ORDER BY bedrijf_naam`;
+  return result.rows.map(r => r.bedrijf_naam);
+}
+
+export async function saveLogoSelection(namen: string[]): Promise<void> {
+  await sql`DELETE FROM logo_selection`;
+  for (const naam of namen) {
+    await sql`INSERT INTO logo_selection (bedrijf_naam) VALUES (${naam})`;
+  }
 }
 
 // Participants / groepsindeling

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getCustomLogos, setCustomLogo, deleteCustomLogo, createTables } from '@/lib/db';
+import { getCustomLogos, setCustomLogo, deleteCustomLogo, getLogoSelection, saveLogoSelection, createTables } from '@/lib/db';
 
 export async function GET() {
   try {
     // Ensure table exists
     await createTables();
 
-    const logos = await getCustomLogos();
-    return NextResponse.json({ logos });
+    const [logos, selection] = await Promise.all([getCustomLogos(), getLogoSelection()]);
+    return NextResponse.json({ logos, selection });
   } catch (error) {
     console.error('Failed to get custom logos:', error);
     return NextResponse.json({ error: 'Failed to get logos' }, { status: 500 });
@@ -36,6 +36,26 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to save custom logo:', error);
     return NextResponse.json({ error: 'Failed to save logo' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { selection } = await request.json();
+    if (!Array.isArray(selection)) {
+      return NextResponse.json({ error: 'Missing selection array' }, { status: 400 });
+    }
+
+    await saveLogoSelection(selection);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to save logo selection:', error);
+    return NextResponse.json({ error: 'Failed to save selection' }, { status: 500 });
   }
 }
 
