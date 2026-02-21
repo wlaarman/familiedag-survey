@@ -27,6 +27,10 @@ const RONDES: QuizRonde[] = [
     titel: 'Feit of fabel',
     beschrijving: 'Stellingen over de familie — klopt het of niet?',
     icon: '✅',
+    links: [
+      { label: 'Quiz', href: '/admin/quiz/feit-of-fabel?mode=quiz', variant: 'primary' },
+      { label: 'Antwoorden', href: '/admin/quiz/feit-of-fabel?mode=antwoorden', variant: 'answer' },
+    ],
   },
   {
     nummer: 3,

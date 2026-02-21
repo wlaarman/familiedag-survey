@@ -117,6 +117,17 @@ export async function createTables() {
     )
   `;
 
+  // Feit of fabel table
+  await sql`
+    CREATE TABLE IF NOT EXISTS feit_of_fabel (
+      id SERIAL PRIMARY KEY,
+      stelling TEXT NOT NULL,
+      is_waar BOOLEAN NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   // Participants table for groepsindeling
   await sql`
     CREATE TABLE IF NOT EXISTS participants (
@@ -245,6 +256,38 @@ export interface StreetviewQuizItem {
 export async function getStreetviewQuiz(): Promise<StreetviewQuizItem[]> {
   const result = await sql`SELECT * FROM streetview_quiz ORDER BY question_number ASC`;
   return result.rows as StreetviewQuizItem[];
+}
+
+// Feit of fabel functions
+export interface FeitOfFabel {
+  id: number;
+  stelling: string;
+  is_waar: boolean;
+  sort_order: number;
+}
+
+export async function getFeitOfFabel(): Promise<FeitOfFabel[]> {
+  const result = await sql`SELECT id, stelling, is_waar, sort_order FROM feit_of_fabel ORDER BY sort_order, id`;
+  return result.rows as FeitOfFabel[];
+}
+
+export async function addFeitOfFabel(stelling: string, isWaar: boolean): Promise<number> {
+  const maxOrder = await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM feit_of_fabel`;
+  const nextOrder = maxOrder.rows[0].next;
+  const result = await sql`
+    INSERT INTO feit_of_fabel (stelling, is_waar, sort_order)
+    VALUES (${stelling}, ${isWaar}, ${nextOrder})
+    RETURNING id
+  `;
+  return result.rows[0].id;
+}
+
+export async function updateFeitOfFabel(id: number, stelling: string, isWaar: boolean): Promise<void> {
+  await sql`UPDATE feit_of_fabel SET stelling = ${stelling}, is_waar = ${isWaar} WHERE id = ${id}`;
+}
+
+export async function deleteFeitOfFabel(id: number): Promise<void> {
+  await sql`DELETE FROM feit_of_fabel WHERE id = ${id}`;
 }
 
 // Logo selection functions

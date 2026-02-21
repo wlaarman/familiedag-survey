@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 import { BEDRIJVEN } from '@/lib/bedrijven';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'groepen';
+type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
 
 interface Statistics {
   total: number;
@@ -77,7 +77,7 @@ const FAMILIE_KLEUREN: Record<string, string> = {
 
 const ORGANISATIE_NAMEN = ['Jandirk', 'Linda', 'Willem', 'Mirjam'];
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'groepen'];
+const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -95,6 +95,13 @@ export default function AdminDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
   const [streetviewItems, setStreetviewItems] = useState<StreetviewQuizItem[]>([]);
   const [streetviewLoading, setStreetviewLoading] = useState(false);
+  const [feitOfFabelItems, setFeitOfFabelItems] = useState<{ id: number; stelling: string; is_waar: boolean }[]>([]);
+  const [feitOfFabelLoading, setFeitOfFabelLoading] = useState(false);
+  const [nieuweStellingText, setNieuweStellingText] = useState('');
+  const [nieuweStellingWaar, setNieuweStellingWaar] = useState(true);
+  const [editingStelling, setEditingStelling] = useState<number | null>(null);
+  const [editStellingText, setEditStellingText] = useState('');
+  const [editStellingWaar, setEditStellingWaar] = useState(true);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [maxPerGroep, setMaxPerGroep] = useState(6);
@@ -143,6 +150,66 @@ export default function AdminDashboard() {
       });
     } catch (err) {
       console.error('Failed to save logo selection:', err);
+    }
+  };
+
+  const fetchFeitOfFabel = async () => {
+    setFeitOfFabelLoading(true);
+    try {
+      const response = await fetch('/api/feit-of-fabel');
+      if (response.ok) {
+        const data = await response.json();
+        setFeitOfFabelItems(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch feit of fabel:', err);
+    } finally {
+      setFeitOfFabelLoading(false);
+    }
+  };
+
+  const addStelling = async () => {
+    if (!nieuweStellingText.trim()) return;
+    try {
+      const response = await fetch('/api/feit-of-fabel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stelling: nieuweStellingText.trim(), is_waar: nieuweStellingWaar }),
+      });
+      if (response.ok) {
+        setNieuweStellingText('');
+        setNieuweStellingWaar(true);
+        fetchFeitOfFabel();
+      }
+    } catch (err) {
+      console.error('Failed to add stelling:', err);
+    }
+  };
+
+  const updateStelling = async (id: number) => {
+    try {
+      await fetch('/api/feit-of-fabel', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, stelling: editStellingText, is_waar: editStellingWaar }),
+      });
+      setEditingStelling(null);
+      fetchFeitOfFabel();
+    } catch (err) {
+      console.error('Failed to update stelling:', err);
+    }
+  };
+
+  const deleteStelling = async (id: number) => {
+    try {
+      await fetch('/api/feit-of-fabel', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      fetchFeitOfFabel();
+    } catch (err) {
+      console.error('Failed to delete stelling:', err);
     }
   };
 
@@ -717,6 +784,7 @@ export default function AdminDashboard() {
                 { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
                 { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
                 { id: 'wievande3', label: 'Wie van de 3', icon: '🤔' },
+                { id: 'feitoffabel', label: 'Feit/Fabel', icon: '✅' },
                 { id: 'groepen', label: 'Groepen', icon: '👥' },
               ].map(tab => (
                 <button
@@ -1582,6 +1650,160 @@ export default function AdminDashboard() {
                   <p className="font-medium mb-1">Dynamisch gegenereerd</p>
                   <p>Vragen worden samengesteld uit unieke feiten: vakantielanden, angsten, lievelingsgerechten, bijnamen, auto&apos;s, sport, etc. Alleen feiten die bij precies 1 persoon horen worden gebruikt. Open opnieuw na nieuwe inzendingen.</p>
                 </div>
+              </div>
+            )}
+
+            {/* Feit of Fabel Tab */}
+            {activeTab === 'feitoffabel' && (
+              <div>
+                {feitOfFabelItems.length === 0 && !feitOfFabelLoading && (
+                  <div className="text-center py-4 mb-4">
+                    <button
+                      onClick={fetchFeitOfFabel}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                    >
+                      Stellingen laden
+                    </button>
+                  </div>
+                )}
+
+                {(feitOfFabelItems.length > 0 || feitOfFabelLoading) && (
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Feit of Fabel</h3>
+                        <p className="text-sm text-slate-500">{feitOfFabelItems.length} stellingen</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href="/admin/quiz/feit-of-fabel?mode=quiz"
+                          target="_blank"
+                          className={`px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm ${feitOfFabelItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          Open quiz
+                        </a>
+                        <a
+                          href="/admin/quiz/feit-of-fabel?mode=antwoorden"
+                          target="_blank"
+                          className={`px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm ${feitOfFabelItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          Antwoorden
+                        </a>
+                        <button
+                          onClick={fetchFeitOfFabel}
+                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm"
+                        >
+                          Herlaad
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add new stelling */}
+                    <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                          type="text"
+                          value={nieuweStellingText}
+                          onChange={e => setNieuweStellingText(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && addStelling()}
+                          placeholder="Nieuwe stelling..."
+                          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        />
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input
+                              type="radio"
+                              checked={nieuweStellingWaar}
+                              onChange={() => setNieuweStellingWaar(true)}
+                              className="text-emerald-600"
+                            />
+                            <span className="text-emerald-700 font-medium">Waar</span>
+                          </label>
+                          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                            <input
+                              type="radio"
+                              checked={!nieuweStellingWaar}
+                              onChange={() => setNieuweStellingWaar(false)}
+                              className="text-red-600"
+                            />
+                            <span className="text-red-700 font-medium">Niet waar</span>
+                          </label>
+                          <button
+                            onClick={addStelling}
+                            disabled={!nieuweStellingText.trim()}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            Toevoegen
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Stellingen list */}
+                    {feitOfFabelLoading ? (
+                      <p className="text-center text-slate-500 py-4">Laden...</p>
+                    ) : (
+                      <div className="space-y-0 border border-slate-200 rounded-lg overflow-hidden">
+                        {feitOfFabelItems.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            className={`flex items-center gap-3 px-4 py-3 bg-white ${idx < feitOfFabelItems.length - 1 ? 'border-b border-slate-100' : ''} hover:bg-slate-50`}
+                          >
+                            <span className="flex-shrink-0 w-7 h-7 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                              {idx + 1}
+                            </span>
+
+                            {editingStelling === item.id ? (
+                              <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                <input
+                                  type="text"
+                                  value={editStellingText}
+                                  onChange={e => setEditStellingText(e.target.value)}
+                                  onKeyDown={e => e.key === 'Enter' && updateStelling(item.id)}
+                                  className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                  autoFocus
+                                />
+                                <div className="flex items-center gap-2">
+                                  <label className="flex items-center gap-1 text-xs cursor-pointer">
+                                    <input type="radio" checked={editStellingWaar} onChange={() => setEditStellingWaar(true)} />
+                                    <span className="text-emerald-700">Waar</span>
+                                  </label>
+                                  <label className="flex items-center gap-1 text-xs cursor-pointer">
+                                    <input type="radio" checked={!editStellingWaar} onChange={() => setEditStellingWaar(false)} />
+                                    <span className="text-red-700">Niet waar</span>
+                                  </label>
+                                  <button onClick={() => updateStelling(item.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Opslaan</button>
+                                  <button onClick={() => setEditingStelling(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="flex-1 text-sm text-slate-800">{item.stelling}</span>
+                                <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs font-semibold ${
+                                  item.is_waar ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {item.is_waar ? 'WAAR' : 'FABEL'}
+                                </span>
+                                <button
+                                  onClick={() => { setEditingStelling(item.id); setEditStellingText(item.stelling); setEditStellingWaar(item.is_waar); }}
+                                  className="text-xs text-slate-400 hover:text-blue-600"
+                                >
+                                  Bewerk
+                                </button>
+                                <button
+                                  onClick={() => deleteStelling(item.id)}
+                                  className="text-xs text-slate-400 hover:text-red-600"
+                                >
+                                  Verwijder
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
