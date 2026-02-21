@@ -231,7 +231,7 @@ export default function AdminDashboard() {
   const [streetviewLoading, setStreetviewLoading] = useState(false);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [aantalGroepen, setAantalGroepen] = useState(4);
+  const [maxPerGroep, setMaxPerGroep] = useState(6);
   const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
   const [metOrganisatie, setMetOrganisatie] = useState(true);
 
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
       const response = await fetch('/api/participants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aantalGroepen, excludeIds }),
+        body: JSON.stringify({ maxPerGroep, excludeIds }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -1709,19 +1709,19 @@ export default function AdminDashboard() {
                 ) : (
                   <div>
                     {/* Controls */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6 print:hidden">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-800">Groepsindeling</h3>
                         <p className="text-sm text-slate-500">{participants.length} deelnemers uit {new Set(participants.map(p => p.familie)).size} families</p>
                       </div>
-                      <div className="flex items-center gap-3 sm:ml-auto">
-                        <label className="text-sm font-medium text-slate-600">Aantal groepen:</label>
+                      <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
+                        <label className="text-sm font-medium text-slate-600">Max per groep:</label>
                         <input
                           type="number"
                           min={2}
-                          max={10}
-                          value={aantalGroepen}
-                          onChange={e => setAantalGroepen(parseInt(e.target.value) || 2)}
+                          max={15}
+                          value={maxPerGroep}
+                          onChange={e => setMaxPerGroep(parseInt(e.target.value) || 2)}
                           className="w-16 px-2 py-1.5 border border-slate-300 rounded-lg text-center text-sm"
                         />
                         <label className="flex items-center gap-1.5 text-sm text-slate-600 cursor-pointer">
@@ -1741,14 +1741,22 @@ export default function AdminDashboard() {
                         </button>
                         <button
                           onClick={fetchParticipants}
-                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm"
+                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm print:hidden"
                         >
                           Herlaad
                         </button>
+                        {participants.some(p => p.groep) && (
+                          <button
+                            onClick={() => window.print()}
+                            className="px-3 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 text-sm print:hidden"
+                          >
+                            Print
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    {/* Group stats */}
+                    {/* Group stats (hidden on print) */}
                     {participants.some(p => p.groep) && (() => {
                       const maxGroep = Math.max(...participants.filter(p => p.groep).map(p => p.groep!));
                       const groepen = Array.from({ length: maxGroep }, (_, i) => {
@@ -1759,7 +1767,7 @@ export default function AdminDashboard() {
                         return { nr: i + 1, members, families: families.size, jong, oud: members.length - jong, man, vrouw: members.length - man };
                       });
                       return (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-6 print:hidden">
                           {groepen.map(g => (
                             <div key={g.nr} className="bg-slate-50 border border-slate-200 rounded-lg p-3">
                               <div className="font-semibold text-slate-800 mb-1">Groep {g.nr} <span className="text-slate-400 font-normal">({g.members.length})</span></div>
@@ -1791,7 +1799,6 @@ export default function AdminDashboard() {
                                       className={`px-2 py-1 rounded text-xs border ${FAMILIE_KLEUREN[m.familie] || 'bg-gray-100 text-gray-800 border-gray-300'}`}
                                     >
                                       <span className="font-medium">{m.naam}</span>
-                                      <span className="opacity-60 ml-1">{m.generatie === 2 ? '(oud)' : ''}</span>
                                     </div>
                                   ))}
                                 </div>
@@ -1804,7 +1811,7 @@ export default function AdminDashboard() {
 
                     {/* Niet-ingedeeld */}
                     {participants.some(p => !p.groep) && (
-                      <div className="mb-6">
+                      <div className="mb-6 print:hidden">
                         <h4 className="text-sm font-semibold text-slate-500 uppercase mb-2">Niet ingedeeld ({participants.filter(p => !p.groep).length})</h4>
                         <div className="flex flex-wrap gap-2">
                           {participants.filter(p => !p.groep).map(m => (
@@ -1817,8 +1824,8 @@ export default function AdminDashboard() {
                     )}
 
                     {/* Deelnemers tabel */}
-                    <h4 className="text-sm font-semibold text-slate-500 uppercase mb-2 mt-8">Alle deelnemers</h4>
-                    <div className="overflow-x-auto">
+                    <h4 className="text-sm font-semibold text-slate-500 uppercase mb-2 mt-8 print:hidden">Alle deelnemers</h4>
+                    <div className="overflow-x-auto print:hidden">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="bg-slate-50 border-b border-slate-200">

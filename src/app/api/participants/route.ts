@@ -26,26 +26,49 @@ export async function PATCH(request: NextRequest) {
 // POST: auto-assign groups
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { aantalGroepen, excludeIds = [] } = body;
+  const { maxPerGroep, excludeIds = [] } = body;
 
-  if (!aantalGroepen || aantalGroepen < 2) {
-    return NextResponse.json({ error: 'Minimaal 2 groepen' }, { status: 400 });
+  if (!maxPerGroep || maxPerGroep < 2) {
+    return NextResponse.json({ error: 'Minimaal 2 per groep' }, { status: 400 });
   }
 
   const participants = await getParticipants();
   const excludeSet = new Set(excludeIds as number[]);
 
-  // Filter out excluded participants, then sort for balanced round-robin
-  const toAssign = participants
-    .filter(p => !excludeSet.has(p.id))
-    .sort((a, b) => {
-      if (a.generatie !== b.generatie) return a.generatie - b.generatie;
-      if (a.geslacht !== b.geslacht) return a.geslacht.localeCompare(b.geslacht);
-      return a.familie.localeCompare(b.familie);
-    });
+  const toAssign = participants.filter(p => !excludeSet.has(p.id));
+  const aantalGroepen = Math.ceil(toAssign.length / maxPerGroep);
 
-  // Round-robin assignment for included participants
-  const assignments: { id: number; groep: number }[] = toAssign.map((p, i) => ({
+  // Group by family, then interleave to maximize family spread
+  const byFamily = new Map<string, typeof toAssign>();
+  for (const p of toAssign) {
+    if (!byFamily.has(p.familie)) byFamily.set(p.familie, []);
+    byFamily.get(p.familie)!.push(p);
+  }
+
+  // Within each family, sort by generatie then geslacht for secondary balance
+  for (const members of byFamily.values()) {
+    members.sort((a, b) => {
+      if (a.generatie !== b.generatie) return a.generatie - b.generatie;
+      return a.geslacht.localeCompare(b.geslacht);
+    });
+  }
+
+  // Interleave: pick one from each family in rotation (round-robin across families)
+  const familyQueues = [...byFamily.values()].sort((a, b) => b.length - a.length);
+  const interleaved: typeof toAssign = [];
+  let remaining = true;
+  while (remaining) {
+    remaining = false;
+    for (const queue of familyQueues) {
+      if (queue.length > 0) {
+        interleaved.push(queue.shift()!);
+        remaining = remaining || queue.length > 0;
+      }
+    }
+  }
+
+  // Assign round-robin over groups — family members are spread because they're interleaved
+  const assignments: { id: number; groep: number }[] = interleaved.map((p, i) => ({
     id: p.id,
     groep: (i % aantalGroepen) + 1,
   }));

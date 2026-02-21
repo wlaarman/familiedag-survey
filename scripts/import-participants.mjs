@@ -6,7 +6,7 @@ const DEELNEMERS = [
   { naam: 'Willem', familie: 'Laarman', gezin: 'Willem & Mirjam', generatie: 1, geslacht: 'M' },
   { naam: 'Geert', familie: 'Laarman', gezin: 'Geert & Janneke', generatie: 1, geslacht: 'M' },
   { naam: 'Janneke L.', familie: 'Laarman', gezin: 'Geert & Janneke', generatie: 1, geslacht: 'V' },
-  { naam: 'Gineke', familie: 'Laarman', gezin: 'Gineke', generatie: 1, geslacht: 'V' },
+  { naam: 'Gineke L.', familie: 'Laarman', gezin: 'Gineke', generatie: 1, geslacht: 'V' },
   { naam: 'Rick R.', familie: 'Laarman', gezin: 'Rick & Nienke', generatie: 1, geslacht: 'M' },
   { naam: 'Nienke', familie: 'Laarman', gezin: 'Rick & Nienke', generatie: 1, geslacht: 'V' },
   { naam: 'Gea', familie: 'Laarman', gezin: 'Gea', generatie: 2, geslacht: 'V' },
@@ -37,7 +37,7 @@ const DEELNEMERS = [
 
   // Familie Erik Beltman
   { naam: 'Erik', familie: 'Erik Beltman', gezin: 'Erik & Janneke', generatie: 2, geslacht: 'M' },
-  { naam: 'Janneke', familie: 'Erik Beltman', gezin: 'Erik & Janneke', generatie: 2, geslacht: 'V' },
+  { naam: 'Janneke B.', familie: 'Erik Beltman', gezin: 'Erik & Janneke', generatie: 2, geslacht: 'V' },
   { naam: 'Kim', familie: 'Erik Beltman', gezin: 'Kim & Rick', generatie: 1, geslacht: 'V' },
   { naam: 'Rick H.', familie: 'Erik Beltman', gezin: 'Kim & Rick', generatie: 1, geslacht: 'M' },
 ];
