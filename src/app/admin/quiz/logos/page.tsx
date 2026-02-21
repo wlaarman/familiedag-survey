@@ -3,46 +3,7 @@ import { isAuthenticated } from '@/lib/auth';
 import { getCustomLogos, getLogoSelection, createTables } from '@/lib/db';
 import { BEDRIJVEN } from '@/lib/bedrijven';
 import PrintButton from '../straat/PrintButton';
-
-function LogoImage({ bedrijf, customLogos, size = 'large' }: {
-  bedrijf: { naam: string; website: string; logo?: string };
-  customLogos: Record<string, string>;
-  size?: 'large' | 'small';
-}) {
-  const domain = new URL(bedrijf.website).hostname;
-  const sizeClass = size === 'large' ? 'w-full h-full' : 'w-16 h-16';
-
-  if (customLogos[bedrijf.naam] || bedrijf.logo) {
-    return (
-      <img
-        src={customLogos[bedrijf.naam] || bedrijf.logo}
-        alt="Logo"
-        className={`${sizeClass} object-contain p-3`}
-      />
-    );
-  }
-
-  return (
-    <>
-      <img
-        src={`https://logo.clearbit.com/${domain}`}
-        alt="Logo"
-        className={`${sizeClass} object-contain p-3 absolute inset-0 m-auto`}
-        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
-      />
-      <img
-        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=128`}
-        alt="Logo"
-        className="w-16 h-16 object-contain"
-        onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
-      />
-    </>
-  );
-}
+import LogoImage from './LogoImage';
 
 export default async function LogoQuizPage({
   searchParams,
