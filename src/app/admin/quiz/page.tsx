@@ -102,6 +102,15 @@ export default async function QuizOverzichtPage() {
           <p className="text-slate-500 mt-1">Familiedag 2026 — overzicht van alle rondes</p>
         </div>
 
+        {/* Familieportret */}
+        <div className="mb-8 rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+          <img
+            src="/familieportret.png"
+            alt="Familieportret"
+            className="w-full object-cover"
+          />
+        </div>
+
         <div className="space-y-4">
           {RONDES.map((ronde) => (
             <div
