@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getFeitOfFabel } from '@/lib/db';
+import { getFeitOfFabel, createTables } from '@/lib/db';
 import PrintButton from '../straat/PrintButton';
 
 export default async function FeitOfFabelPage({
@@ -14,6 +14,7 @@ export default async function FeitOfFabelPage({
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
 
+  await createTables();
   const stellingen = await getFeitOfFabel();
 
   return (

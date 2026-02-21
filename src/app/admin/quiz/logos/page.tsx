@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getCustomLogos, getLogoSelection } from '@/lib/db';
+import { getCustomLogos, getLogoSelection, createTables } from '@/lib/db';
 import { BEDRIJVEN } from '@/lib/bedrijven';
 import PrintButton from '../straat/PrintButton';
 
@@ -55,6 +55,7 @@ export default async function LogoQuizPage({
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
 
+  await createTables();
   const [customLogos, selection] = await Promise.all([
     getCustomLogos(),
     getLogoSelection(),
