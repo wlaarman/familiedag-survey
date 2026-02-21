@@ -766,7 +766,7 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-slate-200">
+      <header className="bg-white shadow-sm border-b border-slate-200 print:hidden">
         <div className="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Familiequiz Admin</h1>
@@ -795,7 +795,7 @@ export default function AdminDashboard() {
 
       {/* Quick Stats */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 print:hidden">
           <div className="bg-white rounded-xl p-4 shadow-sm border-l-4 border-blue-500">
             <p className="text-sm text-slate-500">Totaal Inzendingen</p>
             <p className="text-3xl font-bold text-slate-800">{stats.total}</p>
@@ -821,8 +821,8 @@ export default function AdminDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="border-b border-slate-200 overflow-x-auto">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none">
+          <div className="border-b border-slate-200 overflow-x-auto print:hidden">
             <nav className="flex gap-1 px-2 min-w-max">
               {[
                 { id: 'responses', label: 'Inzendingen', icon: '👥' },
