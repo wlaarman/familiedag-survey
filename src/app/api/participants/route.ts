@@ -38,40 +38,52 @@ export async function POST(request: NextRequest) {
   const toAssign = participants.filter(p => !excludeSet.has(p.id));
   const aantalGroepen = Math.ceil(toAssign.length / maxPerGroep);
 
-  // Group by family, then interleave to maximize family spread
-  const byFamily = new Map<string, typeof toAssign>();
-  for (const p of toAssign) {
-    if (!byFamily.has(p.familie)) byFamily.set(p.familie, []);
-    byFamily.get(p.familie)!.push(p);
-  }
+  // Track per-group state: family counts, generatie counts, geslacht counts, total size
+  const groups: { familyCount: Map<string, number>; jong: number; man: number; size: number }[] =
+    Array.from({ length: aantalGroepen }, () => ({ familyCount: new Map(), jong: 0, man: 0, size: 0 }));
 
-  // Within each family, sort by generatie then geslacht for secondary balance
-  for (const members of byFamily.values()) {
-    members.sort((a, b) => {
-      if (a.generatie !== b.generatie) return a.generatie - b.generatie;
-      return a.geslacht.localeCompare(b.geslacht);
-    });
-  }
+  // Sort: largest families first so they get spread first, then by generatie/geslacht
+  const sorted = [...toAssign].sort((a, b) => {
+    const famSizeA = toAssign.filter(p => p.familie === a.familie).length;
+    const famSizeB = toAssign.filter(p => p.familie === b.familie).length;
+    if (famSizeA !== famSizeB) return famSizeB - famSizeA; // biggest family first
+    if (a.familie !== b.familie) return a.familie.localeCompare(b.familie);
+    if (a.generatie !== b.generatie) return a.generatie - b.generatie;
+    return a.geslacht.localeCompare(b.geslacht);
+  });
 
-  // Interleave: pick one from each family in rotation (round-robin across families)
-  const familyQueues = [...byFamily.values()].sort((a, b) => b.length - a.length);
-  const interleaved: typeof toAssign = [];
-  let remaining = true;
-  while (remaining) {
-    remaining = false;
-    for (const queue of familyQueues) {
-      if (queue.length > 0) {
-        interleaved.push(queue.shift()!);
-        remaining = remaining || queue.length > 0;
+  // Greedy assignment: for each person, pick the best group
+  const assignments: { id: number; groep: number }[] = [];
+  for (const p of sorted) {
+    let bestGroup = 0;
+    let bestScore = Infinity;
+
+    for (let g = 0; g < aantalGroepen; g++) {
+      if (groups[g].size >= maxPerGroep) continue; // full
+
+      const famCount = groups[g].familyCount.get(p.familie) || 0;
+      // Primary: minimize family members in same group (weight 1000)
+      // Secondary: balance group sizes (weight 10)
+      // Tertiary: balance generatie and geslacht (weight 1)
+      const score =
+        famCount * 1000 +
+        groups[g].size * 10 +
+        Math.abs(groups[g].jong - groups[g].man); // slight tiebreaker for balance
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestGroup = g;
       }
     }
-  }
 
-  // Assign round-robin over groups — family members are spread because they're interleaved
-  const assignments: { id: number; groep: number }[] = interleaved.map((p, i) => ({
-    id: p.id,
-    groep: (i % aantalGroepen) + 1,
-  }));
+    // Assign to best group
+    const grp = groups[bestGroup];
+    grp.familyCount.set(p.familie, (grp.familyCount.get(p.familie) || 0) + 1);
+    if (p.generatie === 1) grp.jong++;
+    if (p.geslacht === 'M') grp.man++;
+    grp.size++;
+    assignments.push({ id: p.id, groep: bestGroup + 1 });
+  }
 
   await updateAllParticipantGroups(assignments);
 
