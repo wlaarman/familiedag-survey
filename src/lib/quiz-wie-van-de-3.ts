@@ -18,6 +18,32 @@ function firstName(name: string): string {
   return name.trim().split(/\s+/)[0];
 }
 
+// Build a display name map that adds initials when first names collide
+function buildDisplayNames(allPersons: PersonFact[]): Map<string, string> {
+  const firstNames = new Map<string, PersonFact[]>();
+  for (const p of allPersons) {
+    const fn = firstName(p.name);
+    if (!firstNames.has(fn)) firstNames.set(fn, []);
+    firstNames.get(fn)!.push(p);
+  }
+
+  const displayNames = new Map<string, string>();
+  for (const [fn, persons] of firstNames) {
+    if (persons.length === 1) {
+      displayNames.set(persons[0].name, fn);
+    } else {
+      // Multiple people with same first name — add last name initial
+      for (const p of persons) {
+        const parts = p.name.trim().split(/\s+/);
+        const lastPart = parts.length > 1 ? parts[parts.length - 1] : '';
+        const initial = lastPart ? ` ${lastPart[0].toUpperCase()}.` : '';
+        displayNames.set(p.name, `${fn}${initial}`);
+      }
+    }
+  }
+  return displayNames;
+}
+
 function shuffle<T>(arr: T[], seed: number): T[] {
   const result = [...arr];
   let s = seed;
@@ -94,6 +120,8 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
   }
 
   if (allPersons.length < 5) return questions; // Need enough people
+
+  const displayNames = buildDisplayNames(allPersons);
 
   // Define question templates: [field1, field2, questionTemplate, filter?]
   type Template = {
@@ -218,24 +246,23 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
     if (decoys.length < 2) continue;
 
     // Build the 3 names and shuffle them
-    const threeNames = [
-      firstName(cand.correct.name),
-      firstName(decoys[0].name),
-      firstName(decoys[1].name),
-    ];
+    const correctDisplay = displayNames.get(cand.correct.name) || firstName(cand.correct.name);
+    const decoy1Display = displayNames.get(decoys[0].name) || firstName(decoys[0].name);
+    const decoy2Display = displayNames.get(decoys[1].name) || firstName(decoys[1].name);
+    const threeNames = [correctDisplay, decoy1Display, decoy2Display];
 
     // Make sure all 3 names are different
     if (new Set(threeNames).size < 3) continue;
 
     const shuffledNames = shuffle(threeNames, cand.seed + questions.length);
-    const answerIndex = shuffledNames.indexOf(firstName(cand.correct.name));
+    const answerIndex = shuffledNames.indexOf(correctDisplay);
 
     questions.push({
       number: questions.length + 1,
       question: cand.question,
       names: shuffledNames,
       answerIndex,
-      answerName: firstName(cand.correct.name),
+      answerName: correctDisplay,
     });
 
     usedQuestionKeys.add(cand.key);
