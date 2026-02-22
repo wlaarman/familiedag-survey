@@ -125,9 +125,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
         schoenmaat: parseSchoenmaat(r.schoenmaat_2),
       });
     }
-    // Only include specific couples for wedding questions
-    const TROUW_STELLEN = ['Marieke', 'Henrieke', 'Rick', 'Willem'];
-    if (r.is_getrouwd === 'Ja' && r.trouwdatum && r.naam_2 && TROUW_STELLEN.some(n => r.naam_1.trim().startsWith(n))) {
+    if (r.is_getrouwd === 'Ja' && r.trouwdatum && r.naam_2) {
       const d = parseDate(r.trouwdatum);
       if (d) {
         couples.push({
