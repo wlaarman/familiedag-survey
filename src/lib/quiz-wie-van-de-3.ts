@@ -270,5 +270,26 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
     usedNames.add(cand.correct.name);
   }
 
+  // Manual questions (handmatig toegevoegd)
+  const manualQuestions: { question: string; names: string[]; correctIndex: number }[] = [
+    {
+      question: 'Van wie is deze anekdote? "Ik logeerde met Marieke bij opa en oma in de gouden koets vanwege de goudkleurige sprei die daar op lag. We deden \'s avonds altijd een potje sjoelen."',
+      names: ['Gineke L.', 'Nienke', 'Jarno'],
+      correctIndex: 0,
+    },
+  ];
+
+  for (const mq of manualQuestions) {
+    const shuffled = shuffle([...mq.names], questions.length * 13 + 7);
+    const correctName = mq.names[mq.correctIndex];
+    questions.push({
+      number: questions.length + 1,
+      question: mq.question,
+      names: shuffled,
+      answerIndex: shuffled.indexOf(correctName),
+      answerName: correctName,
+    });
+  }
+
   return questions;
 }
