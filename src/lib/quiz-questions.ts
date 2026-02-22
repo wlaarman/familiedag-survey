@@ -198,9 +198,9 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     questions.push({
       number: num++,
       category: 'Verjaardagen',
-      question: `Welke familieleden zijn op dezelfde dag jarig (${dateStr})?`,
+      question: `Welke familieleden zijn op dezelfde dag jarig?`,
       type: 'open',
-      answer: names,
+      answer: `${names} (${dateStr})`,
     });
   }
 
