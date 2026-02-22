@@ -261,7 +261,42 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 6. MARRIAGE ORDERING =====
+  // ===== 6. BIRTHDAY ORDERING =====
+  const personsWithBirthday = persons.filter(p => p.birthday);
+  if (personsWithBirthday.length >= 4) {
+    // Sort by month/day within the year
+    const sorted = [...personsWithBirthday].sort((a, b) => {
+      const aKey = a.birthday!.getMonth() * 100 + a.birthday!.getDate();
+      const bKey = b.birthday!.getMonth() * 100 + b.birthday!.getDate();
+      return aKey - bKey;
+    });
+    // Pick 4 spread across the year
+    const pick = [
+      sorted[0],
+      sorted[Math.floor(sorted.length / 3)],
+      sorted[Math.floor(2 * sorted.length / 3)],
+      sorted[sorted.length - 1],
+    ];
+    const shuffled = shuffle(pick, pick.length * 13);
+    const correctOrder = [...shuffled]
+      .sort((a, b) => {
+        const aKey = a.birthday!.getMonth() * 100 + a.birthday!.getDate();
+        const bKey = b.birthday!.getMonth() * 100 + b.birthday!.getDate();
+        return aKey - bKey;
+      })
+      .map(p => firstName(p.name))
+      .join(' → ');
+
+    questions.push({
+      number: num++,
+      category: 'Verjaardagen',
+      question: `Zet deze familieleden in volgorde van verjaardag (vroegst → laatst in het jaar):\n${shuffled.map((p, i) => `${String.fromCharCode(65 + i)}) ${firstName(p.name)}`).join('\n')}`,
+      type: 'open',
+      answer: `${correctOrder}\n(${[...shuffled].sort((a, b) => a.birthday!.getMonth() * 100 + a.birthday!.getDate() - b.birthday!.getMonth() * 100 - b.birthday!.getDate()).map(p => `${firstName(p.name)}: ${formatDateShort(p.birthday!)}`).join(', ')})`,
+    });
+  }
+
+  // ===== 7. MARRIAGE ORDERING =====
   if (couples.length >= 3) {
     const sorted = [...couples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
     // Pick 4 couples spread across the timeline
