@@ -294,6 +294,15 @@ export async function deleteFeitOfFabel(id: number): Promise<void> {
   await sql`DELETE FROM feit_of_fabel WHERE id = ${id}`;
 }
 
+export async function swapFeitOfFabelOrder(id1: number, id2: number): Promise<void> {
+  const items = await sql`SELECT id, sort_order FROM feit_of_fabel WHERE id IN (${id1}, ${id2})`;
+  if (items.rows.length !== 2) return;
+  const order1 = items.rows.find(r => r.id === id1)!.sort_order;
+  const order2 = items.rows.find(r => r.id === id2)!.sort_order;
+  await sql`UPDATE feit_of_fabel SET sort_order = ${order2} WHERE id = ${id1}`;
+  await sql`UPDATE feit_of_fabel SET sort_order = ${order1} WHERE id = ${id2}`;
+}
+
 // Logo selection functions
 export async function getLogoSelection(): Promise<string[]> {
   const result = await sql`SELECT bedrijf_naam FROM logo_selection ORDER BY bedrijf_naam`;

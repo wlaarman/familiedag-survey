@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAuthenticated } from '@/lib/auth';
-import { getFeitOfFabel, addFeitOfFabel, updateFeitOfFabel, deleteFeitOfFabel, createTables } from '@/lib/db';
+import { getFeitOfFabel, addFeitOfFabel, updateFeitOfFabel, deleteFeitOfFabel, swapFeitOfFabelOrder, createTables } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -42,6 +42,22 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     console.error('Failed to update feit of fabel:', error);
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const { id1, id2 } = await request.json();
+    if (!id1 || !id2) return NextResponse.json({ error: 'Missing ids' }, { status: 400 });
+
+    await swapFeitOfFabelOrder(id1, id2);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to swap order:', error);
+    return NextResponse.json({ error: 'Failed to swap' }, { status: 500 });
   }
 }
 

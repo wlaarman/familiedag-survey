@@ -184,6 +184,21 @@ export default function AdminDashboard() {
     }
   };
 
+  const moveStelling = async (idx: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= feitOfFabelItems.length) return;
+    try {
+      await fetch('/api/feit-of-fabel', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id1: feitOfFabelItems[idx].id, id2: feitOfFabelItems[targetIdx].id }),
+      });
+      fetchFeitOfFabel();
+    } catch (err) {
+      console.error('Failed to move stelling:', err);
+    }
+  };
+
   const fetchStreetviewQuiz = async () => {
     setStreetviewLoading(true);
     try {
@@ -1401,9 +1416,25 @@ export default function AdminDashboard() {
                             key={item.id}
                             className={`flex items-center gap-3 px-4 py-3 bg-white ${idx < feitOfFabelItems.length - 1 ? 'border-b border-slate-100' : ''} hover:bg-slate-50`}
                           >
-                            <span className="flex-shrink-0 w-7 h-7 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
-                              {idx + 1}
-                            </span>
+                            <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+                              <button
+                                onClick={() => moveStelling(idx, 'up')}
+                                disabled={idx === 0}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▲
+                              </button>
+                              <span className="w-7 h-7 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                {idx + 1}
+                              </span>
+                              <button
+                                onClick={() => moveStelling(idx, 'down')}
+                                disabled={idx === feitOfFabelItems.length - 1}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▼
+                              </button>
+                            </div>
 
                             {editingStelling === item.id ? (
                               <div className="flex-1 flex flex-col gap-2">
