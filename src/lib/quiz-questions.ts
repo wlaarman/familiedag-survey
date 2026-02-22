@@ -296,17 +296,13 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 7. MARRIAGE ORDERING =====
-  if (couples.length >= 3) {
-    const sorted = [...couples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
-    // Pick 4 couples spread across the timeline
-    const pick = sorted.length <= 4 ? sorted : [
-      sorted[0],
-      sorted[Math.floor(sorted.length / 3)],
-      sorted[Math.floor(2 * sorted.length / 3)],
-      sorted[sorted.length - 1],
-    ];
-    const shuffled = shuffle(pick, pick.length * 7);
+  // ===== 7. MARRIAGE ORDERING (fixed 4 couples) =====
+  const TROUW_VOLGORDE = ['Marieke', 'Henrieke', 'Rick', 'Willem'];
+  const trouwPick = TROUW_VOLGORDE
+    .map(n => couples.find(c => c.names.startsWith(n)))
+    .filter((c): c is Couple => c !== undefined);
+  if (trouwPick.length >= 4) {
+    const shuffled = shuffle(trouwPick, trouwPick.length * 7);
     const correctOrder = [...shuffled]
       .sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime())
       .map(c => c.names)
@@ -317,7 +313,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       category: 'Huwelijken',
       question: `Zet deze stellen in volgorde van trouwdatum (oudst → nieuwst):\n${shuffled.map((c, i) => `${String.fromCharCode(65 + i)}) ${c.names}`).join('\n')}`,
       type: 'open',
-      answer: `${correctOrder}\n(${pick.sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime()).map(c => `${c.names}: ${c.weddingStr}`).join(', ')})`,
+      answer: `${correctOrder}\n(${[...trouwPick].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime()).map(c => `${c.names}: ${c.weddingStr}`).join(', ')})`,
     });
   }
 
