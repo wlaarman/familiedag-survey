@@ -34,8 +34,15 @@ function parseSchoenmaat(s?: string): number | null {
   return n >= 28 && n <= 52 ? n : null;
 }
 
+const ACHTERNAMEN = ['Otten', 'Laarman', 'Beltman', 'Heringa', 'Rolleman', 'Maassen'];
+
 function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0];
+  const parts = name.trim().split(/\s+/);
+  // Remove known last names from the end
+  while (parts.length > 1 && ACHTERNAMEN.some(a => parts[parts.length - 1].toLowerCase().startsWith(a.toLowerCase()))) {
+    parts.pop();
+  }
+  return parts.join(' ');
 }
 
 function formatDate(d: Date): string {
