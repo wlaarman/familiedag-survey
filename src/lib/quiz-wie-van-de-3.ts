@@ -282,6 +282,11 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
       names: ['Gerrit', 'Jan', 'Erik'],
       correctIndex: 2,
     },
+    {
+      question: 'Van wie is deze uitspraak? "Ik liet geen scheten\u2026.. 😜"',
+      names: ['Gineke B.', 'Henrieke', 'Mirjam'],
+      correctIndex: 0,
+    },
   ];
 
   for (const mq of manualQuestions) {
