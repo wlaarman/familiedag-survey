@@ -123,10 +123,13 @@ export async function createTables() {
       id SERIAL PRIMARY KEY,
       stelling TEXT NOT NULL,
       is_waar BOOLEAN NOT NULL,
+      toelichting TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  // Add toelichting column if not exists (migration)
+  await sql`ALTER TABLE feit_of_fabel ADD COLUMN IF NOT EXISTS toelichting TEXT`;
 
   // Participants table for groepsindeling
   await sql`
@@ -263,27 +266,28 @@ export interface FeitOfFabel {
   id: number;
   stelling: string;
   is_waar: boolean;
+  toelichting: string | null;
   sort_order: number;
 }
 
 export async function getFeitOfFabel(): Promise<FeitOfFabel[]> {
-  const result = await sql`SELECT id, stelling, is_waar, sort_order FROM feit_of_fabel ORDER BY sort_order, id`;
+  const result = await sql`SELECT id, stelling, is_waar, toelichting, sort_order FROM feit_of_fabel ORDER BY sort_order, id`;
   return result.rows as FeitOfFabel[];
 }
 
-export async function addFeitOfFabel(stelling: string, isWaar: boolean): Promise<number> {
+export async function addFeitOfFabel(stelling: string, isWaar: boolean, toelichting?: string): Promise<number> {
   const maxOrder = await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM feit_of_fabel`;
   const nextOrder = maxOrder.rows[0].next;
   const result = await sql`
-    INSERT INTO feit_of_fabel (stelling, is_waar, sort_order)
-    VALUES (${stelling}, ${isWaar}, ${nextOrder})
+    INSERT INTO feit_of_fabel (stelling, is_waar, toelichting, sort_order)
+    VALUES (${stelling}, ${isWaar}, ${toelichting || null}, ${nextOrder})
     RETURNING id
   `;
   return result.rows[0].id;
 }
 
-export async function updateFeitOfFabel(id: number, stelling: string, isWaar: boolean): Promise<void> {
-  await sql`UPDATE feit_of_fabel SET stelling = ${stelling}, is_waar = ${isWaar} WHERE id = ${id}`;
+export async function updateFeitOfFabel(id: number, stelling: string, isWaar: boolean, toelichting?: string): Promise<void> {
+  await sql`UPDATE feit_of_fabel SET stelling = ${stelling}, is_waar = ${isWaar}, toelichting = ${toelichting || null} WHERE id = ${id}`;
 }
 
 export async function deleteFeitOfFabel(id: number): Promise<void> {

@@ -108,6 +108,12 @@ export default async function FeitOfFabelPage({
                       })}
                     </div>
 
+                    {mode === 'antwoorden' && s.toelichting && (
+                      <p className="text-xs text-slate-500 mt-2 italic print:mt-1">
+                        {s.toelichting}
+                      </p>
+                    )}
+
                     {mode === 'quiz' && (
                       <div className="flex items-center gap-2 mt-3 print:mt-2">
                         <span className="text-xs text-slate-400">Mijn antwoord:</span>

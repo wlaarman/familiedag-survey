@@ -63,13 +63,15 @@ export default function AdminDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState<string | null>(null);
   const [streetviewItems, setStreetviewItems] = useState<StreetviewQuizItem[]>([]);
   const [streetviewLoading, setStreetviewLoading] = useState(false);
-  const [feitOfFabelItems, setFeitOfFabelItems] = useState<{ id: number; stelling: string; is_waar: boolean }[]>([]);
+  const [feitOfFabelItems, setFeitOfFabelItems] = useState<{ id: number; stelling: string; is_waar: boolean; toelichting: string | null }[]>([]);
   const [feitOfFabelLoading, setFeitOfFabelLoading] = useState(false);
   const [nieuweStellingText, setNieuweStellingText] = useState('');
   const [nieuweStellingWaar, setNieuweStellingWaar] = useState(true);
+  const [nieuweStellingToelichting, setNieuweStellingToelichting] = useState('');
   const [editingStelling, setEditingStelling] = useState<number | null>(null);
   const [editStellingText, setEditStellingText] = useState('');
   const [editStellingWaar, setEditStellingWaar] = useState(true);
+  const [editStellingToelichting, setEditStellingToelichting] = useState('');
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [maxPerGroep, setMaxPerGroep] = useState(6);
@@ -142,11 +144,12 @@ export default function AdminDashboard() {
       const response = await fetch('/api/feit-of-fabel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stelling: nieuweStellingText.trim(), is_waar: nieuweStellingWaar }),
+        body: JSON.stringify({ stelling: nieuweStellingText.trim(), is_waar: nieuweStellingWaar, toelichting: nieuweStellingToelichting.trim() || undefined }),
       });
       if (response.ok) {
         setNieuweStellingText('');
         setNieuweStellingWaar(true);
+        setNieuweStellingToelichting('');
         fetchFeitOfFabel();
       }
     } catch (err) {
@@ -159,7 +162,7 @@ export default function AdminDashboard() {
       await fetch('/api/feit-of-fabel', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, stelling: editStellingText, is_waar: editStellingWaar }),
+        body: JSON.stringify({ id, stelling: editStellingText, is_waar: editStellingWaar, toelichting: editStellingToelichting.trim() || undefined }),
       });
       setEditingStelling(null);
       fetchFeitOfFabel();
@@ -1340,42 +1343,51 @@ export default function AdminDashboard() {
 
                     {/* Add new stelling */}
                     <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
-                      <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <input
+                            type="text"
+                            value={nieuweStellingText}
+                            onChange={e => setNieuweStellingText(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && addStelling()}
+                            placeholder="Nieuwe stelling..."
+                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={nieuweStellingWaar}
+                                onChange={() => setNieuweStellingWaar(true)}
+                                className="text-emerald-600"
+                              />
+                              <span className="text-emerald-700 font-medium">Waar</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={!nieuweStellingWaar}
+                                onChange={() => setNieuweStellingWaar(false)}
+                                className="text-red-600"
+                              />
+                              <span className="text-red-700 font-medium">Niet waar</span>
+                            </label>
+                            <button
+                              onClick={addStelling}
+                              disabled={!nieuweStellingText.trim()}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            >
+                              Toevoegen
+                            </button>
+                          </div>
+                        </div>
                         <input
                           type="text"
-                          value={nieuweStellingText}
-                          onChange={e => setNieuweStellingText(e.target.value)}
-                          onKeyDown={e => e.key === 'Enter' && addStelling()}
-                          placeholder="Nieuwe stelling..."
-                          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          value={nieuweStellingToelichting}
+                          onChange={e => setNieuweStellingToelichting(e.target.value)}
+                          placeholder="Toelichting (optioneel, verschijnt op antwoordblad)..."
+                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
                         />
-                        <div className="flex items-center gap-2">
-                          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                            <input
-                              type="radio"
-                              checked={nieuweStellingWaar}
-                              onChange={() => setNieuweStellingWaar(true)}
-                              className="text-emerald-600"
-                            />
-                            <span className="text-emerald-700 font-medium">Waar</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                            <input
-                              type="radio"
-                              checked={!nieuweStellingWaar}
-                              onChange={() => setNieuweStellingWaar(false)}
-                              className="text-red-600"
-                            />
-                            <span className="text-red-700 font-medium">Niet waar</span>
-                          </label>
-                          <button
-                            onClick={addStelling}
-                            disabled={!nieuweStellingText.trim()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
-                          >
-                            Toevoegen
-                          </button>
-                        </div>
                       </div>
                     </div>
 
@@ -1394,38 +1406,52 @@ export default function AdminDashboard() {
                             </span>
 
                             {editingStelling === item.id ? (
-                              <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                              <div className="flex-1 flex flex-col gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    value={editStellingText}
+                                    onChange={e => setEditStellingText(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && updateStelling(item.id)}
+                                    className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                    autoFocus
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <label className="flex items-center gap-1 text-xs cursor-pointer">
+                                      <input type="radio" checked={editStellingWaar} onChange={() => setEditStellingWaar(true)} />
+                                      <span className="text-emerald-700">Waar</span>
+                                    </label>
+                                    <label className="flex items-center gap-1 text-xs cursor-pointer">
+                                      <input type="radio" checked={!editStellingWaar} onChange={() => setEditStellingWaar(false)} />
+                                      <span className="text-red-700">Niet waar</span>
+                                    </label>
+                                    <button onClick={() => updateStelling(item.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Opslaan</button>
+                                    <button onClick={() => setEditingStelling(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
+                                  </div>
+                                </div>
                                 <input
                                   type="text"
-                                  value={editStellingText}
-                                  onChange={e => setEditStellingText(e.target.value)}
-                                  onKeyDown={e => e.key === 'Enter' && updateStelling(item.id)}
-                                  className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
-                                  autoFocus
+                                  value={editStellingToelichting}
+                                  onChange={e => setEditStellingToelichting(e.target.value)}
+                                  placeholder="Toelichting (optioneel)..."
+                                  className="px-2 py-1 border border-slate-300 rounded text-sm"
                                 />
-                                <div className="flex items-center gap-2">
-                                  <label className="flex items-center gap-1 text-xs cursor-pointer">
-                                    <input type="radio" checked={editStellingWaar} onChange={() => setEditStellingWaar(true)} />
-                                    <span className="text-emerald-700">Waar</span>
-                                  </label>
-                                  <label className="flex items-center gap-1 text-xs cursor-pointer">
-                                    <input type="radio" checked={!editStellingWaar} onChange={() => setEditStellingWaar(false)} />
-                                    <span className="text-red-700">Niet waar</span>
-                                  </label>
-                                  <button onClick={() => updateStelling(item.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Opslaan</button>
-                                  <button onClick={() => setEditingStelling(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
-                                </div>
                               </div>
                             ) : (
                               <>
-                                <span className="flex-1 text-sm text-slate-800">{item.stelling}</span>
+                                <div className="flex-1">
+                                  <span className="text-sm text-slate-800">{item.stelling}</span>
+                                  {item.toelichting && (
+                                    <p className="text-xs text-slate-400 mt-0.5">{item.toelichting}</p>
+                                  )}
+                                </div>
                                 <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs font-semibold ${
                                   item.is_waar ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                                 }`}>
                                   {item.is_waar ? 'WAAR' : 'FABEL'}
                                 </span>
                                 <button
-                                  onClick={() => { setEditingStelling(item.id); setEditStellingText(item.stelling); setEditStellingWaar(item.is_waar); }}
+                                  onClick={() => { setEditingStelling(item.id); setEditStellingText(item.stelling); setEditStellingWaar(item.is_waar); setEditStellingToelichting(item.toelichting || ''); }}
                                   className="text-xs text-slate-400 hover:text-blue-600"
                                 >
                                   Bewerk

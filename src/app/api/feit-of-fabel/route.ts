@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
     const authenticated = await isAuthenticated();
     if (!authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { stelling, is_waar } = await request.json();
+    const { stelling, is_waar, toelichting } = await request.json();
     if (!stelling) return NextResponse.json({ error: 'Missing stelling' }, { status: 400 });
 
-    const id = await addFeitOfFabel(stelling, is_waar ?? true);
+    const id = await addFeitOfFabel(stelling, is_waar ?? true, toelichting);
     return NextResponse.json({ id });
   } catch (error) {
     console.error('Failed to add feit of fabel:', error);
@@ -34,10 +34,10 @@ export async function PATCH(request: NextRequest) {
     const authenticated = await isAuthenticated();
     if (!authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id, stelling, is_waar } = await request.json();
+    const { id, stelling, is_waar, toelichting } = await request.json();
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    await updateFeitOfFabel(id, stelling, is_waar);
+    await updateFeitOfFabel(id, stelling, is_waar, toelichting);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to update feit of fabel:', error);
