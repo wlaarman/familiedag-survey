@@ -277,6 +277,11 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
       names: ['Gineke L.', 'Nienke', 'Jarno'],
       correctIndex: 0,
     },
+    {
+      question: 'Wie had als bijnaam "Billy"?',
+      names: ['Gerrit', 'Jan', 'Erik'],
+      correctIndex: 2,
+    },
   ];
 
   for (const mq of manualQuestions) {
