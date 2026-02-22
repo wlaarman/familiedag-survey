@@ -71,6 +71,38 @@ function ageBetween(birth: Date, ref: Date): number {
   return age;
 }
 
+// Ensure all options are unique; replace duplicates with nearby values
+function uniqueOptions(opts: string[]): string[] {
+  const seen = new Set<string>();
+  return opts.map(o => {
+    if (!seen.has(o)) { seen.add(o); return o; }
+    // Try adjusting the number in the option
+    const match = o.match(/^(\d+)/);
+    if (match) {
+      for (let delta = 1; delta <= 10; delta++) {
+        for (const dir of [1, -1]) {
+          const alt = o.replace(/^\d+/, String(Math.max(0, parseInt(match[1]) + delta * dir)));
+          if (!seen.has(alt)) { seen.add(alt); return alt; }
+        }
+      }
+    }
+    return o; // fallback
+  });
+}
+
+// ============================================================
+// HANDMATIGE VRAGEN - Voeg hier je eigen vragen toe!
+// ============================================================
+const MANUAL_QUESTIONS: Omit<QuizQuestion, 'number'>[] = [
+  {
+    category: 'Verjaardagen',
+    question: 'Hoeveel familieleden zijn in 1981 geboren?',
+    type: 'multiple_choice',
+    options: ['2', '3', '4', '5'],
+    answer: '3 (Gerbrand, Willem en Ilona)',
+  },
+];
+
 export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
   const questions: QuizQuestion[] = [];
   let num = 1;
@@ -146,7 +178,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     const decoys = sorted.slice(1).filter(p => p.age !== oldest.age).slice(0, 3);
     if (decoys.length >= 2) {
       const options = shuffle(
-        [oldest, ...decoys.slice(0, 3)].map(p => `${firstName(p.name)} (${p.age})`),
+        [oldest, ...decoys.slice(0, 3)].map(p => firstName(p.name)),
         oldest.age
       );
       questions.push({
@@ -167,7 +199,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     const decoys = sorted.slice(1).filter(p => p.age !== youngest.age).slice(0, 3);
     if (decoys.length >= 2) {
       const options = shuffle(
-        [youngest, ...decoys.slice(0, 3)].map(p => `${firstName(p.name)} (${p.age})`),
+        [youngest, ...decoys.slice(0, 3)].map(p => firstName(p.name)),
         youngest.age
       );
       questions.push({
@@ -368,30 +400,31 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       category: 'Voorkeuren',
       question: 'Hoeveel procent van de familie kiest koffie boven thee?',
       type: 'multiple_choice',
-      options: shuffle([
+      options: shuffle(uniqueOptions([
         `${koffiePct}%`,
         `${Math.min(100, koffiePct + 15)}%`,
         `${Math.max(0, koffiePct - 20)}%`,
         `${Math.min(100, koffiePct + 30)}%`,
-      ], koffiePct),
+      ]), koffiePct),
       answer: `${koffiePct}% (${prefs.koffie} koffie, ${prefs.thee} thee)`,
     });
   }
 
   const hondTotal = prefs.hond + prefs.kat;
   if (hondTotal > 0) {
+    const hondPct = Math.round((prefs.hond / hondTotal) * 100);
     questions.push({
       number: num++,
       category: 'Voorkeuren',
-      question: `Hoeveel familieleden kiezen voor hond (vs. kat)?`,
+      question: `Hoeveel procent van de familie kiest hond boven kat?`,
       type: 'multiple_choice',
-      options: shuffle([
-        `${prefs.hond} van de ${hondTotal}`,
-        `${Math.max(0, prefs.hond - 3)} van de ${hondTotal}`,
-        `${Math.min(hondTotal, prefs.hond + 2)} van de ${hondTotal}`,
-        `${Math.min(hondTotal, prefs.hond + 5)} van de ${hondTotal}`,
-      ], prefs.hond),
-      answer: `${prefs.hond} van de ${hondTotal} (${Math.round(prefs.hond / hondTotal * 100)}%)`,
+      options: shuffle(uniqueOptions([
+        `${hondPct}%`,
+        `${Math.min(100, hondPct + 15)}%`,
+        `${Math.max(0, hondPct - 20)}%`,
+        `${Math.min(100, hondPct + 30)}%`,
+      ]), hondPct),
+      answer: `${hondPct}% (${prefs.hond} hond, ${prefs.kat} kat)`,
     });
   }
 
@@ -413,25 +446,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 12. TOTAL YEARS MARRIED =====
-  if (couples.length >= 3) {
-    const totalYears = couples.reduce((sum, c) => sum + (now.getFullYear() - c.weddingDate.getFullYear()), 0);
-    questions.push({
-      number: num++,
-      category: 'Huwelijken',
-      question: `Hoeveel jaar zijn alle ${couples.length} stellen bij elkaar opgeteld getrouwd?`,
-      type: 'multiple_choice',
-      options: shuffle([
-        `${totalYears} jaar`,
-        `${totalYears + 25} jaar`,
-        `${totalYears - 30 > 0 ? totalYears - 30 : totalYears + 50} jaar`,
-        `${totalYears + 60} jaar`,
-      ], totalYears),
-      answer: `${totalYears} jaar`,
-    });
-  }
-
-  // ===== 13. AGE DIFFERENCE =====
+  // ===== 12. AGE DIFFERENCE =====
   if (personsWithAge.length >= 4) {
     const sorted = [...personsWithAge].sort((a, b) => b.age - a.age);
     const diff = sorted[0].age - sorted[sorted.length - 1].age;
@@ -472,6 +487,11 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       options: shuffle([topName, ...others], top[1]),
       answer: `${topName} (${top[1]}x genoemd)`,
     });
+  }
+
+  // ===== HANDMATIGE VRAGEN =====
+  for (const mq of MANUAL_QUESTIONS) {
+    questions.push({ ...mq, number: num++ });
   }
 
   return questions;

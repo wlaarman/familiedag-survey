@@ -74,11 +74,11 @@ async function main() {
     const houseLat = geo.results[0].geometry.location.lat;
     const houseLng = geo.results[0].geometry.location.lng;
 
-    // 3. Calculate heading: pano→house, then rotate 180° to face street
+    // 3. Calculate heading: pano→house, then rotate 90° to look along the street
     const toHouse = bearing(panoLat, panoLng, houseLat, houseLng);
-    const streetHeading = (toHouse + 180) % 360;
+    const streetHeading = (toHouse + 90) % 360;
 
-    console.log(`  "${addr}" → heading ${Math.round(toHouse)}° naar huis, ${Math.round(streetHeading)}° naar straat`);
+    console.log(`  "${addr}" → heading ${Math.round(toHouse)}° naar huis, ${Math.round(streetHeading)}° langs straat`);
 
     // 4. Download with computed heading
     const imageUrl = `https://maps.googleapis.com/maps/api/streetview?size=800x500&location=${encodeURIComponent(addr)}&heading=${streetHeading}&fov=90&key=${API_KEY}`;
