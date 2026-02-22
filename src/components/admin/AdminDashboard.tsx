@@ -6,46 +6,14 @@ import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 import { BEDRIJVEN } from '@/lib/bedrijven';
 
-type TabType = 'responses' | 'overview' | 'statistics' | 'photos' | 'anekdotes' | 'feitjes' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
+type TabType = 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
 
 interface Statistics {
   total: number;
   withPartner: number;
   married: number;
   withPets: number;
-  preferences: {
-    koffie: number;
-    thee: number;
-    vlees: number;
-    vis: number;
-    hond: number;
-    kat: number;
-    zomer: number;
-    winter: number;
-    aardappels: number;
-    pasta: number;
-    zwembad: number;
-    zee: number;
-    auto: number;
-    fiets: number;
-  };
-  schools: string[];
-  vacationCountries: string[];
-  anekdotes: { name: string; text: string }[];
   photos: { name: string; url: string }[];
-}
-
-interface FunFact {
-  category: string;
-  icon: string;
-  title: string;
-  description: string;
-}
-
-interface MarriedCouple {
-  names: string;
-  date: Date;
-  dateStr: string;
 }
 
 
@@ -77,7 +45,7 @@ const FAMILIE_KLEUREN: Record<string, string> = {
 
 const ORGANISATIE_NAMEN = ['Jandirk', 'Linda', 'Willem', 'Mirjam'];
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'statistics', 'photos', 'anekdotes', 'feitjes', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
+const VALID_TABS: TabType[] = ['responses', 'overview', 'photos', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -363,13 +331,6 @@ export default function AdminDashboard() {
   };
 
   const stats = useMemo<Statistics>(() => {
-    const prefs = {
-      koffie: 0, thee: 0, vlees: 0, vis: 0, hond: 0, kat: 0,
-      zomer: 0, winter: 0, aardappels: 0, pasta: 0, zwembad: 0, zee: 0, auto: 0, fiets: 0
-    };
-    const schools = new Set<string>();
-    const countries = new Set<string>();
-    const anekdotes: { name: string; text: string }[] = [];
     const photos: { name: string; url: string }[] = [];
 
     let withPartner = 0;
@@ -377,62 +338,10 @@ export default function AdminDashboard() {
     let withPets = 0;
 
     responses.forEach(r => {
-      // Count partners and married
       if (r.heeft_partner) withPartner++;
       if (r.is_getrouwd === 'Ja') married++;
       if (r.heeft_huisdieren) withPets++;
 
-      // Count preferences (both persons)
-      [1, 2].forEach(n => {
-        const suffix = `_${n}` as '_1' | '_2';
-        if (n === 2 && !r.heeft_partner) return;
-
-        const koffieTh = r[`koffie_thee${suffix}`];
-        if (koffieTh === 'Koffie') prefs.koffie++;
-        if (koffieTh === 'Thee') prefs.thee++;
-
-        const vleesVis = r[`vlees_vis${suffix}`];
-        if (vleesVis === 'Vlees') prefs.vlees++;
-        if (vleesVis === 'Vis') prefs.vis++;
-
-        const hondKat = r[`hond_kat${suffix}`];
-        if (hondKat === 'Hond') prefs.hond++;
-        if (hondKat === 'Kat') prefs.kat++;
-
-        const zomerWinter = r[`zomer_winter${suffix}`];
-        if (zomerWinter === 'Zomer') prefs.zomer++;
-        if (zomerWinter === 'Winter') prefs.winter++;
-
-        const aardPasta = r[`aardappel_pasta${suffix}`];
-        if (aardPasta === 'Aardappels') prefs.aardappels++;
-        if (aardPasta === 'Pasta') prefs.pasta++;
-
-        const zwembadZee = r[`zwembad_zee${suffix}`];
-        if (zwembadZee === 'Zwembad') prefs.zwembad++;
-        if (zwembadZee === 'Zee') prefs.zee++;
-
-        const autoFiets = r[`auto_fiets${suffix}`];
-        if (autoFiets === 'Auto') prefs.auto++;
-        if (autoFiets === 'Fiets') prefs.fiets++;
-
-        // Schools
-        const school = r[`basisschool${suffix}`];
-        if (school) schools.add(school);
-
-        // Vacation countries
-        const country = r[`vakantieland${suffix}`];
-        if (country) countries.add(country);
-      });
-
-      // Anekdotes
-      if (r.anekdote && r.anekdote.length > 10) {
-        anekdotes.push({
-          name: r.naam_2 ? `${r.naam_1} & ${r.naam_2}` : r.naam_1,
-          text: r.anekdote
-        });
-      }
-
-      // Photos
       if (r.foto_1_url) {
         photos.push({ name: r.naam_1, url: r.foto_1_url });
       }
@@ -446,168 +355,9 @@ export default function AdminDashboard() {
       withPartner,
       married,
       withPets,
-      preferences: prefs,
-      schools: Array.from(schools).sort(),
-      vacationCountries: Array.from(countries).sort(),
-      anekdotes,
       photos
     };
   }, [responses]);
-
-  // Calculate fun facts
-  const funFacts = useMemo<{ facts: FunFact[]; marriages: MarriedCouple[]; closestMarriages: { couple1: string; couple2: string; days: number } | null }>(() => {
-    const facts: FunFact[] = [];
-    const marriages: MarriedCouple[] = [];
-
-    // Collect all persons with their data
-    const persons: { name: string; schoenmaat?: number; angst?: string; prijs?: string; gerecht?: string; bijnaam?: string }[] = [];
-
-    responses.forEach(r => {
-      // Person 1
-      const schoen1 = r.schoenmaat_1 ? parseInt(r.schoenmaat_1.replace(/[^0-9]/g, '')) : undefined;
-      persons.push({
-        name: r.naam_1.trim(),
-        schoenmaat: schoen1 && !isNaN(schoen1) ? schoen1 : undefined,
-        angst: r.angst_1?.trim(),
-        prijs: r.prijs_medaille_1?.trim(),
-        gerecht: r.gerecht_1?.trim(),
-        bijnaam: r.bijnaam_1?.trim(),
-      });
-
-      // Person 2
-      if (r.heeft_partner && r.naam_2) {
-        const schoen2 = r.schoenmaat_2 ? parseInt(r.schoenmaat_2.replace(/[^0-9]/g, '')) : undefined;
-        persons.push({
-          name: r.naam_2.trim(),
-          schoenmaat: schoen2 && !isNaN(schoen2) ? schoen2 : undefined,
-          angst: r.angst_2?.trim(),
-          prijs: r.prijs_medaille_2?.trim(),
-          gerecht: r.gerecht_2?.trim(),
-          bijnaam: r.bijnaam_2?.trim(),
-        });
-      }
-
-      // Marriages
-      if (r.is_getrouwd === 'Ja' && r.trouwdatum && r.naam_2) {
-        const date = new Date(r.trouwdatum);
-        if (date.getFullYear() > 1900 && date.getFullYear() < 2030) {
-          marriages.push({
-            names: `${r.naam_1.trim()} & ${r.naam_2.trim()}`,
-            date,
-            dateStr: date.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' })
-          });
-        }
-      }
-    });
-
-    // Sort marriages chronologically
-    marriages.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    // Find closest marriages
-    let closestMarriages: { couple1: string; couple2: string; days: number } | null = null;
-    if (marriages.length >= 2) {
-      let minDays = Infinity;
-      for (let i = 0; i < marriages.length - 1; i++) {
-        const days = Math.abs(marriages[i + 1].date.getTime() - marriages[i].date.getTime()) / (1000 * 60 * 60 * 24);
-        if (days < minDays) {
-          minDays = days;
-          closestMarriages = {
-            couple1: marriages[i].names,
-            couple2: marriages[i + 1].names,
-            days: Math.round(days)
-          };
-        }
-      }
-    }
-
-    // Unanimous preferences
-    const totalPersons = persons.length;
-    if (stats.preferences.hond > 0 && stats.preferences.kat === 0) {
-      facts.push({ category: 'Unaniem', icon: '🐕', title: '100% Team Hond', description: `Alle ${stats.preferences.hond} familieleden kiezen voor hond boven kat!` });
-    }
-    if (stats.preferences.zomer > 0 && stats.preferences.winter === 0) {
-      facts.push({ category: 'Unaniem', icon: '☀️', title: '100% Team Zomer', description: `Niemand in de familie kiest voor winter!` });
-    }
-    if (stats.preferences.kat > 0 && stats.preferences.hond === 0) {
-      facts.push({ category: 'Unaniem', icon: '🐱', title: '100% Team Kat', description: `Alle familieleden kiezen voor kat!` });
-    }
-
-    // Shoe sizes
-    const validSchoenmaten = persons.filter(p => p.schoenmaat && p.schoenmaat >= 30 && p.schoenmaat <= 50);
-    if (validSchoenmaten.length >= 2) {
-      const biggest = validSchoenmaten.reduce((a, b) => (a.schoenmaat! > b.schoenmaat! ? a : b));
-      const smallest = validSchoenmaten.reduce((a, b) => (a.schoenmaat! < b.schoenmaat! ? a : b));
-      if (biggest.schoenmaat !== smallest.schoenmaat) {
-        facts.push({
-          category: 'Extremen',
-          icon: '👟',
-          title: 'Schoenmaten',
-          description: `Grootste: ${biggest.name} (${biggest.schoenmaat}) • Kleinste: ${smallest.name} (${smallest.schoenmaat}) • Verschil: ${biggest.schoenmaat! - smallest.schoenmaat!} maten!`
-        });
-      }
-    }
-
-    // Notable achievements (kampioenen)
-    persons.forEach(p => {
-      if (p.prijs && p.prijs.toLowerCase().includes('kampioen')) {
-        facts.push({ category: 'Kampioen', icon: '🏆', title: p.name, description: p.prijs });
-      }
-    });
-
-    // Unusual fears
-    const funnyFears = persons.filter(p =>
-      p.angst &&
-      !['nee', 'niet', 'geen', 'nergens', 'x', '-', 'n.v.t'].some(x => p.angst!.toLowerCase().includes(x)) &&
-      p.angst.length > 3
-    );
-    funnyFears.forEach(p => {
-      if (p.angst!.toLowerCase().includes('vrouw') || p.angst!.toLowerCase().includes('man')) {
-        facts.push({ category: 'Grappig', icon: '😅', title: `${p.name}'s angst`, description: p.angst! });
-      }
-      if (p.angst!.toLowerCase().includes('kat') || p.angst!.toLowerCase().includes('muis') || p.angst!.toLowerCase().includes('veren')) {
-        facts.push({ category: 'Angsten', icon: '😨', title: `${p.name}`, description: `Bang voor: ${p.angst}` });
-      }
-    });
-
-    // Unusual foods
-    const unusualFoods = ['brood', 'hazepeper', 'zuurkool'];
-    persons.forEach(p => {
-      if (p.gerecht && unusualFoods.some(f => p.gerecht!.toLowerCase().includes(f))) {
-        facts.push({ category: 'Eten', icon: '🍽️', title: `${p.name}'s lievelingsgerecht`, description: p.gerecht });
-      }
-    });
-
-    // Funny nicknames
-    const funnyNicknames = persons.filter(p => p.bijnaam && p.bijnaam.length > 2 && !['geen', 'nee', '-'].includes(p.bijnaam.toLowerCase()));
-    if (funnyNicknames.length > 0) {
-      const nickList = funnyNicknames.map(p => `${p.name}: "${p.bijnaam}"`).slice(0, 5);
-      facts.push({ category: 'Bijnamen', icon: '🏷️', title: 'Bijnamen in de familie', description: nickList.join(' • ') });
-    }
-
-    // Marriage facts
-    if (closestMarriages) {
-      const years = Math.floor(closestMarriages.days / 365);
-      const months = Math.floor((closestMarriages.days % 365) / 30);
-      const timeStr = years > 0 ? `${years} jaar en ${months} maanden` : `${months} maanden`;
-      facts.push({
-        category: 'Huwelijken',
-        icon: '💒',
-        title: 'Dichtst bij elkaar getrouwd',
-        description: `${closestMarriages.couple1} en ${closestMarriages.couple2} trouwden met slechts ${timeStr} verschil!`
-      });
-    }
-
-    if (marriages.length > 0) {
-      facts.push({
-        category: 'Huwelijken',
-        icon: '💍',
-        title: 'Langst getrouwd',
-        description: `${marriages[0].names} - getrouwd op ${marriages[0].dateStr}`
-      });
-    }
-
-    return { facts, marriages, closestMarriages };
-  }, [responses, stats.preferences]);
 
   const handleLogout = async () => {
     await fetch('/api/auth', { method: 'DELETE' });
@@ -687,23 +437,6 @@ export default function AdminDashboard() {
     });
   };
 
-  const PreferenceBar = ({ label1, val1, label2, val2 }: { label1: string; val1: number; label2: string; val2: number }) => {
-    const total = val1 + val2;
-    const pct1 = total > 0 ? Math.round((val1 / total) * 100) : 50;
-    return (
-      <div className="mb-4">
-        <div className="flex justify-between text-sm mb-1">
-          <span className="font-medium">{label1} ({val1})</span>
-          <span className="font-medium">{label2} ({val2})</span>
-        </div>
-        <div className="h-6 rounded-full overflow-hidden flex bg-slate-200">
-          <div className="bg-blue-500 transition-all" style={{ width: `${pct1}%` }} />
-          <div className="bg-amber-500 transition-all" style={{ width: `${100 - pct1}%` }} />
-        </div>
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -776,10 +509,7 @@ export default function AdminDashboard() {
               {[
                 { id: 'responses', label: 'Inzendingen', icon: '👥' },
                 { id: 'overview', label: 'Overzicht', icon: '📋' },
-                { id: 'statistics', label: 'Stats', icon: '📊' },
                 { id: 'photos', label: `Foto's`, icon: '📷', count: stats.photos.length },
-                { id: 'anekdotes', label: 'Anekdotes', icon: '💬', count: stats.anekdotes.length },
-                { id: 'feitjes', label: 'Feitjes', icon: '✨', count: funFacts.facts.length },
                 { id: 'logoquiz', label: 'Logo Quiz', icon: '🏢' },
                 { id: 'straatquiz', label: 'Raad de Straat', icon: '🏠' },
                 { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
@@ -801,6 +531,14 @@ export default function AdminDashboard() {
                   {'count' in tab && <span className="sm:hidden">{tab.count}</span>}
                 </button>
               ))}
+              <Link
+                href="/admin/quiz"
+                target="_blank"
+                className="px-3 py-3 text-sm font-medium border-b-2 border-transparent text-indigo-600 hover:text-indigo-800 whitespace-nowrap"
+              >
+                <span className="mr-1">🎯</span>
+                <span className="hidden sm:inline">Quiz overzicht</span>
+              </Link>
             </nav>
           </div>
 
@@ -1025,37 +763,6 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Statistics Tab */}
-            {activeTab === 'statistics' && (
-              <div className="grid md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Dit of Dat?</h3>
-                  <PreferenceBar label1="Koffie" val1={stats.preferences.koffie} label2="Thee" val2={stats.preferences.thee} />
-                  <PreferenceBar label1="Vlees" val1={stats.preferences.vlees} label2="Vis" val2={stats.preferences.vis} />
-                  <PreferenceBar label1="Hond" val1={stats.preferences.hond} label2="Kat" val2={stats.preferences.kat} />
-                  <PreferenceBar label1="Zomer" val1={stats.preferences.zomer} label2="Winter" val2={stats.preferences.winter} />
-                  <PreferenceBar label1="Aardappels" val1={stats.preferences.aardappels} label2="Pasta" val2={stats.preferences.pasta} />
-                  <PreferenceBar label1="Zwembad" val1={stats.preferences.zwembad} label2="Zee" val2={stats.preferences.zee} />
-                  <PreferenceBar label1="Auto" val1={stats.preferences.auto} label2="Fiets" val2={stats.preferences.fiets} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Basisscholen ({stats.schools.length})</h3>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {stats.schools.map(school => (
-                      <span key={school} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">{school}</span>
-                    ))}
-                  </div>
-
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Vakantielanden ({stats.vacationCountries.length})</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {stats.vacationCountries.map(country => (
-                      <span key={country} className="px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-sm">{country}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Photos Tab */}
             {activeTab === 'photos' && (
               <div>
@@ -1116,73 +823,6 @@ export default function AdminDashboard() {
                         <p className="text-sm text-slate-600 mt-1 truncate">{photo.name}</p>
                       </div>
                     ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Anekdotes Tab */}
-            {activeTab === 'anekdotes' && (
-              <div className="space-y-4">
-                {stats.anekdotes.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">Nog geen anekdotes ingevuld</p>
-                ) : (
-                  stats.anekdotes.map((anekdote, idx) => (
-                    <div key={idx} className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg">
-                      <p className="text-slate-700 mb-2">"{anekdote.text}"</p>
-                      <p className="text-sm text-slate-500">— {anekdote.name}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-
-            {/* Feitjes Tab */}
-            {activeTab === 'feitjes' && (
-              <div className="space-y-8">
-                {/* Fun Facts Grid */}
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Interessante Feitjes</h3>
-                  {funFacts.facts.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">Nog niet genoeg data voor feitjes</p>
-                  ) : (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {funFacts.facts.map((fact, idx) => (
-                        <div key={idx} className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-4 border border-slate-200">
-                          <div className="flex items-start gap-3">
-                            <span className="text-2xl">{fact.icon}</span>
-                            <div>
-                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">{fact.category}</span>
-                              <h4 className="font-semibold text-slate-800">{fact.title}</h4>
-                              <p className="text-sm text-slate-600 mt-1">{fact.description}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Marriage Timeline */}
-                {funFacts.marriages.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Huwelijken Tijdlijn</h3>
-                    <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-pink-200" />
-                      <div className="space-y-4">
-                        {funFacts.marriages.map((marriage, idx) => (
-                          <div key={idx} className="flex items-center gap-4 relative">
-                            <div className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold z-10">
-                              {idx + 1}
-                            </div>
-                            <div className="flex-1 bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
-                              <p className="font-medium text-slate-800">{marriage.names}</p>
-                              <p className="text-sm text-slate-500">{marriage.dateStr}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
                 )}
               </div>
