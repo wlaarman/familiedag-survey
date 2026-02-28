@@ -47,6 +47,10 @@ const RONDES: QuizRonde[] = [
     titel: 'Hoe goed ken je elkaar',
     beschrijving: 'Vragen over familieleden — hoe goed ken je ze echt?',
     icon: '💬',
+    links: [
+      { label: 'Quiz', href: '/admin/quiz/ken-je-elkaar?mode=quiz', variant: 'primary' },
+      { label: 'Antwoorden', href: '/admin/quiz/ken-je-elkaar?mode=antwoorden', variant: 'answer' },
+    ],
   },
   {
     nummer: 5,

@@ -145,6 +145,18 @@ export async function createTables() {
     )
   `;
 
+  // Ken je elkaar (Ronde 4) table
+  await sql`
+    CREATE TABLE IF NOT EXISTS ken_je_elkaar (
+      id SERIAL PRIMARY KEY,
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      type VARCHAR(20) NOT NULL DEFAULT 'number',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   // Participants table for groepsindeling
   await sql`
     CREATE TABLE IF NOT EXISTS participants (
@@ -413,4 +425,46 @@ export async function swapWieVanDe3ManualOrder(id1: number, id2: number): Promis
   const order2 = items.rows.find(r => r.id === id2)!.sort_order;
   await sql`UPDATE wie_van_de_3_manual SET sort_order = ${order2} WHERE id = ${id1}`;
   await sql`UPDATE wie_van_de_3_manual SET sort_order = ${order1} WHERE id = ${id2}`;
+}
+
+// Ken je elkaar (Ronde 4) functions
+export interface KenJeElkaar {
+  id: number;
+  question: string;
+  answer: string;
+  type: string; // 'number' or 'open'
+  sort_order: number;
+}
+
+export async function getKenJeElkaar(): Promise<KenJeElkaar[]> {
+  const result = await sql`SELECT id, question, answer, type, sort_order FROM ken_je_elkaar ORDER BY sort_order, id`;
+  return result.rows as KenJeElkaar[];
+}
+
+export async function addKenJeElkaar(question: string, answer: string, type: string): Promise<number> {
+  const maxOrder = await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM ken_je_elkaar`;
+  const nextOrder = maxOrder.rows[0].next;
+  const result = await sql`
+    INSERT INTO ken_je_elkaar (question, answer, type, sort_order)
+    VALUES (${question}, ${answer}, ${type}, ${nextOrder})
+    RETURNING id
+  `;
+  return result.rows[0].id;
+}
+
+export async function updateKenJeElkaar(id: number, question: string, answer: string, type: string): Promise<void> {
+  await sql`UPDATE ken_je_elkaar SET question = ${question}, answer = ${answer}, type = ${type} WHERE id = ${id}`;
+}
+
+export async function deleteKenJeElkaar(id: number): Promise<void> {
+  await sql`DELETE FROM ken_je_elkaar WHERE id = ${id}`;
+}
+
+export async function swapKenJeElkaarOrder(id1: number, id2: number): Promise<void> {
+  const items = await sql`SELECT id, sort_order FROM ken_je_elkaar WHERE id IN (${id1}, ${id2})`;
+  if (items.rows.length !== 2) return;
+  const order1 = items.rows.find(r => r.id === id1)!.sort_order;
+  const order2 = items.rows.find(r => r.id === id2)!.sort_order;
+  await sql`UPDATE ken_je_elkaar SET sort_order = ${order2} WHERE id = ${id1}`;
+  await sql`UPDATE ken_je_elkaar SET sort_order = ${order1} WHERE id = ${id2}`;
 }

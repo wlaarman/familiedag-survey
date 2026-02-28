@@ -8,7 +8,7 @@ import { BEDRIJVEN } from '@/lib/bedrijven';
 import { generateQuestions, QuizQuestion } from '@/lib/quiz-questions';
 import { generateWieVanDe3, WieVanDe3Question } from '@/lib/quiz-wie-van-de-3';
 
-type TabType = 'quiz' | 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
+type TabType = 'quiz' | 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'kenjeeelkaar' | 'groepen';
 
 interface Statistics {
   total: number;
@@ -49,7 +49,7 @@ const FAMILIE_KLEUREN: Record<string, string> = {
 
 const ORGANISATIE_NAMEN = ['Jandirk', 'Linda', 'Willem', 'Mirjam'];
 
-const VALID_TABS: TabType[] = ['quiz', 'responses', 'overview', 'photos', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
+const VALID_TABS: TabType[] = ['quiz', 'responses', 'overview', 'photos', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'kenjeeelkaar', 'groepen'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -76,6 +76,15 @@ export default function AdminDashboard() {
   const [editStellingText, setEditStellingText] = useState('');
   const [editStellingWaar, setEditStellingWaar] = useState(true);
   const [editStellingToelichting, setEditStellingToelichting] = useState('');
+  const [kenJeElkaarItems, setKenJeElkaarItems] = useState<{ id: number; question: string; answer: string; type: string; sort_order: number }[]>([]);
+  const [kenJeElkaarLoading, setKenJeElkaarLoading] = useState(false);
+  const [nieuweKjeVraag, setNieuweKjeVraag] = useState('');
+  const [nieuweKjeAntwoord, setNieuweKjeAntwoord] = useState('');
+  const [nieuweKjeType, setNieuweKjeType] = useState('number');
+  const [editingKje, setEditingKje] = useState<number | null>(null);
+  const [editKjeVraag, setEditKjeVraag] = useState('');
+  const [editKjeAntwoord, setEditKjeAntwoord] = useState('');
+  const [editKjeType, setEditKjeType] = useState('number');
   const [wvd3ManualItems, setWvd3ManualItems] = useState<{ id: number; question: string; name_1: string; name_2: string; name_3: string; correct_index: number; sort_order: number }[]>([]);
   const [wvd3ManualLoading, setWvd3ManualLoading] = useState(false);
   const [wvd3NewQuestion, setWvd3NewQuestion] = useState('');
@@ -126,6 +135,9 @@ export default function AdminDashboard() {
     }
     if (activeTab === 'wievande3' && wvd3ManualItems.length === 0 && !wvd3ManualLoading) {
       fetchWvd3Manual();
+    }
+    if (activeTab === 'kenjeeelkaar' && kenJeElkaarItems.length === 0 && !kenJeElkaarLoading) {
+      fetchKenJeElkaar();
     }
   }, [activeTab]);
 
@@ -247,6 +259,82 @@ export default function AdminDashboard() {
       fetchFeitOfFabel();
     } catch (err) {
       console.error('Failed to move stelling:', err);
+    }
+  };
+
+  const fetchKenJeElkaar = async () => {
+    setKenJeElkaarLoading(true);
+    try {
+      const response = await fetch('/api/ken-je-elkaar');
+      if (response.ok) {
+        const data = await response.json();
+        setKenJeElkaarItems(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch ken je elkaar:', err);
+    } finally {
+      setKenJeElkaarLoading(false);
+    }
+  };
+
+  const addKjeVraag = async () => {
+    if (!nieuweKjeVraag.trim() || !nieuweKjeAntwoord.trim()) return;
+    try {
+      const response = await fetch('/api/ken-je-elkaar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: nieuweKjeVraag.trim(), answer: nieuweKjeAntwoord.trim(), type: nieuweKjeType }),
+      });
+      if (response.ok) {
+        setNieuweKjeVraag('');
+        setNieuweKjeAntwoord('');
+        setNieuweKjeType('number');
+        fetchKenJeElkaar();
+      }
+    } catch (err) {
+      console.error('Failed to add ken je elkaar:', err);
+    }
+  };
+
+  const updateKjeVraag = async (id: number) => {
+    try {
+      await fetch('/api/ken-je-elkaar', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, question: editKjeVraag, answer: editKjeAntwoord, type: editKjeType }),
+      });
+      setEditingKje(null);
+      fetchKenJeElkaar();
+    } catch (err) {
+      console.error('Failed to update ken je elkaar:', err);
+    }
+  };
+
+  const deleteKjeVraag = async (id: number) => {
+    try {
+      await fetch('/api/ken-je-elkaar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      fetchKenJeElkaar();
+    } catch (err) {
+      console.error('Failed to delete ken je elkaar:', err);
+    }
+  };
+
+  const moveKjeVraag = async (idx: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= kenJeElkaarItems.length) return;
+    try {
+      await fetch('/api/ken-je-elkaar', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id1: kenJeElkaarItems[idx].id, id2: kenJeElkaarItems[targetIdx].id }),
+      });
+      fetchKenJeElkaar();
+    } catch (err) {
+      console.error('Failed to move ken je elkaar:', err);
     }
   };
 
@@ -663,6 +751,7 @@ export default function AdminDashboard() {
                 { id: 'cijferquiz', label: 'Cijferronde', icon: '🔢' },
                 { id: 'wievande3', label: 'Wie van de 3', icon: '🤔' },
                 { id: 'feitoffabel', label: 'Feit/Fabel', icon: '✅' },
+                { id: 'kenjeeelkaar', label: 'Ken je elkaar', icon: '💬' },
                 { id: 'groepen', label: 'Groepen', icon: '👥' },
               ].map(tab => (
                 <button
@@ -730,7 +819,10 @@ export default function AdminDashboard() {
                       { label: 'Quiz', href: '/admin/quiz/cijfers?mode=quiz', variant: 'primary' as const },
                       { label: 'Antwoorden', href: '/admin/quiz/cijfers?mode=antwoorden', variant: 'answer' as const },
                     ]},
-                    { nummer: 4, titel: 'Hoe goed ken je elkaar', beschrijving: 'Vragen over familieleden — hoe goed ken je ze echt?', icon: '💬', links: undefined },
+                    { nummer: 4, titel: 'Hoe goed ken je elkaar', beschrijving: 'Vragen over familieleden — hoe goed ken je ze echt?', icon: '💬', links: [
+                      { label: 'Quiz', href: '/admin/quiz/ken-je-elkaar?mode=quiz', variant: 'primary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/ken-je-elkaar?mode=antwoorden', variant: 'answer' as const },
+                    ]},
                     { nummer: 5, titel: 'Raad de straat', beschrijving: 'Streetview foto\'s van adressen — raad wie er woont.', icon: '🏠', links: [
                       { label: 'Quiz', href: '/admin/quiz/straat?mode=quiz', variant: 'primary' as const },
                       { label: 'Quiz (moeilijk)', href: '/admin/quiz/straat?mode=quiz&variant=moeilijk', variant: 'secondary' as const },
@@ -1949,6 +2041,178 @@ export default function AdminDashboard() {
                                 </button>
                                 <button
                                   onClick={() => deleteStelling(item.id)}
+                                  className="text-xs text-slate-400 hover:text-red-600"
+                                >
+                                  Verwijder
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Ken je elkaar Tab */}
+            {activeTab === 'kenjeeelkaar' && (
+              <div>
+                {(kenJeElkaarItems.length > 0 || kenJeElkaarLoading) && (
+                  <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">Hoe goed ken je elkaar?</h3>
+                        <p className="text-sm text-slate-500">{kenJeElkaarItems.length} vragen</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <a
+                          href="/admin/quiz/ken-je-elkaar?mode=quiz"
+                          target="_blank"
+                          className={`px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm ${kenJeElkaarItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          Open quiz
+                        </a>
+                        <a
+                          href="/admin/quiz/ken-je-elkaar?mode=antwoorden"
+                          target="_blank"
+                          className={`px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm ${kenJeElkaarItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          Antwoorden
+                        </a>
+                        <button
+                          onClick={fetchKenJeElkaar}
+                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 text-sm"
+                        >
+                          Herlaad
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Add new question */}
+                    <div className="bg-slate-50 rounded-lg p-4 mb-6 border border-slate-200">
+                      <div className="flex flex-col gap-3">
+                        <input
+                          type="text"
+                          value={nieuweKjeVraag}
+                          onChange={e => setNieuweKjeVraag(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && addKjeVraag()}
+                          placeholder="Nieuwe vraag..."
+                          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        />
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <input
+                            type="text"
+                            value={nieuweKjeAntwoord}
+                            onChange={e => setNieuweKjeAntwoord(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && addKjeVraag()}
+                            placeholder="Antwoord..."
+                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={nieuweKjeType}
+                              onChange={e => setNieuweKjeType(e.target.value)}
+                              className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                            >
+                              <option value="number">Getal</option>
+                              <option value="open">Open vraag</option>
+                            </select>
+                            <button
+                              onClick={addKjeVraag}
+                              disabled={!nieuweKjeVraag.trim() || !nieuweKjeAntwoord.trim()}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            >
+                              Toevoegen
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Questions list */}
+                    {kenJeElkaarLoading ? (
+                      <p className="text-center text-slate-500 py-4">Laden...</p>
+                    ) : (
+                      <div className="space-y-0 border border-slate-200 rounded-lg overflow-hidden">
+                        {kenJeElkaarItems.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            className={`flex items-center gap-3 px-4 py-3 bg-white ${idx < kenJeElkaarItems.length - 1 ? 'border-b border-slate-100' : ''} hover:bg-slate-50`}
+                          >
+                            <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+                              <button
+                                onClick={() => moveKjeVraag(idx, 'up')}
+                                disabled={idx === 0}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▲
+                              </button>
+                              <span className="w-7 h-7 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                {idx + 1}
+                              </span>
+                              <button
+                                onClick={() => moveKjeVraag(idx, 'down')}
+                                disabled={idx === kenJeElkaarItems.length - 1}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▼
+                              </button>
+                            </div>
+
+                            {editingKje === item.id ? (
+                              <div className="flex-1 flex flex-col gap-2">
+                                <input
+                                  type="text"
+                                  value={editKjeVraag}
+                                  onChange={e => setEditKjeVraag(e.target.value)}
+                                  onKeyDown={e => e.key === 'Enter' && updateKjeVraag(item.id)}
+                                  className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                  autoFocus
+                                />
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    value={editKjeAntwoord}
+                                    onChange={e => setEditKjeAntwoord(e.target.value)}
+                                    onKeyDown={e => e.key === 'Enter' && updateKjeVraag(item.id)}
+                                    placeholder="Antwoord..."
+                                    className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <select
+                                      value={editKjeType}
+                                      onChange={e => setEditKjeType(e.target.value)}
+                                      className="px-2 py-1 border border-slate-300 rounded text-sm"
+                                    >
+                                      <option value="number">Getal</option>
+                                      <option value="open">Open</option>
+                                    </select>
+                                    <button onClick={() => updateKjeVraag(item.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Opslaan</button>
+                                    <button onClick={() => setEditingKje(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex-1">
+                                  <span className="text-sm text-slate-800">{item.question}</span>
+                                  <p className="text-xs text-slate-400 mt-0.5">{item.answer}</p>
+                                </div>
+                                <span className={`flex-shrink-0 px-2 py-0.5 rounded text-xs font-semibold ${
+                                  item.type === 'number' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {item.type === 'number' ? 'GETAL' : 'OPEN'}
+                                </span>
+                                <button
+                                  onClick={() => { setEditingKje(item.id); setEditKjeVraag(item.question); setEditKjeAntwoord(item.answer); setEditKjeType(item.type); }}
+                                  className="text-xs text-slate-400 hover:text-blue-600"
+                                >
+                                  Bewerk
+                                </button>
+                                <button
+                                  onClick={() => deleteKjeVraag(item.id)}
                                   className="text-xs text-slate-400 hover:text-red-600"
                                 >
                                   Verwijder

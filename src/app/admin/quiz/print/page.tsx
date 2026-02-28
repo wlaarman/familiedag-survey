@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getAllResponses, getFeitOfFabel, getStreetviewQuiz, getCustomLogos, getLogoSelection, getWieVanDe3Manual, createTables } from '@/lib/db';
+import { getAllResponses, getFeitOfFabel, getStreetviewQuiz, getCustomLogos, getLogoSelection, getWieVanDe3Manual, getKenJeElkaar, createTables } from '@/lib/db';
 import { generateQuestions } from '@/lib/quiz-questions';
 import { generateWieVanDe3 } from '@/lib/quiz-wie-van-de-3';
 import { BEDRIJVEN } from '@/lib/bedrijven';
@@ -21,13 +21,14 @@ export default async function PrintAllQuizPage({
   await createTables();
 
   // Fetch all data in parallel
-  const [responses, stellingen, streetviewItems, customLogos, logoSelection, manualQuestions] = await Promise.all([
+  const [responses, stellingen, streetviewItems, customLogos, logoSelection, manualQuestions, kenJeElkaarVragen] = await Promise.all([
     getAllResponses(),
     getFeitOfFabel(),
     getStreetviewQuiz(),
     getCustomLogos(),
     getLogoSelection(),
     getWieVanDe3Manual(),
+    getKenJeElkaar(),
   ]);
 
   // Derive quiz data
@@ -272,6 +273,69 @@ export default async function PrintAllQuizPage({
                 <div className="flex items-center gap-2">
                   <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
                   <span className="text-slate-500">/ {cijferQuestions.length}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ==================== RONDE 4: Hoe goed ken je elkaar ==================== */}
+      <div className="print-section">
+        <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+          <div className="text-center mb-10 print:mb-6">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 4</p>
+            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Hoe goed ken je elkaar?</h1>
+            <p className="text-slate-500 mt-2 print:text-sm">
+              {mode === 'quiz'
+                ? 'Beantwoord de vragen zo goed mogelijk!'
+                : 'Antwoordblad — Hoe goed ken je elkaar?'}
+            </p>
+            <p className="text-sm text-slate-400 mt-1 print:text-xs">
+              Familiedag 2026 &bull; {kenJeElkaarVragen.length} vragen
+            </p>
+          </div>
+
+          {kenJeElkaarVragen.length > 0 && (
+            <div className="space-y-8 print:space-y-5">
+              {kenJeElkaarVragen.map((v, idx) => (
+                <div key={v.id} className="print:break-inside-avoid">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
+                      {idx + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-800 mt-0.5 print:text-sm">{v.question}</p>
+                      {mode === 'quiz' ? (
+                        <div className="mt-3">
+                          {v.type === 'number' ? (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-slate-500 text-sm">Antwoord:</span>
+                              <div className="border-b-2 border-dashed border-slate-300 w-32 h-7 print:h-6" />
+                            </div>
+                          ) : (
+                            <div className="border-b-2 border-dashed border-slate-300 h-7 mt-2 print:h-6" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
+                          <span className="font-semibold text-emerald-700">{v.answer}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {mode === 'quiz' && kenJeElkaarVragen.length > 0 && (
+            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-slate-600">Totaal score:</p>
+                <div className="flex items-center gap-2">
+                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
+                  <span className="text-slate-500">/ {kenJeElkaarVragen.length}</span>
                 </div>
               </div>
             </div>
