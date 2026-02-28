@@ -23,6 +23,8 @@ interface StreetviewQuizItem {
   id: number;
   question_number: number;
   blob_url: string;
+  blob_url_hard: string | null;
+  blob_url_street: string | null;
   address: string;
   names: string;
 }
@@ -81,6 +83,7 @@ export default function AdminDashboard() {
   const [metOrganisatie, setMetOrganisatie] = useState(true);
   const [cijferMode, setCijferMode] = useState<'quiz' | 'antwoorden'>('antwoorden');
   const [wieVanDe3Mode, setWieVanDe3Mode] = useState<'quiz' | 'antwoorden'>('antwoorden');
+  const [straatVariant, setStraatVariant] = useState<'normaal' | 'moeilijk' | 'straat' | 'antwoorden'>('antwoorden');
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -99,10 +102,13 @@ export default function AdminDashboard() {
     fetchCustomLogos();
   }, []);
 
-  // Auto-load feit-of-fabel when tab is activated
+  // Auto-load data when tab is activated
   useEffect(() => {
     if (activeTab === 'feitoffabel' && feitOfFabelItems.length === 0 && !feitOfFabelLoading) {
       fetchFeitOfFabel();
+    }
+    if (activeTab === 'straatquiz' && streetviewItems.length === 0 && !streetviewLoading) {
+      fetchStreetviewQuiz();
     }
   }, [activeTab]);
 
@@ -1185,14 +1191,8 @@ export default function AdminDashboard() {
             {activeTab === 'straatquiz' && (
               <div>
                 {streetviewItems.length === 0 && !streetviewLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-slate-500 mb-4">Nog geen streetview foto's geladen.</p>
-                    <button
-                      onClick={fetchStreetviewQuiz}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                    >
-                      Laden
-                    </button>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
                   </div>
                 ) : streetviewLoading ? (
                   <div className="flex items-center justify-center py-12">
@@ -1203,59 +1203,64 @@ export default function AdminDashboard() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-800">Raad de Straat!</h3>
-                        <p className="text-sm text-slate-500">{streetviewItems.length} street view foto's</p>
+                        <p className="text-sm text-slate-500">{streetviewItems.length} street view foto&apos;s</p>
                       </div>
                       <div className="flex flex-wrap gap-2">
+                        {(['normaal', 'moeilijk', 'straat', 'antwoorden'] as const).map((v) => {
+                          const colors = { normaal: 'bg-blue-600 hover:bg-blue-700', moeilijk: 'bg-orange-600 hover:bg-orange-700', straat: 'bg-purple-600 hover:bg-purple-700', antwoorden: 'bg-emerald-600 hover:bg-emerald-700' };
+                          const labels = { normaal: 'Normaal', moeilijk: 'Moeilijk', straat: 'Straat', antwoorden: 'Antwoorden' };
+                          const isActive = straatVariant === v;
+                          return (
+                            <button
+                              key={v}
+                              onClick={() => setStraatVariant(v)}
+                              className={`px-3 py-2 rounded-lg font-medium text-sm ${isActive ? `${colors[v]} text-white` : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                              {labels[v]}
+                            </button>
+                          );
+                        })}
                         <a
-                          href="/admin/quiz/straat?mode=quiz&variant=normaal"
+                          href={`/admin/quiz/straat?mode=${straatVariant === 'antwoorden' ? 'antwoorden' : 'quiz'}&variant=${straatVariant}`}
                           target="_blank"
-                          className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-center text-sm"
+                          className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-medium text-sm"
                         >
-                          Quiz (normaal)
-                        </a>
-                        <a
-                          href="/admin/quiz/straat?mode=quiz&variant=moeilijk"
-                          target="_blank"
-                          className="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium text-center text-sm"
-                        >
-                          Quiz (moeilijk)
-                        </a>
-                        <a
-                          href="/admin/quiz/straat?mode=quiz&variant=straat"
-                          target="_blank"
-                          className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-center text-sm"
-                        >
-                          Quiz (straat)
-                        </a>
-                        <a
-                          href="/admin/quiz/straat?mode=antwoorden"
-                          target="_blank"
-                          className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-center text-sm"
-                        >
-                          Antwoorden
+                          Printversie
                         </a>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {streetviewItems.map((item) => (
-                        <div key={item.id} className="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                          <div className="aspect-[16/10] bg-slate-100 relative">
-                            <img
-                              src={item.blob_url}
-                              alt={`Vraag ${item.question_number}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute top-2 left-2 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow">
-                              {item.question_number}
+                      {streetviewItems.map((item) => {
+                        const imgUrl = straatVariant === 'moeilijk' ? (item.blob_url_hard || item.blob_url)
+                          : straatVariant === 'straat' ? (item.blob_url_street || item.blob_url)
+                          : item.blob_url;
+                        const showAnswer = straatVariant === 'antwoorden';
+                        return (
+                          <div key={item.id} className="border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
+                            <div className="aspect-[16/10] bg-slate-100 relative">
+                              <img
+                                src={imgUrl}
+                                alt={`Vraag ${item.question_number}`}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute top-2 left-2 w-7 h-7 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs shadow">
+                                {item.question_number}
+                              </div>
                             </div>
+                            {showAnswer ? (
+                              <div className="p-3 bg-emerald-50">
+                                <p className="font-medium text-emerald-800 text-sm truncate">{item.names}</p>
+                                <p className="text-xs text-emerald-600 truncate">{item.address}</p>
+                              </div>
+                            ) : (
+                              <div className="p-3">
+                                <p className="font-medium text-slate-400 text-sm">Wie woont hier?</p>
+                              </div>
+                            )}
                           </div>
-                          <div className="p-3">
-                            <p className="font-medium text-slate-800 text-sm truncate">{item.names}</p>
-                            <p className="text-xs text-slate-500 truncate">{item.address}</p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
