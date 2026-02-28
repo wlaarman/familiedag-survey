@@ -1,4 +1,5 @@
 import { SurveyResponse } from '@/types/survey';
+import { MANUAL_WIE_VAN_DE_3 } from './quiz-wie-van-de-3-manual';
 
 export interface WieVanDe3Question {
   number: number;
@@ -270,26 +271,8 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
     usedNames.add(cand.correct.name);
   }
 
-  // Manual questions (handmatig toegevoegd)
-  const manualQuestions: { question: string; names: string[]; correctIndex: number }[] = [
-    {
-      question: 'Van wie is deze anekdote? "Ik logeerde met Marieke bij opa en oma in de gouden koets vanwege de goudkleurige sprei die daar op lag. We deden \'s avonds altijd een potje sjoelen."',
-      names: ['Gineke L.', 'Nienke', 'Jarno'],
-      correctIndex: 0,
-    },
-    {
-      question: 'Wie had als bijnaam "Billy"?',
-      names: ['Gerrit', 'Jan', 'Erik'],
-      correctIndex: 2,
-    },
-    {
-      question: 'Van wie is deze uitspraak? "Ik liet geen scheten\u2026.. 😜"',
-      names: ['Gineke B.', 'Henrieke', 'Mirjam'],
-      correctIndex: 0,
-    },
-  ];
-
-  for (const mq of manualQuestions) {
+  // Manual questions from separate editable file (src/lib/quiz-wie-van-de-3-manual.ts)
+  for (const mq of MANUAL_WIE_VAN_DE_3) {
     const shuffled = shuffle([...mq.names], questions.length * 13 + 7);
     const correctName = mq.names[mq.correctIndex];
     questions.push({
