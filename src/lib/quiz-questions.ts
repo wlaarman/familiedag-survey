@@ -73,21 +73,24 @@ function ageBetween(birth: Date, ref: Date): number {
 }
 
 // Ensure all options are unique; replace duplicates with nearby values
+// For percentage options (ending in %), clamp between 0-100
 function uniqueOptions(opts: string[]): string[] {
   const seen = new Set<string>();
   return opts.map(o => {
     if (!seen.has(o)) { seen.add(o); return o; }
-    // Try adjusting the number in the option
     const match = o.match(/^(\d+)/);
     if (match) {
+      const isPct = o.endsWith('%');
+      const max = isPct ? 100 : Infinity;
       for (let delta = 1; delta <= 10; delta++) {
-        for (const dir of [1, -1]) {
-          const alt = o.replace(/^\d+/, String(Math.max(0, parseInt(match[1]) + delta * dir)));
+        for (const dir of [-1, 1]) {
+          const val = Math.min(max, Math.max(0, parseInt(match[1]) + delta * dir));
+          const alt = o.replace(/^\d+/, String(val));
           if (!seen.has(alt)) { seen.add(alt); return alt; }
         }
       }
     }
-    return o; // fallback
+    return o;
   });
 }
 
