@@ -131,6 +131,20 @@ export async function createTables() {
   // Add toelichting column if not exists (migration)
   await sql`ALTER TABLE feit_of_fabel ADD COLUMN IF NOT EXISTS toelichting TEXT`;
 
+  // Wie van de 3 manual questions table
+  await sql`
+    CREATE TABLE IF NOT EXISTS wie_van_de_3_manual (
+      id SERIAL PRIMARY KEY,
+      question TEXT NOT NULL,
+      name_1 TEXT NOT NULL,
+      name_2 TEXT NOT NULL,
+      name_3 TEXT NOT NULL,
+      correct_index INTEGER NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `;
+
   // Participants table for groepsindeling
   await sql`
     CREATE TABLE IF NOT EXISTS participants (
@@ -355,4 +369,48 @@ export async function updateAllParticipantGroups(assignments: { id: number; groe
   for (const a of assignments) {
     await sql`UPDATE participants SET groep = ${a.groep} WHERE id = ${a.id}`;
   }
+}
+
+// Wie van de 3 manual questions
+export interface WieVanDe3Manual {
+  id: number;
+  question: string;
+  name_1: string;
+  name_2: string;
+  name_3: string;
+  correct_index: number;
+  sort_order: number;
+}
+
+export async function getWieVanDe3Manual(): Promise<WieVanDe3Manual[]> {
+  const result = await sql`SELECT id, question, name_1, name_2, name_3, correct_index, sort_order FROM wie_van_de_3_manual ORDER BY sort_order, id`;
+  return result.rows as WieVanDe3Manual[];
+}
+
+export async function addWieVanDe3Manual(question: string, name1: string, name2: string, name3: string, correctIndex: number): Promise<number> {
+  const maxOrder = await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM wie_van_de_3_manual`;
+  const nextOrder = maxOrder.rows[0].next;
+  const result = await sql`
+    INSERT INTO wie_van_de_3_manual (question, name_1, name_2, name_3, correct_index, sort_order)
+    VALUES (${question}, ${name1}, ${name2}, ${name3}, ${correctIndex}, ${nextOrder})
+    RETURNING id
+  `;
+  return result.rows[0].id;
+}
+
+export async function updateWieVanDe3Manual(id: number, question: string, name1: string, name2: string, name3: string, correctIndex: number): Promise<void> {
+  await sql`UPDATE wie_van_de_3_manual SET question = ${question}, name_1 = ${name1}, name_2 = ${name2}, name_3 = ${name3}, correct_index = ${correctIndex} WHERE id = ${id}`;
+}
+
+export async function deleteWieVanDe3Manual(id: number): Promise<void> {
+  await sql`DELETE FROM wie_van_de_3_manual WHERE id = ${id}`;
+}
+
+export async function swapWieVanDe3ManualOrder(id1: number, id2: number): Promise<void> {
+  const items = await sql`SELECT id, sort_order FROM wie_van_de_3_manual WHERE id IN (${id1}, ${id2})`;
+  if (items.rows.length !== 2) return;
+  const order1 = items.rows.find(r => r.id === id1)!.sort_order;
+  const order2 = items.rows.find(r => r.id === id2)!.sort_order;
+  await sql`UPDATE wie_van_de_3_manual SET sort_order = ${order2} WHERE id = ${id1}`;
+  await sql`UPDATE wie_van_de_3_manual SET sort_order = ${order1} WHERE id = ${id2}`;
 }

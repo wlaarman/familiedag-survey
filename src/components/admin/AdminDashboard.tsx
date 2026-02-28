@@ -76,6 +76,19 @@ export default function AdminDashboard() {
   const [editStellingText, setEditStellingText] = useState('');
   const [editStellingWaar, setEditStellingWaar] = useState(true);
   const [editStellingToelichting, setEditStellingToelichting] = useState('');
+  const [wvd3ManualItems, setWvd3ManualItems] = useState<{ id: number; question: string; name_1: string; name_2: string; name_3: string; correct_index: number; sort_order: number }[]>([]);
+  const [wvd3ManualLoading, setWvd3ManualLoading] = useState(false);
+  const [wvd3NewQuestion, setWvd3NewQuestion] = useState('');
+  const [wvd3NewName1, setWvd3NewName1] = useState('');
+  const [wvd3NewName2, setWvd3NewName2] = useState('');
+  const [wvd3NewName3, setWvd3NewName3] = useState('');
+  const [wvd3NewCorrect, setWvd3NewCorrect] = useState(0);
+  const [wvd3Editing, setWvd3Editing] = useState<number | null>(null);
+  const [wvd3EditQuestion, setWvd3EditQuestion] = useState('');
+  const [wvd3EditName1, setWvd3EditName1] = useState('');
+  const [wvd3EditName2, setWvd3EditName2] = useState('');
+  const [wvd3EditName3, setWvd3EditName3] = useState('');
+  const [wvd3EditCorrect, setWvd3EditCorrect] = useState(0);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [maxPerGroep, setMaxPerGroep] = useState(6);
@@ -110,6 +123,9 @@ export default function AdminDashboard() {
     }
     if (activeTab === 'straatquiz' && streetviewItems.length === 0 && !streetviewLoading) {
       fetchStreetviewQuiz();
+    }
+    if (activeTab === 'wievande3' && wvd3ManualItems.length === 0 && !wvd3ManualLoading) {
+      fetchWvd3Manual();
     }
   }, [activeTab]);
 
@@ -231,6 +247,84 @@ export default function AdminDashboard() {
       fetchFeitOfFabel();
     } catch (err) {
       console.error('Failed to move stelling:', err);
+    }
+  };
+
+  const fetchWvd3Manual = async () => {
+    setWvd3ManualLoading(true);
+    try {
+      const response = await fetch('/api/wie-van-de-3-manual');
+      if (response.ok) {
+        const data = await response.json();
+        setWvd3ManualItems(data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch wie van de 3 manual:', err);
+    } finally {
+      setWvd3ManualLoading(false);
+    }
+  };
+
+  const addWvd3Manual = async () => {
+    if (!wvd3NewQuestion.trim() || !wvd3NewName1.trim() || !wvd3NewName2.trim() || !wvd3NewName3.trim()) return;
+    try {
+      const response = await fetch('/api/wie-van-de-3-manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: wvd3NewQuestion.trim(), name_1: wvd3NewName1.trim(), name_2: wvd3NewName2.trim(), name_3: wvd3NewName3.trim(), correct_index: wvd3NewCorrect }),
+      });
+      if (response.ok) {
+        setWvd3NewQuestion('');
+        setWvd3NewName1('');
+        setWvd3NewName2('');
+        setWvd3NewName3('');
+        setWvd3NewCorrect(0);
+        fetchWvd3Manual();
+      }
+    } catch (err) {
+      console.error('Failed to add wie van de 3 manual:', err);
+    }
+  };
+
+  const updateWvd3Manual = async (id: number) => {
+    try {
+      await fetch('/api/wie-van-de-3-manual', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, question: wvd3EditQuestion, name_1: wvd3EditName1, name_2: wvd3EditName2, name_3: wvd3EditName3, correct_index: wvd3EditCorrect }),
+      });
+      setWvd3Editing(null);
+      fetchWvd3Manual();
+    } catch (err) {
+      console.error('Failed to update wie van de 3 manual:', err);
+    }
+  };
+
+  const deleteWvd3Manual = async (id: number) => {
+    try {
+      await fetch('/api/wie-van-de-3-manual', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      fetchWvd3Manual();
+    } catch (err) {
+      console.error('Failed to delete wie van de 3 manual:', err);
+    }
+  };
+
+  const moveWvd3Manual = async (idx: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= wvd3ManualItems.length) return;
+    try {
+      await fetch('/api/wie-van-de-3-manual', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id1: wvd3ManualItems[idx].id, id2: wvd3ManualItems[targetIdx].id }),
+      });
+      fetchWvd3Manual();
+    } catch (err) {
+      console.error('Failed to move wie van de 3 manual:', err);
     }
   };
 
@@ -1385,7 +1479,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-800">Wie van de 3?</h3>
-                    <p className="text-sm text-slate-500">{wieVanDe3Questions.length} vragen - automatisch gegenereerd</p>
+                    <p className="text-sm text-slate-500">{wvd3ManualItems.length} handmatig + auto-gegenereerd = {wieVanDe3Questions.length} vragen</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -1403,6 +1497,163 @@ export default function AdminDashboard() {
                     </a>
                   </div>
                 </div>
+
+                {/* Manual questions editor */}
+                <div className="mb-8">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-3">Handmatige vragen</h4>
+
+                  {/* Add new manual question */}
+                  <div className="bg-slate-50 rounded-lg p-4 mb-4 border border-slate-200">
+                    <div className="flex flex-col gap-3">
+                      <input
+                        type="text"
+                        value={wvd3NewQuestion}
+                        onChange={e => setWvd3NewQuestion(e.target.value)}
+                        placeholder="Nieuwe vraag..."
+                        className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                      />
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { val: wvd3NewName1, set: setWvd3NewName1, idx: 0 },
+                          { val: wvd3NewName2, set: setWvd3NewName2, idx: 1 },
+                          { val: wvd3NewName3, set: setWvd3NewName3, idx: 2 },
+                        ].map(({ val, set, idx }) => (
+                          <div key={idx} className="flex items-center gap-1">
+                            <input
+                              type="radio"
+                              checked={wvd3NewCorrect === idx}
+                              onChange={() => setWvd3NewCorrect(idx)}
+                              title="Juiste antwoord"
+                            />
+                            <input
+                              type="text"
+                              value={val}
+                              onChange={e => set(e.target.value)}
+                              placeholder={`Naam ${idx + 1}`}
+                              className="flex-1 px-2 py-1.5 border border-slate-300 rounded text-sm"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400">Selecteer het juiste antwoord met het rondje</span>
+                        <button
+                          onClick={addWvd3Manual}
+                          disabled={!wvd3NewQuestion.trim() || !wvd3NewName1.trim() || !wvd3NewName2.trim() || !wvd3NewName3.trim()}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          Toevoegen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Manual questions list */}
+                  {wvd3ManualLoading ? (
+                    <p className="text-center text-slate-500 py-4">Laden...</p>
+                  ) : wvd3ManualItems.length === 0 ? (
+                    <p className="text-center text-slate-400 py-4 text-sm">Nog geen handmatige vragen. Voeg er een toe hierboven.</p>
+                  ) : (
+                    <div className="space-y-0 border border-slate-200 rounded-lg overflow-hidden">
+                      {wvd3ManualItems.map((item, idx) => (
+                        <div
+                          key={item.id}
+                          className={`px-4 py-3 bg-white ${idx < wvd3ManualItems.length - 1 ? 'border-b border-slate-100' : ''} hover:bg-slate-50`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 flex flex-col items-center gap-0.5 pt-1">
+                              <button
+                                onClick={() => moveWvd3Manual(idx, 'up')}
+                                disabled={idx === 0}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▲
+                              </button>
+                              <span className="w-7 h-7 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                {idx + 1}
+                              </span>
+                              <button
+                                onClick={() => moveWvd3Manual(idx, 'down')}
+                                disabled={idx === wvd3ManualItems.length - 1}
+                                className="text-slate-300 hover:text-slate-600 disabled:opacity-0 text-xs leading-none"
+                              >
+                                ▼
+                              </button>
+                            </div>
+
+                            {wvd3Editing === item.id ? (
+                              <div className="flex-1 flex flex-col gap-2">
+                                <input
+                                  type="text"
+                                  value={wvd3EditQuestion}
+                                  onChange={e => setWvd3EditQuestion(e.target.value)}
+                                  className="px-2 py-1 border border-slate-300 rounded text-sm"
+                                  autoFocus
+                                />
+                                <div className="grid grid-cols-3 gap-2">
+                                  {[
+                                    { val: wvd3EditName1, set: setWvd3EditName1, idx: 0 },
+                                    { val: wvd3EditName2, set: setWvd3EditName2, idx: 1 },
+                                    { val: wvd3EditName3, set: setWvd3EditName3, idx: 2 },
+                                  ].map(({ val, set, idx: nameIdx }) => (
+                                    <div key={nameIdx} className="flex items-center gap-1">
+                                      <input
+                                        type="radio"
+                                        checked={wvd3EditCorrect === nameIdx}
+                                        onChange={() => setWvd3EditCorrect(nameIdx)}
+                                      />
+                                      <input
+                                        type="text"
+                                        value={val}
+                                        onChange={e => set(e.target.value)}
+                                        className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={() => updateWvd3Manual(item.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">Opslaan</button>
+                                  <button onClick={() => setWvd3Editing(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex-1">
+                                  <p className="text-sm text-slate-800">{item.question}</p>
+                                  <div className="flex gap-2 mt-1">
+                                    {[item.name_1, item.name_2, item.name_3].map((name, nameIdx) => (
+                                      <span key={nameIdx} className={`text-xs px-2 py-0.5 rounded ${nameIdx === item.correct_index ? 'bg-emerald-100 text-emerald-700 font-semibold' : 'bg-slate-100 text-slate-600'}`}>
+                                        {name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => { setWvd3Editing(item.id); setWvd3EditQuestion(item.question); setWvd3EditName1(item.name_1); setWvd3EditName2(item.name_2); setWvd3EditName3(item.name_3); setWvd3EditCorrect(item.correct_index); }}
+                                  className="text-xs text-slate-400 hover:text-blue-600"
+                                >
+                                  Bewerk
+                                </button>
+                                <button
+                                  onClick={() => deleteWvd3Manual(item.id)}
+                                  className="text-xs text-slate-400 hover:text-red-600"
+                                >
+                                  Verwijder
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-slate-200 pt-6 mb-6">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-4">Preview (handmatig + auto-gegenereerd)</h4>
+                </div>
+
                 {wieVanDe3Questions.length === 0 ? (
                   <p className="text-center text-slate-500 py-8">Niet genoeg data om vragen te genereren.</p>
                 ) : (

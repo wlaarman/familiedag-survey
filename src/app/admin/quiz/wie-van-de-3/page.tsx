@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { isAuthenticated } from '@/lib/auth';
-import { getAllResponses } from '@/lib/db';
+import { getAllResponses, getWieVanDe3Manual, createTables } from '@/lib/db';
 import { generateWieVanDe3 } from '@/lib/quiz-wie-van-de-3';
 import PrintButton from '../straat/PrintButton';
 
@@ -14,8 +14,9 @@ export default async function WieVanDe3Page({
 
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
-  const responses = await getAllResponses();
-  const questions = generateWieVanDe3(responses);
+  await createTables();
+  const [responses, manualQuestions] = await Promise.all([getAllResponses(), getWieVanDe3Manual()]);
+  const questions = generateWieVanDe3(responses, manualQuestions);
 
   return (
     <div className="min-h-screen bg-white">

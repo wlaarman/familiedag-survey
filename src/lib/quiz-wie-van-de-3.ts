@@ -1,5 +1,5 @@
 import { SurveyResponse } from '@/types/survey';
-import { MANUAL_WIE_VAN_DE_3 } from './quiz-wie-van-de-3-manual';
+import { WieVanDe3Manual } from './db';
 
 export interface WieVanDe3Question {
   number: number;
@@ -106,10 +106,24 @@ function isInteresting(val: string): boolean {
   return !SKIP_VALUES.includes(val.toLowerCase().trim().replace(/\.$/, ''));
 }
 
-export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Question[] {
+export function generateWieVanDe3(responses: SurveyResponse[], manualQuestions: WieVanDe3Manual[] = []): WieVanDe3Question[] {
   const questions: WieVanDe3Question[] = [];
   const usedNames = new Set<string>();
   const usedQuestionKeys = new Set<string>();
+
+  // Manual questions first
+  for (const mq of manualQuestions) {
+    const names = [mq.name_1, mq.name_2, mq.name_3];
+    const correctName = names[mq.correct_index];
+    const shuffled = shuffle([...names], questions.length * 13 + 7);
+    questions.push({
+      number: questions.length + 1,
+      question: mq.question,
+      names: shuffled,
+      answerIndex: shuffled.indexOf(correctName),
+      answerName: correctName,
+    });
+  }
 
   // All persons for decoy picking
   const allPersons: PersonFact[] = [];
@@ -269,19 +283,6 @@ export function generateWieVanDe3(responses: SurveyResponse[]): WieVanDe3Questio
     usedQuestionKeys.add(cand.key);
     answerCount.set(cand.correct.name, currentCount + 1);
     usedNames.add(cand.correct.name);
-  }
-
-  // Manual questions from separate editable file (src/lib/quiz-wie-van-de-3-manual.ts)
-  for (const mq of MANUAL_WIE_VAN_DE_3) {
-    const shuffled = shuffle([...mq.names], questions.length * 13 + 7);
-    const correctName = mq.names[mq.correctIndex];
-    questions.push({
-      number: questions.length + 1,
-      question: mq.question,
-      names: shuffled,
-      answerIndex: shuffled.indexOf(correctName),
-      answerName: correctName,
-    });
   }
 
   return questions;
