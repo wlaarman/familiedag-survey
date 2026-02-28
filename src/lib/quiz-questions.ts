@@ -1,4 +1,5 @@
 import { SurveyResponse } from '@/types/survey';
+import { MANUAL_QUESTIONS } from './quiz-manual-questions';
 
 export interface QuizQuestion {
   number: number;
@@ -90,22 +91,14 @@ function uniqueOptions(opts: string[]): string[] {
   });
 }
 
-// ============================================================
-// HANDMATIGE VRAGEN - Voeg hier je eigen vragen toe!
-// ============================================================
-const MANUAL_QUESTIONS: Omit<QuizQuestion, 'number'>[] = [
-  {
-    category: 'Verjaardagen',
-    question: 'Hoeveel familieleden zijn in 1981 geboren?',
-    type: 'multiple_choice',
-    options: ['2', '3', '4', '5'],
-    answer: '3 (Gerbrand, Willem en Ilona)',
-  },
-];
-
 export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
   const questions: QuizQuestion[] = [];
   let num = 1;
+
+  // ===== HANDMATIGE VRAGEN (eerst) =====
+  for (const mq of MANUAL_QUESTIONS) {
+    questions.push({ ...mq, number: num++ });
+  }
 
   // Collect persons and couples
   const persons: Person[] = [];
@@ -169,49 +162,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 3. OLDEST FAMILY MEMBER =====
-  if (personsWithAge.length >= 2) {
-    const sorted = [...personsWithAge].sort((a, b) => b.age - a.age);
-    const oldest = sorted[0];
-    const decoys = sorted.slice(1).filter(p => p.age !== oldest.age).slice(0, 3);
-    if (decoys.length >= 2) {
-      const options = shuffle(
-        [oldest, ...decoys.slice(0, 3)].map(p => firstName(p.name)),
-        oldest.age
-      );
-      questions.push({
-        number: num++,
-        category: 'Leeftijd',
-        question: 'Wie is het oudste familielid?',
-        type: 'multiple_choice',
-        options,
-        answer: `${firstName(oldest.name)} (${oldest.age} jaar)`,
-      });
-    }
-  }
-
-  // ===== 4. YOUNGEST FAMILY MEMBER =====
-  if (personsWithAge.length >= 2) {
-    const sorted = [...personsWithAge].sort((a, b) => a.age - b.age);
-    const youngest = sorted[0];
-    const decoys = sorted.slice(1).filter(p => p.age !== youngest.age).slice(0, 3);
-    if (decoys.length >= 2) {
-      const options = shuffle(
-        [youngest, ...decoys.slice(0, 3)].map(p => firstName(p.name)),
-        youngest.age
-      );
-      questions.push({
-        number: num++,
-        category: 'Leeftijd',
-        question: 'Wie is het jongste familielid?',
-        type: 'multiple_choice',
-        options,
-        answer: `${firstName(youngest.name)} (${youngest.age} jaar)`,
-      });
-    }
-  }
-
-  // ===== 5. SHARED BIRTHDAYS =====
+  // ===== 3. SHARED BIRTHDAYS =====
   const birthdaysByDay = new Map<string, Person[]>();
   for (const p of persons) {
     if (!p.birthday) continue;
@@ -296,28 +247,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 7. MARRIAGE ORDERING (fixed 4 couples) =====
-  const TROUW_VOLGORDE = ['Marieke', 'Henrieke', 'Rick', 'Willem'];
-  const trouwPick = TROUW_VOLGORDE
-    .map(n => couples.find(c => c.names.startsWith(n)))
-    .filter((c): c is Couple => c !== undefined);
-  if (trouwPick.length >= 4) {
-    const shuffled = shuffle(trouwPick, trouwPick.length * 7);
-    const correctOrder = [...shuffled]
-      .sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime())
-      .map(c => c.names)
-      .join(' → ');
-
-    questions.push({
-      number: num++,
-      category: 'Huwelijken',
-      question: `Zet deze stellen in volgorde van trouwdatum (oudst → nieuwst):\n${shuffled.map((c, i) => `${String.fromCharCode(65 + i)}) ${c.names}`).join('\n')}`,
-      type: 'open',
-      answer: `${correctOrder}\n(${[...trouwPick].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime()).map(c => `${c.names}: ${c.weddingStr}`).join(', ')})`,
-    });
-  }
-
-  // ===== 7. LONGEST MARRIED =====
+  // ===== LONGEST MARRIED =====
   if (couples.length >= 2) {
     const sorted = [...couples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
     const longest = sorted[0];
@@ -475,26 +405,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     });
   }
 
-  // ===== 12. AGE DIFFERENCE =====
-  if (personsWithAge.length >= 4) {
-    const sorted = [...personsWithAge].sort((a, b) => b.age - a.age);
-    const diff = sorted[0].age - sorted[sorted.length - 1].age;
-    questions.push({
-      number: num++,
-      category: 'Leeftijd',
-      question: `Hoeveel jaar zit er tussen het oudste en jongste familielid?`,
-      type: 'multiple_choice',
-      options: shuffle([
-        `${diff} jaar`,
-        `${diff + 7} jaar`,
-        `${diff - 5 > 0 ? diff - 5 : diff + 12} jaar`,
-        `${diff + 15} jaar`,
-      ], diff),
-      answer: `${diff} jaar (${firstName(sorted[0].name)}: ${sorted[0].age} - ${firstName(sorted[sorted.length - 1].name)}: ${sorted[sorted.length - 1].age})`,
-    });
-  }
-
-  // ===== 14. MOST POPULAR VACATION COUNTRY =====
+  // ===== MOST POPULAR VACATION COUNTRY =====
   const countries = new Map<string, number>();
   for (const r of responses) {
     for (const n of [1, 2] as const) {
@@ -516,11 +427,6 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       options: shuffle([topName, ...others], top[1]),
       answer: `${topName} (${top[1]}x genoemd)`,
     });
-  }
-
-  // ===== HANDMATIGE VRAGEN =====
-  for (const mq of MANUAL_QUESTIONS) {
-    questions.push({ ...mq, number: num++ });
   }
 
   return questions;
