@@ -76,17 +76,19 @@ export default function AdminDashboard() {
   const [editStellingText, setEditStellingText] = useState('');
   const [editStellingWaar, setEditStellingWaar] = useState(true);
   const [editStellingToelichting, setEditStellingToelichting] = useState('');
-  const [kenJeElkaarItems, setKenJeElkaarItems] = useState<{ id: number; question: string; answer: string; type: string; toelichting: string | null; sort_order: number }[]>([]);
+  const [kenJeElkaarItems, setKenJeElkaarItems] = useState<{ id: number; question: string; answer: string; type: string; toelichting: string | null; threshold: number | null; sort_order: number }[]>([]);
   const [kenJeElkaarLoading, setKenJeElkaarLoading] = useState(false);
   const [nieuweKjeVraag, setNieuweKjeVraag] = useState('');
   const [nieuweKjeAntwoord, setNieuweKjeAntwoord] = useState('');
   const [nieuweKjeType, setNieuweKjeType] = useState('number');
   const [nieuweKjeToelichting, setNieuweKjeToelichting] = useState('');
+  const [nieuweKjeThreshold, setNieuweKjeThreshold] = useState('');
   const [editingKje, setEditingKje] = useState<number | null>(null);
   const [editKjeVraag, setEditKjeVraag] = useState('');
   const [editKjeAntwoord, setEditKjeAntwoord] = useState('');
   const [editKjeType, setEditKjeType] = useState('number');
   const [editKjeToelichting, setEditKjeToelichting] = useState('');
+  const [editKjeThreshold, setEditKjeThreshold] = useState('');
   const [wvd3ManualItems, setWvd3ManualItems] = useState<{ id: number; question: string; name_1: string; name_2: string; name_3: string; correct_index: number; sort_order: number }[]>([]);
   const [wvd3ManualLoading, setWvd3ManualLoading] = useState(false);
   const [wvd3NewQuestion, setWvd3NewQuestion] = useState('');
@@ -285,13 +287,14 @@ export default function AdminDashboard() {
       const response = await fetch('/api/ken-je-elkaar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: nieuweKjeVraag.trim(), answer: nieuweKjeAntwoord.trim(), type: nieuweKjeType, toelichting: nieuweKjeToelichting.trim() || undefined }),
+        body: JSON.stringify({ question: nieuweKjeVraag.trim(), answer: nieuweKjeAntwoord.trim(), type: nieuweKjeType, toelichting: nieuweKjeToelichting.trim() || undefined, threshold: nieuweKjeThreshold ? Number(nieuweKjeThreshold) : undefined }),
       });
       if (response.ok) {
         setNieuweKjeVraag('');
         setNieuweKjeAntwoord('');
         setNieuweKjeType('number');
         setNieuweKjeToelichting('');
+        setNieuweKjeThreshold('');
         fetchKenJeElkaar();
       }
     } catch (err) {
@@ -304,7 +307,7 @@ export default function AdminDashboard() {
       await fetch('/api/ken-je-elkaar', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, question: editKjeVraag, answer: editKjeAntwoord, type: editKjeType, toelichting: editKjeToelichting.trim() || undefined }),
+        body: JSON.stringify({ id, question: editKjeVraag, answer: editKjeAntwoord, type: editKjeType, toelichting: editKjeToelichting.trim() || undefined, threshold: editKjeThreshold ? Number(editKjeThreshold) : undefined }),
       });
       setEditingKje(null);
       fetchKenJeElkaar();
@@ -2130,13 +2133,22 @@ export default function AdminDashboard() {
                             </button>
                           </div>
                         </div>
-                        <input
-                          type="text"
-                          value={nieuweKjeToelichting}
-                          onChange={e => setNieuweKjeToelichting(e.target.value)}
-                          placeholder="Toelichting (optioneel, bijv. namen van familieleden)..."
-                          className="px-3 py-2 border border-slate-300 rounded-lg text-sm"
-                        />
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <input
+                            type="text"
+                            value={nieuweKjeToelichting}
+                            onChange={e => setNieuweKjeToelichting(e.target.value)}
+                            placeholder="Toelichting (optioneel, bijv. namen van familieleden)..."
+                            className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                          <input
+                            type="number"
+                            value={nieuweKjeThreshold}
+                            onChange={e => setNieuweKjeThreshold(e.target.value)}
+                            placeholder="Drempelwaarde (meer/minder)"
+                            className="w-48 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -2202,19 +2214,31 @@ export default function AdminDashboard() {
                                     <button onClick={() => setEditingKje(null)} className="text-xs text-slate-400 hover:text-slate-600">Annuleer</button>
                                   </div>
                                 </div>
-                                <input
-                                  type="text"
-                                  value={editKjeToelichting}
-                                  onChange={e => setEditKjeToelichting(e.target.value)}
-                                  placeholder="Toelichting (optioneel)..."
-                                  className="px-2 py-1 border border-slate-300 rounded text-sm"
-                                />
+                                <div className="flex flex-col sm:flex-row gap-2">
+                                  <input
+                                    type="text"
+                                    value={editKjeToelichting}
+                                    onChange={e => setEditKjeToelichting(e.target.value)}
+                                    placeholder="Toelichting (optioneel)..."
+                                    className="flex-1 px-2 py-1 border border-slate-300 rounded text-sm"
+                                  />
+                                  <input
+                                    type="number"
+                                    value={editKjeThreshold}
+                                    onChange={e => setEditKjeThreshold(e.target.value)}
+                                    placeholder="Drempelwaarde"
+                                    className="w-36 px-2 py-1 border border-slate-300 rounded text-sm"
+                                  />
+                                </div>
                               </div>
                             ) : (
                               <>
                                 <div className="flex-1">
                                   <span className="text-sm text-slate-800">{item.question}</span>
-                                  <p className="text-xs text-slate-400 mt-0.5">{item.answer}</p>
+                                  <p className="text-xs text-slate-400 mt-0.5">
+                                    {item.answer}
+                                    {item.threshold != null && <span className="ml-2 text-blue-500">(drempel: {item.threshold})</span>}
+                                  </p>
                                   {item.toelichting && (
                                     <p className="text-xs text-slate-400 mt-0.5 italic">{item.toelichting}</p>
                                   )}
@@ -2225,7 +2249,7 @@ export default function AdminDashboard() {
                                   {item.type === 'number' ? 'GETAL' : 'OPEN'}
                                 </span>
                                 <button
-                                  onClick={() => { setEditingKje(item.id); setEditKjeVraag(item.question); setEditKjeAntwoord(item.answer); setEditKjeType(item.type); setEditKjeToelichting(item.toelichting || ''); }}
+                                  onClick={() => { setEditingKje(item.id); setEditKjeVraag(item.question); setEditKjeAntwoord(item.answer); setEditKjeType(item.type); setEditKjeToelichting(item.toelichting || ''); setEditKjeThreshold(item.threshold != null ? String(item.threshold) : ''); }}
                                   className="text-xs text-slate-400 hover:text-blue-600"
                                 >
                                   Bewerk

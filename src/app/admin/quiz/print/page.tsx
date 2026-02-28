@@ -288,7 +288,7 @@ export default async function PrintAllQuizPage({
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Hoe goed ken je elkaar?</h1>
             <p className="text-slate-500 mt-2 print:text-sm">
               {mode === 'quiz'
-                ? 'Beantwoord de vragen zo goed mogelijk!'
+                ? 'Meer of minder? Omcirkel je antwoord!'
                 : 'Antwoordblad — Hoe goed ken je elkaar?'}
             </p>
             <p className="text-sm text-slate-400 mt-1 print:text-xs">
@@ -297,38 +297,80 @@ export default async function PrintAllQuizPage({
           </div>
 
           {kenJeElkaarVragen.length > 0 && (
-            <div className="space-y-8 print:space-y-5">
-              {kenJeElkaarVragen.map((v, idx) => (
-                <div key={v.id} className="print:break-inside-avoid">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
-                      {idx + 1}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-800 mt-0.5 print:text-sm">{v.question}</p>
-                      {mode === 'quiz' ? (
-                        <div className="mt-3">
-                          {v.type === 'number' ? (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-slate-500 text-sm">Antwoord:</span>
-                              <div className="border-b-2 border-dashed border-slate-300 w-32 h-7 print:h-6" />
+            <div className="space-y-6 print:space-y-4">
+              {kenJeElkaarVragen.map((v, idx) => {
+                const realAnswer = parseInt(v.answer);
+                const isMeer = v.threshold !== null && !isNaN(realAnswer) && realAnswer > v.threshold;
+                return (
+                  <div key={v.id} className="print:break-inside-avoid border border-slate-200 rounded-xl p-5 print:p-3 print:rounded-lg">
+                    <div className="flex gap-3 items-start">
+                      <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-800 print:text-sm">{v.question}</p>
+                        {v.threshold !== null ? (
+                          <>
+                            <p className="text-sm text-slate-500 mt-1.5 font-medium">
+                              Meer of minder dan <span className="text-blue-600 font-bold text-base">{v.threshold}</span>?
+                            </p>
+                            <div className="flex gap-3 mt-3 print:mt-2">
+                              {(['meer', 'minder'] as const).map((optie) => {
+                                const isCorrect = optie === 'meer' ? isMeer : !isMeer;
+                                return (
+                                  <div key={optie} className={`flex-1 text-center px-3 py-3 rounded-lg border-2 print:py-2 ${mode === 'antwoorden' && isCorrect ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                    <span className={`text-xs font-bold block mb-0.5 ${mode === 'antwoorden' && isCorrect ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                      {optie === 'meer' ? 'A' : 'B'}
+                                    </span>
+                                    <span className={`font-semibold text-sm print:text-xs uppercase tracking-wide ${mode === 'antwoorden' && isCorrect ? 'text-emerald-700' : 'text-slate-700'}`}>
+                                      {optie === 'meer' ? 'Meer' : 'Minder'}
+                                    </span>
+                                    {mode === 'antwoorden' && isCorrect && (
+                                      <span className="block text-emerald-600 text-xs mt-0.5">&#10003;</span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
-                          ) : (
-                            <div className="border-b-2 border-dashed border-slate-300 h-7 mt-2 print:h-6" />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
-                          <span className="font-semibold text-emerald-700">{v.answer}</span>
-                          {v.toelichting && (
-                            <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
-                          )}
-                        </div>
-                      )}
+                            {mode === 'antwoorden' && (
+                              <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
+                                <span className="font-semibold text-emerald-700">{v.answer}</span>
+                                {v.toelichting && (
+                                  <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
+                                )}
+                              </div>
+                            )}
+                            {mode === 'quiz' && (
+                              <div className="flex items-center gap-2 mt-3 print:mt-2">
+                                <span className="text-xs text-slate-400">Mijn antwoord:</span>
+                                <div className="flex gap-2">
+                                  {['A', 'B'].map((letter) => (
+                                    <div key={letter} className="w-7 h-7 border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-400 print:w-6 print:h-6">
+                                      {letter}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : mode === 'antwoorden' ? (
+                          <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
+                            <span className="font-semibold text-emerald-700">{v.answer}</span>
+                            {v.toelichting && (
+                              <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 mt-3">
+                            <span className="text-slate-500 text-sm">Antwoord:</span>
+                            <div className="border-b-2 border-dashed border-slate-300 w-32 h-7 print:h-6" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
