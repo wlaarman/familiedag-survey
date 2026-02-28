@@ -18,10 +18,10 @@ export async function POST(request: NextRequest) {
     const authenticated = await isAuthenticated();
     if (!authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { question, answer, type } = await request.json();
+    const { question, answer, type, toelichting } = await request.json();
     if (!question || !answer) return NextResponse.json({ error: 'Missing question or answer' }, { status: 400 });
 
-    const id = await addKenJeElkaar(question, answer, type || 'number');
+    const id = await addKenJeElkaar(question, answer, type || 'number', toelichting);
     return NextResponse.json({ id });
   } catch (error) {
     console.error('Failed to add ken je elkaar:', error);
@@ -34,10 +34,10 @@ export async function PATCH(request: NextRequest) {
     const authenticated = await isAuthenticated();
     if (!authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id, question, answer, type } = await request.json();
+    const { id, question, answer, type, toelichting } = await request.json();
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    await updateKenJeElkaar(id, question, answer, type);
+    await updateKenJeElkaar(id, question, answer, type, toelichting);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Failed to update ken je elkaar:', error);

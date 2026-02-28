@@ -152,10 +152,12 @@ export async function createTables() {
       question TEXT NOT NULL,
       answer TEXT NOT NULL,
       type VARCHAR(20) NOT NULL DEFAULT 'number',
+      toelichting TEXT,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE ken_je_elkaar ADD COLUMN IF NOT EXISTS toelichting TEXT`;
 
   // Participants table for groepsindeling
   await sql`
@@ -433,27 +435,28 @@ export interface KenJeElkaar {
   question: string;
   answer: string;
   type: string; // 'number' or 'open'
+  toelichting: string | null;
   sort_order: number;
 }
 
 export async function getKenJeElkaar(): Promise<KenJeElkaar[]> {
-  const result = await sql`SELECT id, question, answer, type, sort_order FROM ken_je_elkaar ORDER BY sort_order, id`;
+  const result = await sql`SELECT id, question, answer, type, toelichting, sort_order FROM ken_je_elkaar ORDER BY sort_order, id`;
   return result.rows as KenJeElkaar[];
 }
 
-export async function addKenJeElkaar(question: string, answer: string, type: string): Promise<number> {
+export async function addKenJeElkaar(question: string, answer: string, type: string, toelichting?: string): Promise<number> {
   const maxOrder = await sql`SELECT COALESCE(MAX(sort_order), 0) + 1 as next FROM ken_je_elkaar`;
   const nextOrder = maxOrder.rows[0].next;
   const result = await sql`
-    INSERT INTO ken_je_elkaar (question, answer, type, sort_order)
-    VALUES (${question}, ${answer}, ${type}, ${nextOrder})
+    INSERT INTO ken_je_elkaar (question, answer, type, toelichting, sort_order)
+    VALUES (${question}, ${answer}, ${type}, ${toelichting || null}, ${nextOrder})
     RETURNING id
   `;
   return result.rows[0].id;
 }
 
-export async function updateKenJeElkaar(id: number, question: string, answer: string, type: string): Promise<void> {
-  await sql`UPDATE ken_je_elkaar SET question = ${question}, answer = ${answer}, type = ${type} WHERE id = ${id}`;
+export async function updateKenJeElkaar(id: number, question: string, answer: string, type: string, toelichting?: string): Promise<void> {
+  await sql`UPDATE ken_je_elkaar SET question = ${question}, answer = ${answer}, type = ${type}, toelichting = ${toelichting || null} WHERE id = ${id}`;
 }
 
 export async function deleteKenJeElkaar(id: number): Promise<void> {

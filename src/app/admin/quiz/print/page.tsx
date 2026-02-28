@@ -320,6 +320,9 @@ export default async function PrintAllQuizPage({
                       ) : (
                         <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
                           <span className="font-semibold text-emerald-700">{v.answer}</span>
+                          {v.toelichting && (
+                            <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
+                          )}
                         </div>
                       )}
                     </div>
