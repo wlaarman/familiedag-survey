@@ -2059,8 +2059,7 @@ export default function AdminDashboard() {
             {/* Ken je elkaar Tab */}
             {activeTab === 'kenjeeelkaar' && (
               <div>
-                {(kenJeElkaarItems.length > 0 || kenJeElkaarLoading) && (
-                  <div>
+                <div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                       <div>
                         <h3 className="text-lg font-semibold text-slate-800">Hoe goed ken je elkaar?</h3>
@@ -2224,7 +2223,6 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                )}
               </div>
             )}
 
