@@ -84,6 +84,7 @@ export default function AdminDashboard() {
   const [cijferMode, setCijferMode] = useState<'quiz' | 'antwoorden'>('antwoorden');
   const [wieVanDe3Mode, setWieVanDe3Mode] = useState<'quiz' | 'antwoorden'>('antwoorden');
   const [straatVariant, setStraatVariant] = useState<'normaal' | 'moeilijk' | 'straat' | 'antwoorden'>('antwoorden');
+  const [fotoMode, setFotoMode] = useState<'overzicht' | 'kleur' | 'zwartwit' | 'antwoorden'>('overzicht');
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -115,6 +116,19 @@ export default function AdminDashboard() {
   // Generate quiz data from responses
   const cijferQuestions = useMemo(() => responses.length > 0 ? generateQuestions(responses) : [], [responses]);
   const wieVanDe3Questions = useMemo(() => responses.length > 0 ? generateWieVanDe3(responses) : [], [responses]);
+  const quizPhotos = useMemo(() => {
+    const photos: { name: string; url: string; responseId: number }[] = [];
+    for (const r of responses) {
+      if (r.foto_1_url) photos.push({ name: r.naam_1, url: r.foto_1_url, responseId: r.id });
+      if (r.foto_2_url && r.naam_2) photos.push({ name: r.naam_2, url: r.foto_2_url, responseId: r.id });
+    }
+    photos.sort((a, b) => {
+      const hashA = a.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) * 31 + a.responseId;
+      const hashB = b.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) * 31 + b.responseId;
+      return hashA - hashB;
+    });
+    return photos;
+  }, [responses]);
 
   const fetchCustomLogos = async () => {
     try {
@@ -806,30 +820,30 @@ export default function AdminDashboard() {
             {activeTab === 'photos' && (
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                  <h3 className="text-lg font-semibold text-slate-800">{stats.photos.length} Foto&apos;s</h3>
+                  <h3 className="text-lg font-semibold text-slate-800">Wie is Wie? &mdash; {quizPhotos.length} foto&apos;s</h3>
                   <div className="flex flex-wrap gap-2">
+                    {(['overzicht', 'kleur', 'zwartwit', 'antwoorden'] as const).map((m) => {
+                      const labels = { overzicht: 'Overzicht', kleur: 'Quiz (kleur)', zwartwit: 'Quiz (zwart-wit)', antwoorden: 'Antwoorden' };
+                      const colors = { overzicht: 'bg-slate-600 hover:bg-slate-700', kleur: 'bg-purple-600 hover:bg-purple-700', zwartwit: 'bg-slate-700 hover:bg-slate-800', antwoorden: 'bg-emerald-600 hover:bg-emerald-700' };
+                      const isActive = fotoMode === m;
+                      return (
+                        <button
+                          key={m}
+                          onClick={() => setFotoMode(m)}
+                          className={`px-3 py-2 rounded-lg font-medium text-sm ${isActive ? `${colors[m]} text-white` : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                          {labels[m]}
+                        </button>
+                      );
+                    })}
                     <a
-                      href="/admin/quiz/fotos?mode=quiz&variant=normaal"
+                      href={`/admin/quiz/fotos?mode=${fotoMode === 'antwoorden' ? 'antwoorden' : 'quiz'}&variant=${fotoMode === 'zwartwit' ? 'moeilijk' : 'normaal'}`}
                       target="_blank"
-                      className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium text-sm"
+                      className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-medium text-sm"
                     >
-                      Quiz (kleur)
+                      Printversie
                     </a>
-                    <a
-                      href="/admin/quiz/fotos?mode=quiz&variant=moeilijk"
-                      target="_blank"
-                      className="px-3 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-800 font-medium text-sm"
-                    >
-                      Quiz (zwart-wit)
-                    </a>
-                    <a
-                      href="/admin/quiz/fotos?mode=antwoorden"
-                      target="_blank"
-                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
-                    >
-                      Antwoorden
-                    </a>
-                    {stats.photos.length > 0 && (
+                    {quizPhotos.length > 0 && (
                       <button
                         onClick={downloadAllPhotos}
                         className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center gap-2 text-sm"
@@ -837,31 +851,63 @@ export default function AdminDashboard() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        Download alle
+                        Download
                       </button>
                     )}
                   </div>
                 </div>
-                {stats.photos.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">Nog geen foto's geupload</p>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {stats.photos.map((photo, idx) => (
-                      <div
-                        key={idx}
-                        className="cursor-pointer group"
-                        onClick={() => setSelectedPhoto(photo.url)}
-                      >
-                        <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
-                          <img
-                            src={photo.url}
-                            alt={photo.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                          />
+                {fotoMode === 'overzicht' ? (
+                  stats.photos.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">Nog geen foto&apos;s geupload</p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {stats.photos.map((photo, idx) => (
+                        <div
+                          key={idx}
+                          className="cursor-pointer group"
+                          onClick={() => setSelectedPhoto(photo.url)}
+                        >
+                          <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
+                            <img
+                              src={photo.url}
+                              alt={photo.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          </div>
+                          <p className="text-sm text-slate-600 mt-1 truncate">{photo.name}</p>
                         </div>
-                        <p className="text-sm text-slate-600 mt-1 truncate">{photo.name}</p>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  )
+                ) : quizPhotos.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">Nog geen foto&apos;s geupload</p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                    {quizPhotos.map((photo, idx) => {
+                      const showName = fotoMode === 'antwoorden';
+                      const isGrayscale = fotoMode === 'zwartwit';
+                      return (
+                        <div key={`${photo.responseId}-${photo.name}`} className="text-center">
+                          <div className="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden relative shadow-sm">
+                            <img
+                              src={photo.url}
+                              alt={showName ? photo.name : `Foto ${idx + 1}`}
+                              className={`w-full h-full object-cover ${isGrayscale ? 'grayscale sepia-[0.15]' : ''}`}
+                            />
+                            <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow">
+                              {idx + 1}
+                            </div>
+                          </div>
+                          <div className="mt-2">
+                            {showName ? (
+                              <p className="font-semibold text-emerald-700 text-sm">{photo.name}</p>
+                            ) : (
+                              <div className="border-b-2 border-dashed border-slate-300 h-6 mx-2" />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
