@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { SurveyResponse } from '@/types/survey';
 import { BEDRIJVEN } from '@/lib/bedrijven';
+import { generateQuestions, QuizQuestion } from '@/lib/quiz-questions';
+import { generateWieVanDe3, WieVanDe3Question } from '@/lib/quiz-wie-van-de-3';
 
 type TabType = 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
 
@@ -77,6 +79,8 @@ export default function AdminDashboard() {
   const [maxPerGroep, setMaxPerGroep] = useState(6);
   const [editingParticipant, setEditingParticipant] = useState<number | null>(null);
   const [metOrganisatie, setMetOrganisatie] = useState(true);
+  const [cijferMode, setCijferMode] = useState<'quiz' | 'antwoorden'>('antwoorden');
+  const [wieVanDe3Mode, setWieVanDe3Mode] = useState<'quiz' | 'antwoorden'>('antwoorden');
 
   // Get active tab from URL or default to 'responses'
   const tabParam = searchParams.get('tab');
@@ -94,6 +98,17 @@ export default function AdminDashboard() {
     fetchResponses();
     fetchCustomLogos();
   }, []);
+
+  // Auto-load feit-of-fabel when tab is activated
+  useEffect(() => {
+    if (activeTab === 'feitoffabel' && feitOfFabelItems.length === 0 && !feitOfFabelLoading) {
+      fetchFeitOfFabel();
+    }
+  }, [activeTab]);
+
+  // Generate quiz data from responses
+  const cijferQuestions = useMemo(() => responses.length > 0 ? generateQuestions(responses) : [], [responses]);
+  const wieVanDe3Questions = useMemo(() => responses.length > 0 ? generateWieVanDe3(responses) : [], [responses]);
 
   const fetchCustomLogos = async () => {
     try {
@@ -1253,29 +1268,63 @@ export default function AdminDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-800">Cijferronde</h3>
-                    <p className="text-sm text-slate-500">Automatisch gegenereerd uit {responses.length} inzendingen</p>
+                    <p className="text-sm text-slate-500">{cijferQuestions.length} vragen uit {responses.length} inzendingen</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setCijferMode(cijferMode === 'quiz' ? 'antwoorden' : 'quiz')}
+                      className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
+                    >
+                      {cijferMode === 'quiz' ? 'Toon antwoorden' : 'Toon quiz'}
+                    </button>
                     <a
-                      href="/admin/quiz/cijfers?mode=quiz"
+                      href={`/admin/quiz/cijfers?mode=${cijferMode}`}
                       target="_blank"
                       className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm"
                     >
-                      Open quiz
-                    </a>
-                    <a
-                      href="/admin/quiz/cijfers?mode=antwoorden"
-                      target="_blank"
-                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
-                    >
-                      Antwoorden
+                      Open printversie
                     </a>
                   </div>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-                  <p className="font-medium mb-1">Dynamisch gegenereerd</p>
-                  <p>De vragen worden automatisch gegenereerd uit de huidige enquêtedata. Als er nieuwe inzendingen binnenkomen, veranderen de vragen en antwoorden mee. Open de quiz opnieuw voor de laatste versie.</p>
-                </div>
+                {cijferQuestions.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">Niet genoeg data om vragen te genereren.</p>
+                ) : (
+                  <div className="space-y-6">
+                    {cijferQuestions.map((q) => (
+                      <div key={q.number}>
+                        <div className="flex gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            {q.number}
+                          </div>
+                          <div className="flex-1">
+                            <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">{q.category}</span>
+                            <p className="font-medium text-slate-800 mt-0.5 whitespace-pre-line">{q.question}</p>
+                            {cijferMode === 'quiz' ? (
+                              <div className="mt-3">
+                                {q.type === 'multiple_choice' && q.options ? (
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {q.options.map((opt, i) => (
+                                      <div key={i} className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200">
+                                        <span className="w-6 h-6 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-500 flex-shrink-0">{String.fromCharCode(65 + i)}</span>
+                                        <span className="text-slate-700">{opt}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="border-b-2 border-dashed border-slate-300 h-7 mt-2" />
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                                <span className="font-semibold text-emerald-700 whitespace-pre-line">{q.answer}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -1285,46 +1334,60 @@ export default function AdminDashboard() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-slate-800">Wie van de 3?</h3>
-                    <p className="text-sm text-slate-500">3 namen, 1 juist antwoord - automatisch gegenereerd</p>
+                    <p className="text-sm text-slate-500">{wieVanDe3Questions.length} vragen - automatisch gegenereerd</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setWieVanDe3Mode(wieVanDe3Mode === 'quiz' ? 'antwoorden' : 'quiz')}
+                      className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
+                    >
+                      {wieVanDe3Mode === 'quiz' ? 'Toon antwoorden' : 'Toon quiz'}
+                    </button>
                     <a
-                      href="/admin/quiz/wie-van-de-3?mode=quiz"
+                      href={`/admin/quiz/wie-van-de-3?mode=${wieVanDe3Mode}`}
                       target="_blank"
                       className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm"
                     >
-                      Open quiz
-                    </a>
-                    <a
-                      href="/admin/quiz/wie-van-de-3?mode=antwoorden"
-                      target="_blank"
-                      className="px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm"
-                    >
-                      Antwoorden
+                      Open printversie
                     </a>
                   </div>
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
-                  <p className="font-medium mb-1">Dynamisch gegenereerd</p>
-                  <p>Vragen worden samengesteld uit unieke feiten: vakantielanden, angsten, lievelingsgerechten, bijnamen, auto&apos;s, sport, etc. Alleen feiten die bij precies 1 persoon horen worden gebruikt. Open opnieuw na nieuwe inzendingen.</p>
-                </div>
+                {wieVanDe3Questions.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">Niet genoeg data om vragen te genereren.</p>
+                ) : (
+                  <div className="space-y-6">
+                    {wieVanDe3Questions.map((q) => (
+                      <div key={q.number} className="border border-slate-200 rounded-xl p-5">
+                        <div className="flex gap-3 items-start">
+                          <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                            {q.number}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-slate-800">{q.question}</p>
+                            <div className="flex gap-3 mt-3">
+                              {q.names.map((name, i) => {
+                                const isAnswer = i === q.answerIndex;
+                                return (
+                                  <div key={i} className={`flex-1 text-center px-3 py-3 rounded-lg border-2 ${wieVanDe3Mode === 'antwoorden' && isAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+                                    <span className={`text-xs font-bold block mb-0.5 ${wieVanDe3Mode === 'antwoorden' && isAnswer ? 'text-emerald-600' : 'text-slate-400'}`}>{String.fromCharCode(65 + i)}</span>
+                                    <span className={`font-semibold text-sm ${wieVanDe3Mode === 'antwoorden' && isAnswer ? 'text-emerald-700' : 'text-slate-700'}`}>{name}</span>
+                                    {wieVanDe3Mode === 'antwoorden' && isAnswer && <span className="block text-emerald-600 text-xs mt-0.5">&#10003;</span>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
             {/* Feit of Fabel Tab */}
             {activeTab === 'feitoffabel' && (
               <div>
-                {feitOfFabelItems.length === 0 && !feitOfFabelLoading && (
-                  <div className="text-center py-4 mb-4">
-                    <button
-                      onClick={fetchFeitOfFabel}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                    >
-                      Stellingen laden
-                    </button>
-                  </div>
-                )}
-
                 {(feitOfFabelItems.length > 0 || feitOfFabelLoading) && (
                   <div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
