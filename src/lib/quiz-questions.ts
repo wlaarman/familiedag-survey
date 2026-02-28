@@ -137,16 +137,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     .filter(p => p.birthday)
     .map(p => ({ ...p, age: ageBetween(p.birthday!, now) }));
 
-  // ===== 1. TOTAL NUMBER OF FAMILY MEMBERS =====
-  questions.push({
-    number: num++,
-    category: 'Algemeen',
-    question: 'Hoeveel familieleden hebben de enquête ingevuld? (individuen, niet huishoudens)',
-    type: 'number',
-    answer: `${persons.length} personen (${responses.length} inzendingen)`,
-  });
-
-  // ===== 2. COMBINED AGE =====
+  // ===== 1. COMBINED AGE =====
   if (personsWithAge.length >= 2) {
     const totalAge = personsWithAge.reduce((sum, p) => sum + p.age, 0);
     const avgAge = Math.round(totalAge / personsWithAge.length);
