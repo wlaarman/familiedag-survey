@@ -8,7 +8,7 @@ import { BEDRIJVEN } from '@/lib/bedrijven';
 import { generateQuestions, QuizQuestion } from '@/lib/quiz-questions';
 import { generateWieVanDe3, WieVanDe3Question } from '@/lib/quiz-wie-van-de-3';
 
-type TabType = 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
+type TabType = 'quiz' | 'responses' | 'overview' | 'photos' | 'logoquiz' | 'straatquiz' | 'cijferquiz' | 'wievande3' | 'feitoffabel' | 'groepen';
 
 interface Statistics {
   total: number;
@@ -49,7 +49,7 @@ const FAMILIE_KLEUREN: Record<string, string> = {
 
 const ORGANISATIE_NAMEN = ['Jandirk', 'Linda', 'Willem', 'Mirjam'];
 
-const VALID_TABS: TabType[] = ['responses', 'overview', 'photos', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
+const VALID_TABS: TabType[] = ['quiz', 'responses', 'overview', 'photos', 'logoquiz', 'straatquiz', 'cijferquiz', 'wievande3', 'feitoffabel', 'groepen'];
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
   const tabParam = searchParams.get('tab');
   const activeTab: TabType = tabParam && VALID_TABS.includes(tabParam as TabType)
     ? (tabParam as TabType)
-    : 'responses';
+    : 'quiz';
 
   const setActiveTab = (tab: TabType) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -654,6 +654,7 @@ export default function AdminDashboard() {
           <div className="border-b border-slate-200 overflow-x-auto print:hidden">
             <nav className="flex gap-1 px-2 min-w-max">
               {[
+                { id: 'quiz', label: 'Quizrondes', icon: '🎯' },
                 { id: 'responses', label: 'Inzendingen', icon: '👥' },
                 { id: 'overview', label: 'Overzicht', icon: '📋' },
                 { id: 'photos', label: `Foto's`, icon: '📷', count: stats.photos.length },
@@ -678,19 +679,113 @@ export default function AdminDashboard() {
                   {'count' in tab && <span className="sm:hidden">{tab.count}</span>}
                 </button>
               ))}
-              <Link
-                href="/admin/quiz"
-                target="_blank"
-                className="px-3 py-3 text-sm font-medium border-b-2 border-transparent text-indigo-600 hover:text-indigo-800 whitespace-nowrap"
-              >
-                <span className="mr-1">🎯</span>
-                <span className="hidden sm:inline">Quiz overzicht</span>
-              </Link>
             </nav>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
+            {/* Quiz Tab */}
+            {activeTab === 'quiz' && (
+              <div>
+                {/* Print buttons */}
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <a
+                    href="/admin/quiz/print?mode=quiz"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    <span>🖨️</span> Print alle quizzen
+                  </a>
+                  <a
+                    href="/admin/quiz/print?mode=antwoorden"
+                    target="_blank"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors"
+                  >
+                    <span>🖨️</span> Print alle antwoorden
+                  </a>
+                </div>
+
+                {/* Familieportret */}
+                <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200">
+                  <img
+                    src="/familieportret.png"
+                    alt="Familieportret"
+                    className="w-full object-cover"
+                  />
+                </div>
+
+                {/* Ronde kaarten */}
+                <div className="space-y-4">
+                  {[
+                    { nummer: 1, titel: 'Raad de kinderfoto', beschrijving: 'Portretfoto\'s van familieleden — wie is wie?', icon: '📷', links: [
+                      { label: 'Quiz (kleur)', href: '/admin/quiz/fotos?mode=quiz&variant=normaal', variant: 'primary' as const },
+                      { label: 'Quiz (zwart-wit)', href: '/admin/quiz/fotos?mode=quiz&variant=moeilijk', variant: 'secondary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/fotos?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                    { nummer: 2, titel: 'Feit of fabel', beschrijving: 'Stellingen over de familie — klopt het of niet?', icon: '✅', links: [
+                      { label: 'Quiz', href: '/admin/quiz/feit-of-fabel?mode=quiz', variant: 'primary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/feit-of-fabel?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                    { nummer: 3, titel: 'Cijferronde', beschrijving: 'Getallen raden: leeftijden, schoenmaten, trouwdata en meer.', icon: '🔢', links: [
+                      { label: 'Quiz', href: '/admin/quiz/cijfers?mode=quiz', variant: 'primary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/cijfers?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                    { nummer: 4, titel: 'Hoe goed ken je elkaar', beschrijving: 'Vragen over familieleden — hoe goed ken je ze echt?', icon: '💬', links: undefined },
+                    { nummer: 5, titel: 'Raad de straat', beschrijving: 'Streetview foto\'s van adressen — raad wie er woont.', icon: '🏠', links: [
+                      { label: 'Quiz', href: '/admin/quiz/straat?mode=quiz', variant: 'primary' as const },
+                      { label: 'Quiz (moeilijk)', href: '/admin/quiz/straat?mode=quiz&variant=moeilijk', variant: 'secondary' as const },
+                      { label: 'Quiz (straat)', href: '/admin/quiz/straat?mode=quiz&variant=straat', variant: 'secondary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/straat?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                    { nummer: 6, titel: 'Logo ronde', beschrijving: 'Rijssense bedrijfslogo\'s herkennen.', icon: '🏢', links: [
+                      { label: 'Quiz', href: '/admin/quiz/logos?mode=quiz', variant: 'primary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/logos?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                    { nummer: 7, titel: 'Wie van de 3', beschrijving: '3 namen, 1 juist antwoord — gebaseerd op unieke feiten.', icon: '🤔', links: [
+                      { label: 'Quiz', href: '/admin/quiz/wie-van-de-3?mode=quiz', variant: 'primary' as const },
+                      { label: 'Antwoorden', href: '/admin/quiz/wie-van-de-3?mode=antwoorden', variant: 'answer' as const },
+                    ]},
+                  ].map((ronde) => (
+                    <div
+                      key={ronde.nummer}
+                      className="bg-slate-50 rounded-xl border border-slate-200 p-4 flex gap-4 items-start"
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xl border border-slate-200">
+                        {ronde.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-xs font-semibold text-slate-400 uppercase">Ronde {ronde.nummer}</span>
+                        </div>
+                        <h3 className="text-base font-semibold text-slate-800">{ronde.titel}</h3>
+                        <p className="text-sm text-slate-500 mt-0.5">{ronde.beschrijving}</p>
+                        {ronde.links ? (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {ronde.links.map((link) => (
+                              <a
+                                key={link.href}
+                                href={link.href}
+                                target="_blank"
+                                className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                                  link.variant === 'primary' ? 'bg-indigo-600 text-white hover:bg-indigo-700' :
+                                  link.variant === 'answer' ? 'bg-emerald-600 text-white hover:bg-emerald-700' :
+                                  'bg-slate-600 text-white hover:bg-slate-700'
+                                }`}
+                              >
+                                {link.label}
+                              </a>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-amber-600 mt-2 font-medium">Nog niet beschikbaar</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Responses Tab */}
             {activeTab === 'responses' && (
               <div className="overflow-x-auto">
