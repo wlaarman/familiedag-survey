@@ -266,7 +266,9 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
   // ===== 8. CLOSEST WEDDINGS =====
   if (couples.length >= 3) {
     const EXCLUDE_NAMES = ['Willem', 'Mirjam', 'Rick', 'Nienke'];
-    const sorted = [...couples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
+    // Filter out excluded couples BEFORE computing pairs
+    const eligibleCouples = couples.filter(c => !EXCLUDE_NAMES.some(n => c.names.includes(n)));
+    const sorted = [...eligibleCouples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
 
     // Calculate days between each consecutive pair
     const pairDiffs: { pair: string; days: number; c1: Couple; c2: Couple }[] = [];
@@ -283,7 +285,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
     }
     pairDiffs.sort((a, b) => a.days - b.days);
 
-    if (pairDiffs.length >= 2) {
+    if (pairDiffs.length >= 4) {
       const closestPair = pairDiffs[0];
 
       function formatDiff(days: number): string {
@@ -293,32 +295,24 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
         return `${Math.floor(days / 365)} jaar en ${Math.round((days % 365) / 30)} maanden`;
       }
 
-      // Build option list: correct answer + decoys (exclude pairs containing Willem/Mirjam or Rick/Nienke)
-      const correctAnswer = closestPair.pair;
-      const decoys = pairDiffs
-        .filter(pd => pd.pair !== correctAnswer)
-        .filter(pd => !EXCLUDE_NAMES.some(n => pd.pair.includes(n)))
-        .slice(0, 3);
+      // Correct answer + 3 decoys
+      const allOptions = [closestPair, ...pairDiffs.filter(pd => pd.pair !== closestPair.pair).slice(0, 3)];
+      const options = shuffle(allOptions.map(o => o.pair), Math.round(closestPair.days));
 
-      if (decoys.length >= 2) {
-        const allOptions = [closestPair, ...decoys.slice(0, 3)];
-        const options = shuffle(allOptions.map(o => o.pair), Math.round(closestPair.days));
+      // Build answer with differences for all options
+      const diffs = allOptions
+        .sort((a, b) => a.days - b.days)
+        .map(o => `${o.pair}: ${formatDiff(o.days)} verschil`)
+        .join('\n');
 
-        // Build answer with differences for all options
-        const diffs = allOptions
-          .sort((a, b) => a.days - b.days)
-          .map(o => `${o.pair}: ${formatDiff(o.days)} verschil`)
-          .join('\n');
-
-        questions.push({
-          number: num++,
-          category: 'Huwelijken',
-          question: 'Welke twee stellen zijn het dichtst bij elkaar getrouwd?',
-          type: 'multiple_choice',
-          options,
-          answer: `${correctAnswer} (${formatDiff(closestPair.days)} verschil)\n\n${diffs}`,
-        });
-      }
+      questions.push({
+        number: num++,
+        category: 'Huwelijken',
+        question: 'Welke twee stellen zijn het dichtst bij elkaar getrouwd?',
+        type: 'multiple_choice',
+        options,
+        answer: `${closestPair.pair} (${formatDiff(closestPair.days)} verschil)\n\n${diffs}`,
+      });
     }
   }
 
