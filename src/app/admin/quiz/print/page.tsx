@@ -75,7 +75,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 1: Raad de kinderfoto ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-8 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 1</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Wie is Wie?</h1>
@@ -127,7 +127,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 2: Feit of fabel ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-10 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 2</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Feit of Fabel</h1>
@@ -207,7 +207,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 3: Cijferronde ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-10 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 3</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Cijferronde</h1>
@@ -282,7 +282,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 4: Hoe goed ken je elkaar ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-10 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 4</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Hoe goed ken je elkaar?</h1>
@@ -390,7 +390,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 5: Raad de straat ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-8 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 5</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Raad de Straat!</h1>
@@ -448,7 +448,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 6: Logo ronde ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-8 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 6</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Logo Quiz — Rijssense Bedrijven</h1>
@@ -500,7 +500,7 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 7: Wie van de 3 ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
           <div className="text-center mb-10 print:mb-6">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 7</p>
             <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Wie van de 3?</h1>
@@ -582,7 +582,7 @@ export default async function PrintAllQuizPage({
           __html: `
             @media print {
               @page {
-                margin: 1cm;
+                margin: 0;
                 size: A4;
               }
               body {

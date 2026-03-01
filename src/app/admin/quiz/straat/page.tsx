@@ -78,7 +78,7 @@ export default async function StreetviewQuizPage({
       </div>
 
       {/* Quiz content */}
-      <div className="max-w-5xl mx-auto px-4 py-4 print:px-2 print:py-2 print:max-w-none">
+      <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
         {/* Title */}
         <div className="text-center mb-3">
           <h1 className="text-lg font-bold text-slate-800">
@@ -177,7 +177,7 @@ export default async function StreetviewQuizPage({
           __html: `
             @media print {
               @page {
-                margin: 1cm;
+                margin: 0;
                 size: A4;
               }
               body {

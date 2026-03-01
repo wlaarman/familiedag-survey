@@ -75,7 +75,7 @@ export default async function FotoQuizPage({
       </div>
 
       {/* Quiz content */}
-      <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+      <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
         {/* Title */}
         <div className="text-center mb-8 print:mb-6">
           <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
@@ -159,7 +159,7 @@ export default async function FotoQuizPage({
           __html: `
             @media print {
               @page {
-                margin: 1cm;
+                margin: 0;
                 size: A4;
               }
               body {

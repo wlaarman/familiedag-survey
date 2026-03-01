@@ -42,7 +42,7 @@ export default async function WieVanDe3Page({
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8 print:px-4 print:py-4 print:max-w-none">
+      <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
         <div className="text-center mb-10 print:mb-6">
           <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
             Wie van de 3?
@@ -151,7 +151,7 @@ export default async function WieVanDe3Page({
         dangerouslySetInnerHTML={{
           __html: `
             @media print {
-              @page { margin: 1.5cm; size: A4; }
+              @page { margin: 0; size: A4; }
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
           `,
