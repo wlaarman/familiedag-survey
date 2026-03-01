@@ -1,7 +1,14 @@
 [
   {
+    "id": 0,
+    "name": "Opa en Oma",
+    "address": "Dennenlaan 108, Rijssen",
+    "status": "gedownload",
+    "filename": "0_Opa_en_Oma.jpg"
+  },
+  {
     "id": 9,
-    "name": "Kim Heringa  & Rick Heringa ",
+    "name": "Kim & Rick Heringa / Erik & Janneke",
     "address": "Haarboersweg 1, Hoge Hexel",
     "status": "al gedownload",
     "filename": "9_Kim_Heringa_&_Rick_Heringa_.jpg"
@@ -110,12 +117,5 @@
     "address": "Banisweg 26, Rijssen",
     "status": "al gedownload",
     "filename": "28_Jan_Dirk_Otten_&_Linda_Otten.jpg"
-  },
-  {
-    "id": 29,
-    "name": "Erik & Janneke Maassen van den Brink",
-    "address": "Haarboersweg 1A, Hoge Hexel",
-    "status": "gedownload",
-    "filename": "29_Erik_&_Janneke_Maassen_van_den_Brink.jpg"
   }
 ]

@@ -64,22 +64,22 @@ export default async function StreetviewQuizPage({
       </div>
 
       {/* Quiz content */}
-      <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+      <div className="max-w-5xl mx-auto px-4 py-4 print:px-2 print:py-2 print:max-w-none">
         {/* Title */}
-        <div className="text-center mb-8 print:mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
+        <div className="text-center mb-3">
+          <h1 className="text-lg font-bold text-slate-800">
             Raad de Straat!
+            {variant !== 'normaal' && (
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                variant === 'moeilijk'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-purple-100 text-purple-700'
+              }`}>
+                {variant === 'moeilijk' ? 'Moeilijk' : 'Straat'}
+              </span>
+            )}
           </h1>
-          {variant !== 'normaal' && (
-            <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-              variant === 'moeilijk'
-                ? 'bg-orange-100 text-orange-700 print:bg-orange-50'
-                : 'bg-purple-100 text-purple-700 print:bg-purple-50'
-            }`}>
-              {variant === 'moeilijk' ? 'Moeilijke variant' : 'Straat-variant'}
-            </span>
-          )}
-          <p className="text-slate-500 mt-2 print:text-sm">
+          <p className="text-slate-500 text-sm mt-1">
             {mode === 'quiz'
               ? 'Bij welk familielid hoort deze straat? Schrijf de naam op de stippellijn.'
               : 'Antwoordblad - Raad de Straat'}
@@ -91,7 +91,7 @@ export default async function StreetviewQuizPage({
             Nog geen streetview foto&apos;s geupload. Draai eerst het upload script.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-6 print:gap-4 print:grid-cols-2">
+          <div className="grid grid-cols-4 gap-2">
             {items.map((item) => {
               const photoUrl = variant === 'moeilijk' && item.blob_url_hard
                 ? item.blob_url_hard
@@ -102,7 +102,7 @@ export default async function StreetviewQuizPage({
               return (
                 <div
                   key={item.id}
-                  className="border border-slate-200 rounded-xl overflow-hidden print:rounded-lg print:break-inside-avoid"
+                  className="border border-slate-200 rounded-lg overflow-hidden break-inside-avoid"
                 >
                   {/* Photo */}
                   <div className="aspect-[16/10] bg-slate-100 relative">
@@ -111,26 +111,21 @@ export default async function StreetviewQuizPage({
                       alt={`Vraag ${item.question_number}`}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg print:w-6 print:h-6 print:text-xs">
+                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {item.question_number}
                     </div>
                   </div>
 
                   {/* Answer area */}
-                  <div className="p-4 print:p-3">
+                  <div className="px-1.5 py-1">
                     {mode === 'quiz' ? (
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2 print:mb-1">
-                          Wie woont hier?
-                        </p>
-                        <div className="border-b-2 border-dashed border-slate-300 h-8 print:h-6" />
-                      </div>
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
                     ) : (
                       <div>
-                        <p className="font-semibold text-slate-800 text-sm">
+                        <p className="font-semibold text-slate-800 text-[11px] leading-tight">
                           {item.names}
                         </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
+                        <p className="text-[10px] text-slate-500">
                           {item.address}
                         </p>
                       </div>
@@ -144,7 +139,7 @@ export default async function StreetviewQuizPage({
 
         {/* Score section */}
         {mode === 'quiz' && items.length > 0 && (
-          <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+          <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
             <div className="flex items-center justify-between">
               <p className="font-medium text-slate-600">Totaal score:</p>
               <div className="flex items-center gap-2">
@@ -156,7 +151,7 @@ export default async function StreetviewQuizPage({
         )}
 
         {mode === 'quiz' && items.length > 0 && (
-          <div className="mt-6 text-center text-xs text-slate-400 print:mt-4">
+          <div className="mt-2 text-center text-xs text-slate-400">
             Succes! Lever je antwoordblad in bij de quizmaster.
           </div>
         )}
