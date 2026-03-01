@@ -265,38 +265,58 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
 
   // ===== 8. CLOSEST WEDDINGS =====
   if (couples.length >= 3) {
+    const EXCLUDE_NAMES = ['Willem', 'Mirjam', 'Rick', 'Nienke'];
     const sorted = [...couples].sort((a, b) => a.weddingDate.getTime() - b.weddingDate.getTime());
-    let minDays = Infinity;
-    let closestPair: [Couple, Couple] | null = null;
+
+    // Calculate days between each consecutive pair
+    const pairDiffs: { pair: string; days: number; c1: Couple; c2: Couple }[] = [];
     for (let i = 0; i < sorted.length - 1; i++) {
       const days = Math.abs(sorted[i + 1].weddingDate.getTime() - sorted[i].weddingDate.getTime()) / (1000 * 60 * 60 * 24);
-      if (days < minDays && days > 0) {
-        minDays = days;
-        closestPair = [sorted[i], sorted[i + 1]];
+      if (days > 0) {
+        pairDiffs.push({
+          pair: `${sorted[i].names} en ${sorted[i + 1].names}`,
+          days,
+          c1: sorted[i],
+          c2: sorted[i + 1],
+        });
       }
     }
-    if (closestPair) {
-      const months = Math.round(minDays / 30);
-      const timeStr = minDays < 60 ? `${Math.round(minDays)} dagen` : months < 12 ? `${months} maanden` : `${Math.floor(minDays / 365)} jaar en ${Math.round((minDays % 365) / 30)} maanden`;
+    pairDiffs.sort((a, b) => a.days - b.days);
 
-      // Pick other pairs as decoys
-      const otherPairs: string[] = [];
-      for (let i = 0; i < sorted.length - 1 && otherPairs.length < 3; i++) {
-        const pair = `${sorted[i].names} en ${sorted[i + 1].names}`;
-        const correctPair = `${closestPair[0].names} en ${closestPair[1].names}`;
-        if (pair !== correctPair) otherPairs.push(pair);
+    if (pairDiffs.length >= 2) {
+      const closestPair = pairDiffs[0];
+
+      function formatDiff(days: number): string {
+        const months = Math.round(days / 30);
+        if (days < 60) return `${Math.round(days)} dagen`;
+        if (months < 12) return `${months} maanden`;
+        return `${Math.floor(days / 365)} jaar en ${Math.round((days % 365) / 30)} maanden`;
       }
 
-      if (otherPairs.length >= 2) {
-        const correctAnswer = `${closestPair[0].names} en ${closestPair[1].names}`;
-        const options = shuffle([correctAnswer, ...otherPairs.slice(0, 3)], Math.round(minDays));
+      // Build option list: correct answer + decoys (exclude pairs containing Willem/Mirjam or Rick/Nienke)
+      const correctAnswer = closestPair.pair;
+      const decoys = pairDiffs
+        .filter(pd => pd.pair !== correctAnswer)
+        .filter(pd => !EXCLUDE_NAMES.some(n => pd.pair.includes(n)))
+        .slice(0, 3);
+
+      if (decoys.length >= 2) {
+        const allOptions = [closestPair, ...decoys.slice(0, 3)];
+        const options = shuffle(allOptions.map(o => o.pair), Math.round(closestPair.days));
+
+        // Build answer with differences for all options
+        const diffs = allOptions
+          .sort((a, b) => a.days - b.days)
+          .map(o => `${o.pair}: ${formatDiff(o.days)} verschil`)
+          .join('\n');
+
         questions.push({
           number: num++,
           category: 'Huwelijken',
           question: 'Welke twee stellen zijn het dichtst bij elkaar getrouwd?',
           type: 'multiple_choice',
           options,
-          answer: `${correctAnswer} (${timeStr} verschil)`,
+          answer: `${correctAnswer} (${formatDiff(closestPair.days)} verschil)\n\n${diffs}`,
         });
       }
     }
@@ -348,6 +368,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
   const koffieTotal = prefs.koffie + prefs.thee;
   if (koffieTotal > 0) {
     const koffiePct = Math.round((prefs.koffie / koffieTotal) * 100);
+    // Generate realistic percentage options based on actual possible values (n/total)
     questions.push({
       number: num++,
       category: 'Voorkeuren',
@@ -355,9 +376,9 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       type: 'multiple_choice',
       options: shuffle(uniqueOptions([
         `${koffiePct}%`,
-        `${Math.min(100, koffiePct + 15)}%`,
-        `${Math.max(0, koffiePct - 20)}%`,
-        `${Math.min(100, koffiePct + 30)}%`,
+        `${Math.max(0, koffiePct - 13)}%`,
+        `${Math.max(0, koffiePct - 27)}%`,
+        `${Math.min(95, koffiePct + 7)}%`,
       ]), koffiePct),
       answer: `${koffiePct}% (${prefs.koffie} koffie, ${prefs.thee} thee)`,
     });
@@ -366,6 +387,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
   const hondTotal = prefs.hond + prefs.kat;
   if (hondTotal > 0) {
     const hondPct = Math.round((prefs.hond / hondTotal) * 100);
+    // Generate realistic percentage options, avoid clustering near 100%
     questions.push({
       number: num++,
       category: 'Voorkeuren',
@@ -373,9 +395,9 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       type: 'multiple_choice',
       options: shuffle(uniqueOptions([
         `${hondPct}%`,
-        `${Math.min(100, hondPct + 15)}%`,
-        `${Math.max(0, hondPct - 20)}%`,
-        `${Math.min(100, hondPct + 30)}%`,
+        `${Math.max(0, hondPct - 12)}%`,
+        `${Math.max(0, hondPct - 25)}%`,
+        `${Math.min(95, hondPct + 8)}%`,
       ]), hondPct),
       answer: `${hondPct}% (${prefs.hond} hond, ${prefs.kat} kat)`,
     });
