@@ -48,10 +48,10 @@ export default async function LogoQuizPage({
       </div>
 
       {/* Quiz content */}
-      <div className="max-w-5xl mx-auto px-6 py-8 print:px-0 print:py-4 print:max-w-none">
+      <div className="max-w-5xl mx-auto px-6 py-8 print:px-2 print:py-2 print:max-w-none">
         {/* Title */}
-        <div className="text-center mb-8 print:mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">
+        <div className="text-center mb-8 print:mb-3">
+          <h1 className="text-3xl font-bold text-slate-800 print:text-lg">
             Logo Quiz - Rijssense Bedrijven
           </h1>
           <p className="text-slate-500 mt-2 print:text-sm">
@@ -69,26 +69,26 @@ export default async function LogoQuizPage({
             Nog geen logo&apos;s geselecteerd. Ga naar de admin en selecteer logo&apos;s.
           </p>
         ) : (
-          <div className="grid grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
+          <div className="grid grid-cols-2 gap-6 print:grid-cols-4 print:gap-2">
             {selectedBedrijven.map((bedrijf, idx) => (
               <div
                 key={bedrijf.naam}
                 className="text-center print:break-inside-avoid"
               >
                 {/* Logo */}
-                <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden relative shadow-sm print:rounded-lg flex items-center justify-center">
+                <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden relative shadow-sm print:rounded-none print:shadow-none print:border print:border-slate-200 flex items-center justify-center">
                   <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
-                  <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow print:w-6 print:h-6 print:text-xs">
+                  <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow print:w-5 print:h-5 print:text-[10px] print:top-1 print:left-1">
                     {idx + 1}
                   </div>
                 </div>
 
                 {/* Answer area */}
-                <div className="mt-3 print:mt-2">
+                <div className="mt-3 print:mt-0.5">
                   {mode === 'quiz' ? (
-                    <div className="border-b-2 border-dashed border-slate-300 h-7 mx-2 print:h-6" />
+                    <div className="border-b-2 border-dashed border-slate-300 h-7 mx-2 print:h-5 print:mx-0" />
                   ) : (
-                    <p className="font-semibold text-slate-800 text-sm print:text-xs">
+                    <p className="font-semibold text-slate-800 text-sm print:text-[10px] print:leading-tight">
                       {bedrijf.naam}
                     </p>
                   )}
@@ -100,7 +100,7 @@ export default async function LogoQuizPage({
 
         {/* Score section */}
         {mode === 'quiz' && selectedBedrijven.length > 0 && (
-          <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+          <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-3 print:pt-2">
             <div className="flex items-center justify-between">
               <p className="font-medium text-slate-600">Totaal score:</p>
               <div className="flex items-center gap-2">
