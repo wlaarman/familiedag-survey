@@ -52,9 +52,6 @@ export default async function FeitOfFabelPage({
               ? 'Is de stelling waar of niet waar? Omcirkel je antwoord.'
               : 'Antwoordblad — Feit of Fabel'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {stellingen.length} stellingen
-          </p>
         </div>
 
         {stellingen.length === 0 ? (

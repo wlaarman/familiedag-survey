@@ -52,9 +52,6 @@ export default async function CijferQuizPage({
               ? 'Hoe goed ken je de familie? Test je kennis met deze vragen!'
               : 'Antwoordblad - Cijferronde'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {questions.length} vragen
-          </p>
         </div>
 
         {questions.length === 0 ? (

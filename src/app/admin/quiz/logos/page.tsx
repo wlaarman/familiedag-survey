@@ -59,9 +59,6 @@ export default async function LogoQuizPage({
               ? 'Ken je alle logo\'s? Schrijf de naam van het bedrijf onder elk logo.'
               : 'Antwoordblad - Logo Quiz'}
           </p>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Familiedag 2026 &bull; {selectedBedrijven.length} logo&apos;s
-          </p>
         </div>
 
         {selectedBedrijven.length === 0 ? (

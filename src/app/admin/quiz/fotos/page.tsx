@@ -91,9 +91,6 @@ export default async function FotoQuizPage({
               ? 'Ken je alle familieleden? Schrijf de naam onder elke foto.'
               : 'Antwoordblad - Wie is Wie?'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {photos.length} foto&apos;s
-          </p>
         </div>
 
         {photos.length === 0 ? (

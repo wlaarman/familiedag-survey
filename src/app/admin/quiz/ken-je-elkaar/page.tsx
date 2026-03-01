@@ -52,9 +52,6 @@ export default async function KenJeElkaarPage({
               ? 'Meer of minder? Omcirkel je antwoord!'
               : 'Antwoordblad — Hoe goed ken je elkaar?'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {vragen.length} vragen
-          </p>
         </div>
 
         {vragen.length === 0 ? (

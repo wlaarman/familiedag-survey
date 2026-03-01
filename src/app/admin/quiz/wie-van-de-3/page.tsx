@@ -52,9 +52,6 @@ export default async function WieVanDe3Page({
               ? 'Bij elke vraag horen 3 namen. Slechts 1 is het juiste antwoord!'
               : 'Antwoordblad - Wie van de 3?'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {questions.length} vragen
-          </p>
         </div>
 
         {questions.length === 0 ? (

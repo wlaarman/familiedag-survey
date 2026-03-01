@@ -84,9 +84,6 @@ export default async function StreetviewQuizPage({
               ? 'Bij welk familielid hoort deze straat? Schrijf de naam op de stippellijn.'
               : 'Antwoordblad - Raad de Straat'}
           </p>
-          <p className="text-sm text-slate-400 mt-1 print:text-xs">
-            Familiedag 2026 &bull; {items.length} vragen
-          </p>
         </div>
 
         {items.length === 0 ? (
