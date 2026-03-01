@@ -35,6 +35,12 @@ export default async function CijferQuizPage({
             >
               {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk quiz'}
             </a>
+            <a
+              href="/api/quiz/cijfers-pptx"
+              className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm"
+            >
+              PowerPoint
+            </a>
             <PrintButton />
           </div>
         </div>
