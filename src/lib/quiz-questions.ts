@@ -299,10 +299,10 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       const allOptions = [closestPair, ...pairDiffs.filter(pd => pd.pair !== closestPair.pair).slice(0, 3)];
       const options = shuffle(allOptions.map(o => o.pair), Math.round(closestPair.days));
 
-      // Build answer with differences for all options
+      // Build answer with differences and exact dates for all options
       const diffs = allOptions
         .sort((a, b) => a.days - b.days)
-        .map(o => `${o.pair}: ${formatDiff(o.days)} verschil`)
+        .map(o => `${o.pair}: ${formatDiff(o.days)} verschil (${o.c1.weddingStr} en ${o.c2.weddingStr})`)
         .join('\n');
 
       questions.push({
@@ -311,7 +311,7 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
         question: 'Welke twee stellen zijn het dichtst bij elkaar getrouwd?',
         type: 'multiple_choice',
         options,
-        answer: `${closestPair.pair} (${formatDiff(closestPair.days)} verschil)\n\n${diffs}`,
+        answer: `${closestPair.pair} (${formatDiff(closestPair.days)} verschil — ${closestPair.c1.weddingStr} en ${closestPair.c2.weddingStr})\n\n${diffs}`,
       });
     }
   }
@@ -406,10 +406,10 @@ export function generateQuestions(responses: SurveyResponse[]): QuizQuestion[] {
       question: `Hoeveel huishoudens hebben huisdieren?`,
       type: 'multiple_choice',
       options: shuffle([
-        `${withPets} van de ${responses.length}`,
-        `${Math.max(0, withPets - 2)} van de ${responses.length}`,
-        `${Math.min(responses.length, withPets + 3)} van de ${responses.length}`,
-        `${Math.min(responses.length, withPets + 1)} van de ${responses.length}`,
+        `5 van de ${responses.length}`,
+        `6 van de ${responses.length}`,
+        `7 van de ${responses.length}`,
+        `8 van de ${responses.length}`,
       ], withPets),
       answer: `${withPets} van de ${responses.length} huishoudens`,
     });
