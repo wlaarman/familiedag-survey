@@ -6,7 +6,7 @@ import PrintButton from './PrintButton';
 export default async function StreetviewQuizPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string; variant?: string }>;
+  searchParams: Promise<{ mode?: string; variant?: string; cols?: string }>;
 }) {
   const authenticated = await isAuthenticated();
   if (!authenticated) redirect('/admin/login');
@@ -14,6 +14,7 @@ export default async function StreetviewQuizPage({
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
   const variant = params.variant === 'moeilijk' ? 'moeilijk' : params.variant === 'straat' ? 'straat' : 'normaal';
+  const cols = params.cols === '2' ? 2 : params.cols === '3' ? 3 : 4;
   const items = await getStreetviewQuiz();
 
   const hasHardVariant = items.some(i => i.blob_url_hard);
@@ -52,8 +53,21 @@ export default async function StreetviewQuizPage({
                 ))}
               </div>
             )}
+            <div className="flex items-center gap-1">
+              {([2, 3, 4] as const).map(c => (
+                <a
+                  key={c}
+                  href={`/admin/quiz/straat?mode=${mode}&variant=${variant}&cols=${c}`}
+                  className={`px-2 py-1.5 rounded text-xs font-medium ${
+                    cols === c ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {c}col
+                </a>
+              ))}
+            </div>
             <a
-              href={`/admin/quiz/straat?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}&variant=${variant}`}
+              href={`/admin/quiz/straat?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}&variant=${variant}&cols=${cols}`}
               className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
             >
               {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk quiz'}
@@ -91,7 +105,7 @@ export default async function StreetviewQuizPage({
             Nog geen streetview foto&apos;s geupload. Draai eerst het upload script.
           </p>
         ) : (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {items.map((item) => {
               const photoUrl = variant === 'moeilijk' && item.blob_url_hard
                 ? item.blob_url_hard
