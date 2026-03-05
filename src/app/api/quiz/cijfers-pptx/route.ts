@@ -170,13 +170,13 @@ export async function GET() {
           valign: 'middle',
         });
       });
-      nextY += optCount * gap + 0.15;
+      nextY += optCount * gap + 0.3;
     }
 
-    // Answer box
+    // Answer box - only show the main answer (first line), skip verbose details
     if (showAnswer) {
-      const answerH = Math.max(0.6, SLIDE_H - nextY - MARGIN);
-      const fullAnswer = q.answer.replace(/\n\n+/g, '\n');
+      const mainAnswer = q.answer.split('\n')[0];
+      const answerH = 0.7;
 
       slide.addShape(pptx.ShapeType.rect, {
         x: 0.8, y: nextY, w: 8.4, h: answerH,
@@ -185,14 +185,14 @@ export async function GET() {
         rectRadius: 0.08,
       });
 
-      slide.addText(fullAnswer, {
-        x: 1.0, y: nextY + 0.05, w: 8, h: answerH - 0.1,
-        fontSize: 14, fontFace: 'Arial', color: GREEN, bold: true,
+      slide.addText(mainAnswer, {
+        x: 1.0, y: nextY, w: 8, h: answerH,
+        fontSize: 16, fontFace: 'Arial', color: GREEN, bold: true,
         valign: 'middle', wrap: true,
       });
     } else if (q.type !== 'multiple_choice') {
       slide.addText('Antwoord: _______________', {
-        x: 0.8, y: nextY, w: 8, h: 0.5,
+        x: 0.8, y: nextY + 0.3, w: 8, h: 0.5,
         fontSize: 18, fontFace: 'Arial', color: GRAY,
       });
     }
