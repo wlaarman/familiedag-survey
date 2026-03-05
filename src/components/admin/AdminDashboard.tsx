@@ -1694,6 +1694,12 @@ export default function AdminDashboard() {
                     >
                       Open printversie
                     </a>
+                    <a
+                      href="/api/quiz/wie-van-de-3-pptx"
+                      className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm"
+                    >
+                      PowerPoint
+                    </a>
                   </div>
                 </div>
 
@@ -1910,6 +1916,12 @@ export default function AdminDashboard() {
                           className={`px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm ${feitOfFabelItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
                         >
                           Antwoorden
+                        </a>
+                        <a
+                          href="/api/quiz/feit-of-fabel-pptx"
+                          className={`px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm ${feitOfFabelItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          PowerPoint
                         </a>
                         <button
                           onClick={fetchFeitOfFabel}
