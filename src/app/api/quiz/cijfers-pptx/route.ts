@@ -125,14 +125,16 @@ export async function GET() {
 
     // Question text
     slide.addText(q.question, {
-      x: 0.5, y: 1.1, w: 9, h: 1.2,
+      x: 0.5, y: 0.9, w: 9, h: 1.0,
       fontSize: 22, fontFace: 'Arial', color: DARK, bold: true,
       valign: 'top', wrap: true,
     });
 
     // Options (for multiple choice)
     if (q.type === 'multiple_choice' && q.options) {
-      const startY = 2.5;
+      const startY = 2.1;
+      const optH = 0.5;
+      const gap = 0.6;
       q.options.forEach((opt, i) => {
         const letter = String.fromCharCode(65 + i);
         const isCorrect = showAnswer && q.answer.toLowerCase().startsWith(opt.toLowerCase());
@@ -141,16 +143,15 @@ export async function GET() {
         const borderColor = isCorrect ? '6EE7B7' : 'E2E8F0';
         const textColor = isCorrect ? GREEN : DARK;
 
-        // Option box
         slide.addShape(pptx.ShapeType.rect, {
-          x: 0.8, y: startY + i * 0.7, w: 8.4, h: 0.55,
+          x: 0.8, y: startY + i * gap, w: 8.4, h: optH,
           fill: { color: bgColor },
           line: { color: borderColor, width: 1.5 },
           rectRadius: 0.08,
         });
 
         slide.addText(`${letter})  ${opt}`, {
-          x: 1.0, y: startY + i * 0.7, w: 8, h: 0.55,
+          x: 1.0, y: startY + i * gap, w: 8, h: optH,
           fontSize: 18, fontFace: 'Arial', color: textColor, bold: isCorrect,
           valign: 'middle',
         });
@@ -160,11 +161,11 @@ export async function GET() {
     // Answer box (for number/open questions, or show full answer)
     if (showAnswer) {
       const answerY = q.type === 'multiple_choice' && q.options
-        ? 2.5 + q.options.length * 0.7 + 0.3
-        : 2.8;
+        ? 2.1 + q.options.length * 0.6 + 0.2
+        : 2.3;
 
       slide.addShape(pptx.ShapeType.rect, {
-        x: 0.8, y: answerY, w: 8.4, h: 0.8,
+        x: 0.8, y: answerY, w: 8.4, h: 0.7,
         fill: { color: 'D1FAE5' },
         line: { color: '6EE7B7', width: 1.5 },
         rectRadius: 0.08,
@@ -175,7 +176,7 @@ export async function GET() {
       const mainAnswer = answerLines[0];
 
       slide.addText(mainAnswer, {
-        x: 1.0, y: answerY, w: 8, h: 0.8,
+        x: 1.0, y: answerY, w: 8, h: 0.7,
         fontSize: 18, fontFace: 'Arial', color: GREEN, bold: true,
         valign: 'middle', wrap: true,
       });
@@ -184,7 +185,7 @@ export async function GET() {
       if (answerLines.length > 1) {
         const detailText = answerLines.slice(1).join('\n');
         slide.addText(detailText, {
-          x: 0.8, y: answerY + 0.9, w: 8.4, h: 1.5,
+          x: 0.8, y: answerY + 0.75, w: 8.4, h: 1.2,
           fontSize: 11, fontFace: 'Arial', color: GRAY,
           valign: 'top', wrap: true,
         });
@@ -192,7 +193,7 @@ export async function GET() {
     } else if (q.type !== 'multiple_choice') {
       // Show answer placeholder for non-MC questions
       slide.addText('Antwoord: _______________', {
-        x: 0.8, y: 2.8, w: 8, h: 0.5,
+        x: 0.8, y: 2.3, w: 8, h: 0.5,
         fontSize: 18, fontFace: 'Arial', color: GRAY,
       });
     }
