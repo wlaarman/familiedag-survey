@@ -1622,6 +1622,12 @@ export default function AdminDashboard() {
                     >
                       Open printversie
                     </a>
+                    <a
+                      href="/api/quiz/cijfers-pptx"
+                      className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm"
+                    >
+                      PowerPoint
+                    </a>
                   </div>
                 </div>
                 {cijferQuestions.length === 0 ? (

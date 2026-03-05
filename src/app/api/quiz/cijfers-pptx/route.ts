@@ -64,14 +64,27 @@ export async function GET() {
     answer: '7 rondes',
   }, true);
 
-  // === Question + answer slides ===
+  // === All question slides first ===
   for (const q of questions) {
-    // Question slide
     const qSlide = pptx.addSlide();
     qSlide.background = { color: 'FFFFFF' };
     addQuestionContent(qSlide, q, false);
+  }
 
-    // Answer slide
+  // === Answers divider slide ===
+  const dividerSlide = pptx.addSlide();
+  dividerSlide.background = { color: BLUE };
+  dividerSlide.addText('Antwoorden', {
+    x: 0.5, y: 1.5, w: 9, h: 1.5,
+    fontSize: 44, fontFace: 'Arial', color: 'FFFFFF', bold: true, align: 'center',
+  });
+  dividerSlide.addText(`Lever je formulier in voordat je verdergaat!`, {
+    x: 0.5, y: 3, w: 9, h: 0.8,
+    fontSize: 20, fontFace: 'Arial', color: 'BFDBFE', align: 'center',
+  });
+
+  // === All answer slides ===
+  for (const q of questions) {
     const aSlide = pptx.addSlide();
     aSlide.background = { color: 'FFFFFF' };
     addQuestionContent(aSlide, q, true);
@@ -84,7 +97,7 @@ export async function GET() {
     x: 0.5, y: 2, w: 9, h: 1.5,
     fontSize: 36, fontFace: 'Arial', color: 'FFFFFF', bold: true, align: 'center',
   });
-  endSlide.addText('Tel je punten en lever je formulier in.', {
+  endSlide.addText('Tel je punten op.', {
     x: 0.5, y: 3.5, w: 9, h: 0.8,
     fontSize: 18, fontFace: 'Arial', color: 'BFDBFE', align: 'center',
   });
