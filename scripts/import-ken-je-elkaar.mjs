@@ -39,22 +39,19 @@ function countPref(field, value) {
   return people.filter(p => get(p, field).toLowerCase() === value.toLowerCase());
 }
 
-// Generate a threshold that's close to the real answer but not equal
-// Makes the quiz tricky - offset by 1-3 in random direction
+// Generate a threshold that's exactly 1 off from the real answer
 function makeThreshold(realAnswer) {
   const n = parseInt(realAnswer);
   if (isNaN(n)) return null;
-  // Offset: for small numbers (<=5) offset by 1-2, for larger by 2-4
-  const offsets = n <= 5 ? [1, 2] : [2, 3, 4];
-  const offset = offsets[Math.floor(Math.random() * offsets.length)];
-  // Random direction, but ensure threshold >= 0
+  // Always exactly 1 higher or lower, random direction
   const direction = Math.random() > 0.5 ? 1 : -1;
-  const threshold = n + (direction * offset);
+  const threshold = n + direction;
   return Math.max(0, threshold);
 }
 
 // ============ GENERATE QUESTIONS ============
-const questions = [];
+const autoQuestions = [];
+const otherQuestions = [];
 
 // --- Auto merken (top 3 alleen) ---
 const autoGroups = {};
@@ -65,12 +62,12 @@ for (const p of people) {
 const topMerken = Object.entries(autoGroups).sort((a, b) => b[1].length - a[1].length).slice(0, 3);
 for (const [merk, names] of topMerken) {
   const answer = String(names.length);
-  questions.push({ question: `Hoeveel familieleden rijden in een ${merk}?`, answer, type: 'number', toelichting: names.join(', '), threshold: makeThreshold(answer) });
+  autoQuestions.push({ question: `Hoeveel familieleden rijden in een ${merk}?`, answer, type: 'number', toelichting: names.join(', '), threshold: makeThreshold(answer) });
 }
 
 // --- Hoeveel verschillende automerken telt de familie? ---
 const merkCount = Object.keys(autoGroups).length;
-questions.push({ question: 'Hoeveel verschillende automerken telt de familie?', answer: String(merkCount), type: 'number', toelichting: Object.keys(autoGroups).join(', '), threshold: makeThreshold(String(merkCount)) });
+autoQuestions.push({ question: 'Hoeveel verschillende automerken telt de familie?', answer: String(merkCount), type: 'number', toelichting: Object.keys(autoGroups).join(', '), threshold: makeThreshold(String(merkCount)) });
 
 // --- Sporten ---
 const sportCount = {};
@@ -88,7 +85,7 @@ for (const p of people) {
 // --- Hoeveel familieleden spelen tafeltennis? ---
 if (sportCount['Tafeltennis']) {
   const answer = String(sportCount['Tafeltennis'].length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden spelen tafeltennis?',
     answer, type: 'number',
     toelichting: sportCount['Tafeltennis'].join(', '),
@@ -111,7 +108,7 @@ for (const r of responses) {
 }
 if (honden.length > 0) {
   const answer = String(honden.length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel honden heeft de familie in totaal?',
     answer, type: 'number',
     toelichting: honden.map(h => `${h.hondNaam} (${h.gezin})`).join(', '),
@@ -133,7 +130,7 @@ for (const p of people) {
 const topGerecht = Object.entries(gerechtGroups).sort((a, b) => b[1].length - a[1].length);
 if (topGerecht.length > 0 && topGerecht[0][1].length >= 2) {
   const answer = String(topGerecht[0][1].length);
-  questions.push({
+  otherQuestions.push({
     question: `Hoeveel familieleden noemen ${topGerecht[0][0].toLowerCase()} als favoriet gerecht?`,
     answer, type: 'number',
     toelichting: topGerecht[0][1].join(', '),
@@ -154,7 +151,7 @@ for (const p of people) {
 }
 if (drankGroups['Bier'] && drankGroups['Bier'].length >= 2) {
   const answer = String(drankGroups['Bier'].length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden noemen bier als favoriete drank?',
     answer, type: 'number',
     toelichting: drankGroups['Bier'].join(', '),
@@ -174,7 +171,7 @@ for (const p of people) {
 }
 if (angstGroups['Spinnen'] && angstGroups['Spinnen'].length >= 2) {
   const answer = String(angstGroups['Spinnen'].length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden zijn bang voor spinnen?',
     answer, type: 'number',
     toelichting: angstGroups['Spinnen'].join(', '),
@@ -183,7 +180,7 @@ if (angstGroups['Spinnen'] && angstGroups['Spinnen'].length >= 2) {
 }
 if (angstGroups['Muizen'] && angstGroups['Muizen'].length >= 2) {
   const answer = String(angstGroups['Muizen'].length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden zijn bang voor muizen?',
     answer, type: 'number',
     toelichting: angstGroups['Muizen'].join(', '),
@@ -196,7 +193,7 @@ const prefKoffie = countPref('koffie_thee', 'Koffie');
 const prefThee = countPref('koffie_thee', 'Thee');
 if (prefThee.length > 0 && prefKoffie.length > 0) {
   const answer = String(prefThee.length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden drinken liever thee dan koffie?',
     answer, type: 'number',
     toelichting: prefThee.map(p => p.name).join(', '),
@@ -208,7 +205,7 @@ const prefPasta = countPref('aardappel_pasta', 'Pasta');
 const prefAardappel = countPref('aardappel_pasta', 'Aardappels');
 if (prefPasta.length > 0 && prefAardappel.length > 0) {
   const answer = String(prefPasta.length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden kiezen voor pasta boven aardappels?',
     answer, type: 'number',
     toelichting: prefPasta.map(p => p.name).join(', '),
@@ -220,7 +217,7 @@ if (prefPasta.length > 0 && prefAardappel.length > 0) {
 const italieLovers = people.filter(p => /itali[eë]/i.test(get(p, 'vakantieland')));
 if (italieLovers.length > 0) {
   const answer = String(italieLovers.length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden noemen Italië als favoriete vakantieland?',
     answer, type: 'number',
     toelichting: italieLovers.map(p => p.name).join(', '),
@@ -237,12 +234,30 @@ for (const p of people) {
 }
 if (vrijwilligers.length >= 2) {
   const answer = String(vrijwilligers.length);
-  questions.push({
+  otherQuestions.push({
     question: 'Hoeveel familieleden doen vrijwilligerswerk?',
     answer, type: 'number',
     toelichting: vrijwilligers.map(v => v.wat !== 'ja' ? `${v.name} (${v.wat})` : v.name).join(', '),
     threshold: makeThreshold(answer),
   });
+}
+
+// --- Interleave auto questions among other questions ---
+const questions = [];
+if (autoQuestions.length > 0 && otherQuestions.length > 0) {
+  // Distribute auto questions evenly among other questions
+  const step = Math.floor(otherQuestions.length / (autoQuestions.length + 1));
+  let autoIdx = 0;
+  for (let i = 0; i < otherQuestions.length; i++) {
+    questions.push(otherQuestions[i]);
+    if (autoIdx < autoQuestions.length && (i + 1) % Math.max(step, 2) === 0) {
+      questions.push(autoQuestions[autoIdx++]);
+    }
+  }
+  // Add remaining auto questions at the end
+  while (autoIdx < autoQuestions.length) questions.push(autoQuestions[autoIdx++]);
+} else {
+  questions.push(...autoQuestions, ...otherQuestions);
 }
 
 // --- Print ---
