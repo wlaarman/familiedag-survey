@@ -62,14 +62,14 @@ export async function POST(request: NextRequest) {
       if (groups[g].size >= maxPerGroep) continue; // full
 
       const famCount = groups[g].familyCount.get(p.familie) || 0;
-      // Primary: minimize family members in same group (weight 1000)
-      // Secondary: balance generatie (young/old) within group (weight 100)
-      // Tertiary: balance group sizes (weight 10)
+      // Primary: balance group sizes (weight 1000)
+      // Secondary: minimize family members in same group (weight 100)
+      // Tertiary: balance generatie (young/old) within group (weight 1)
       const generatieImbalance = Math.abs(groups[g].jong - groups[g].oud);
       const score =
-        famCount * 1000 +
-        generatieImbalance * 100 +
-        groups[g].size * 10;
+        groups[g].size * 1000 +
+        famCount * 100 +
+        generatieImbalance;
 
       if (score < bestScore) {
         bestScore = score;
