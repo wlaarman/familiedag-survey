@@ -31,6 +31,25 @@ export default async function PrintAllQuizPage({
     getKenJeElkaar(),
   ]);
 
+  // Calculate total age for the cover page guessing question
+  const now = new Date();
+  let totalAge = 0;
+  let personCount = 0;
+  for (const r of responses) {
+    for (const n of [1, 2] as const) {
+      if (n === 2 && !r.heeft_partner) continue;
+      const geb = r[`geboortedatum_${n}`];
+      if (!geb) continue;
+      const d = new Date(geb);
+      if (isNaN(d.getTime())) continue;
+      let age = now.getFullYear() - d.getFullYear();
+      const m = now.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+      totalAge += age;
+      personCount++;
+    }
+  }
+
   // Derive quiz data
   const photos = (() => {
     const p: { name: string; url: string; responseId: number }[] = [];
@@ -69,6 +88,60 @@ export default async function PrintAllQuizPage({
               {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk quiz'}
             </a>
             <PrintButton />
+          </div>
+        </div>
+      </div>
+
+      {/* ==================== VOORBLAD ==================== */}
+      <div className="print-section">
+        <div className="px-8 py-16 print:px-[2cm] print:py-[2cm] print:h-[297mm] print:flex print:flex-col print:justify-between">
+          <div>
+            <div className="text-center mb-16">
+              <h1 className="text-5xl font-bold text-slate-800 print:text-4xl">Familiequiz</h1>
+              <p className="text-xl text-slate-500 mt-3">Familiedag 2026</p>
+            </div>
+
+            <div className="max-w-sm mx-auto space-y-8">
+              <div>
+                <label className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Teamnaam</label>
+                <div className="border-b-2 border-slate-300 h-10 mt-1" />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Deelnemers</label>
+                <div className="space-y-3 mt-2">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">{i}</span>
+                      <div className="border-b-2 border-slate-300 h-8 flex-1" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Schattingsvraag */}
+            <div className="max-w-sm mx-auto mt-12 p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
+              <h3 className="font-bold text-blue-800 text-lg">Schattingsvraag</h3>
+              <p className="text-blue-700 mt-2 text-sm">
+                Wat is de totale leeftijd van alle {personCount} familieleden die de enquete hebben ingevuld bij elkaar opgeteld?
+              </p>
+              <div className="flex items-center gap-3 mt-4">
+                <span className="text-blue-600 font-medium text-sm">Ons antwoord:</span>
+                <div className="border-b-2 border-blue-300 h-8 w-28" />
+                <span className="text-blue-500 text-sm">jaar</span>
+              </div>
+              {mode === 'antwoorden' && (
+                <div className="mt-3 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <span className="font-bold text-emerald-700">{totalAge} jaar</span>
+                  <span className="text-emerald-600 text-sm ml-2">({personCount} personen)</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="text-center text-xs text-slate-400 mt-8">
+            Veel plezier en succes!
           </div>
         </div>
       </div>
@@ -390,40 +463,34 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 5: Raad de straat ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-8 print:mb-6">
+        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
+          <div className="text-center mb-3">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 5</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Raad de Straat!</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
+            <h1 className="text-lg font-bold text-slate-800">Raad de Straat!</h1>
+            <p className="text-slate-500 text-sm mt-1">
               {mode === 'quiz'
                 ? 'Bij welk familielid hoort deze straat? Schrijf de naam op de stippellijn.'
                 : 'Antwoordblad — Raad de Straat'}
             </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {streetviewItems.length} vragen
-            </p>
           </div>
 
           {streetviewItems.length > 0 && (
-            <div className="grid grid-cols-2 gap-6 print:gap-4 print:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2 print:gap-1.5">
               {streetviewItems.map((item) => (
-                <div key={item.id} className="border border-slate-200 rounded-xl overflow-hidden print:rounded-lg print:break-inside-avoid">
+                <div key={item.id} className="border border-slate-200 rounded-lg overflow-hidden print:break-inside-avoid">
                   <div className="aspect-[16/10] bg-slate-100 relative">
                     <img src={item.blob_url} alt={`Vraag ${item.question_number}`} className="w-full h-full object-cover" />
-                    <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-lg print:w-6 print:h-6 print:text-xs">
+                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {item.question_number}
                     </div>
                   </div>
-                  <div className="p-4 print:p-3">
+                  <div className="px-1.5 py-1">
                     {mode === 'quiz' ? (
-                      <div>
-                        <p className="text-xs text-slate-400 mb-2 print:mb-1">Wie woont hier?</p>
-                        <div className="border-b-2 border-dashed border-slate-300 h-8 print:h-6" />
-                      </div>
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
                     ) : (
                       <div>
-                        <p className="font-semibold text-slate-800 text-sm">{item.names}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{item.address}</p>
+                        <p className="font-semibold text-slate-800 text-[11px] leading-tight">{item.names}</p>
+                        <p className="text-[10px] text-slate-500">{item.address}</p>
                       </div>
                     )}
                   </div>
@@ -433,7 +500,7 @@ export default async function PrintAllQuizPage({
           )}
 
           {mode === 'quiz' && streetviewItems.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
               <div className="flex items-center justify-between">
                 <p className="font-medium text-slate-600">Totaal score:</p>
                 <div className="flex items-center gap-2">

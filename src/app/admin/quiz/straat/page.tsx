@@ -14,7 +14,7 @@ export default async function StreetviewQuizPage({
   const params = await searchParams;
   const mode = params.mode === 'antwoorden' ? 'antwoorden' : 'quiz';
   const variant = params.variant === 'moeilijk' ? 'moeilijk' : params.variant === 'straat' ? 'straat' : 'normaal';
-  const cols = params.cols === '2' ? 2 : params.cols === '3' ? 3 : 4;
+  const cols = params.cols === '3' ? 3 : params.cols === '4' ? 4 : 2;
   const items = await getStreetviewQuiz();
 
   const hasHardVariant = items.some(i => i.blob_url_hard);

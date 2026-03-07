@@ -48,10 +48,4 @@ export const MANUAL_QUESTIONS: ManualQuestion[] = [
     type: 'open',
     answer: 'Marieke & Gerbrand → Henrieke & Jarno → Rick & Nienke → Willem & Mirjam\n(31 augustus 2006, 12 oktober 2007, 4 maart 2011, 13 mei 2011)',
   },
-  {
-    category: 'Weetjes',
-    question: 'Hoeveel kleinkinderen hadden opa & oma toen Niels werd geboren?',
-    type: 'number',
-    answer: '??? (VUL ZELF IN)',
-  },
 ];
