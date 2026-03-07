@@ -148,35 +148,32 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 1: Raad de kinderfoto ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-8 print:mb-6">
+        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
+          <div className="text-center mb-3">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 1</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Wie is Wie?</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
+            <h1 className="text-lg font-bold text-slate-800">Wie is Wie?</h1>
+            <p className="text-slate-500 text-sm mt-1">
               {mode === 'quiz'
                 ? 'Ken je alle familieleden? Schrijf de naam onder elke foto.'
                 : 'Antwoordblad — Wie is Wie?'}
             </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {photos.length} foto&apos;s
-            </p>
           </div>
 
           {photos.length > 0 && (
-            <div className="grid grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
+            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
               {photos.map((photo, idx) => (
                 <div key={`${photo.responseId}-${photo.name}`} className="text-center print:break-inside-avoid">
-                  <div className="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden relative shadow-sm print:rounded-lg">
+                  <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden relative">
                     <img src={photo.url} alt={mode === 'antwoorden' ? photo.name : `Foto ${idx + 1}`} className="w-full h-full object-cover" />
-                    <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow print:w-6 print:h-6 print:text-xs">
+                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {idx + 1}
                     </div>
                   </div>
-                  <div className="mt-3 print:mt-2">
+                  <div className="mt-0.5">
                     {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-7 mx-2 print:h-6" />
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
                     ) : (
-                      <p className="font-semibold text-slate-800 text-sm print:text-xs">{photo.name}</p>
+                      <p className="font-semibold text-slate-800 text-[11px] leading-tight">{photo.name}</p>
                     )}
                   </div>
                 </div>
@@ -185,7 +182,7 @@ export default async function PrintAllQuizPage({
           )}
 
           {mode === 'quiz' && photos.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
               <div className="flex items-center justify-between">
                 <p className="font-medium text-slate-600">Totaal score:</p>
                 <div className="flex items-center gap-2">
@@ -515,35 +512,32 @@ export default async function PrintAllQuizPage({
 
       {/* ==================== RONDE 6: Logo ronde ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-8 print:mb-6">
+        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
+          <div className="text-center mb-3">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 6</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Logo Quiz — Rijssense Bedrijven</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
+            <h1 className="text-lg font-bold text-slate-800">Logo Quiz — Rijssense Bedrijven</h1>
+            <p className="text-slate-500 text-sm mt-1">
               {mode === 'quiz'
                 ? 'Ken je alle logo\'s? Schrijf de naam van het bedrijf onder elk logo.'
                 : 'Antwoordblad — Logo Quiz'}
             </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {selectedBedrijven.length} logo&apos;s
-            </p>
           </div>
 
           {selectedBedrijven.length > 0 && (
-            <div className="grid grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
+            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
-                  <div className="aspect-square bg-slate-50 rounded-xl overflow-hidden relative shadow-sm print:rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-slate-50 rounded-lg overflow-hidden relative border border-slate-200 flex items-center justify-center">
                     <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
-                    <div className="absolute top-2 left-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow print:w-6 print:h-6 print:text-xs">
+                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {idx + 1}
                     </div>
                   </div>
-                  <div className="mt-3 print:mt-2">
+                  <div className="mt-0.5">
                     {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-7 mx-2 print:h-6" />
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
                     ) : (
-                      <p className="font-semibold text-slate-800 text-sm print:text-xs">{bedrijf.naam}</p>
+                      <p className="font-semibold text-slate-800 text-[11px] leading-tight">{bedrijf.naam}</p>
                     )}
                   </div>
                 </div>
@@ -552,7 +546,7 @@ export default async function PrintAllQuizPage({
           )}
 
           {mode === 'quiz' && selectedBedrijven.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
+            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
               <div className="flex items-center justify-between">
                 <p className="font-medium text-slate-600">Totaal score:</p>
                 <div className="flex items-center gap-2">
