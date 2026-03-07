@@ -406,7 +406,7 @@ export default async function PrintAllQuizPage({
             <div className="grid grid-cols-4 gap-2 print:gap-1.5">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
-                  <div className="mx-auto w-3/4 aspect-square bg-slate-50 rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                  <div className="aspect-square bg-white rounded overflow-hidden relative border border-slate-200 flex items-center justify-center p-3">
                     <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
