@@ -262,13 +262,18 @@ export default async function PrintAllQuizPage({
                           ))}
                         </div>
                       ) : letterOptions && letterOptions.length > 0 ? (
-                        <div className="flex gap-1.5">
-                          {letterOptions.map((_, i) => (
-                            <div key={i} className="w-5 h-5 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400">
-                              {String.fromCharCode(65 + i)}
-                            </div>
-                          ))}
-                        </div>
+                        <>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {letterOptions.map((opt, i) => (
+                              <div key={i} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                                {opt.trim()}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                            <div className="border-b-2 border-dashed border-slate-300 w-24 h-5" />
+                          </div>
+                        </>
                       ) : (
                         <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
                       )}
