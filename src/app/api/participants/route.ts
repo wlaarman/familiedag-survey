@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
   const aantalGroepen = Math.ceil(toAssign.length / maxPerGroep);
 
   // Track per-group state: family counts, generatie counts, geslacht counts, total size
-  const groups: { familyCount: Map<string, number>; jong: number; man: number; size: number }[] =
-    Array.from({ length: aantalGroepen }, () => ({ familyCount: new Map(), jong: 0, man: 0, size: 0 }));
+  const groups: { familyCount: Map<string, number>; jong: number; oud: number; man: number; size: number }[] =
+    Array.from({ length: aantalGroepen }, () => ({ familyCount: new Map(), jong: 0, oud: 0, man: 0, size: 0 }));
 
   // Sort: largest families first so they get spread first, then by generatie/geslacht
   const sorted = [...toAssign].sort((a, b) => {
@@ -63,12 +63,13 @@ export async function POST(request: NextRequest) {
 
       const famCount = groups[g].familyCount.get(p.familie) || 0;
       // Primary: minimize family members in same group (weight 1000)
-      // Secondary: balance group sizes (weight 10)
-      // Tertiary: balance generatie and geslacht (weight 1)
+      // Secondary: balance generatie (young/old) within group (weight 100)
+      // Tertiary: balance group sizes (weight 10)
+      const generatieImbalance = Math.abs(groups[g].jong - groups[g].oud);
       const score =
         famCount * 1000 +
-        groups[g].size * 10 +
-        Math.abs(groups[g].jong - groups[g].man); // slight tiebreaker for balance
+        generatieImbalance * 100 +
+        groups[g].size * 10;
 
       if (score < bestScore) {
         bestScore = score;
@@ -80,6 +81,7 @@ export async function POST(request: NextRequest) {
     const grp = groups[bestGroup];
     grp.familyCount.set(p.familie, (grp.familyCount.get(p.familie) || 0) + 1);
     if (p.generatie === 1) grp.jong++;
+    if (p.generatie === 2) grp.oud++;
     if (p.geslacht === 'M') grp.man++;
     grp.size++;
     assignments.push({ id: p.id, groep: bestGroup + 1 });
