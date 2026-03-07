@@ -376,7 +376,7 @@ export default async function PrintAllQuizPage({
               {streetviewItems.map((item) => (
                 <div key={item.id} className="border border-slate-200 rounded-lg overflow-hidden print:break-inside-avoid">
                   <div className="aspect-[16/10] bg-slate-100 relative">
-                    <img src={item.blob_url} alt={`Vraag ${item.question_number}`} className="w-full h-full object-cover" />
+                    <img src={item.blob_url_street || item.blob_url} alt={`Vraag ${item.question_number}`} className="w-full h-full object-cover" />
                     <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {item.question_number}
                     </div>
