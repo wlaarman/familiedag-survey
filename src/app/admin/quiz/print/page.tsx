@@ -69,7 +69,6 @@ export default async function PrintAllQuizPage({
   const wieVanDe3Questions = generateWieVanDe3(responses, manualQuestions);
   const selectedBedrijven = BEDRIJVEN.filter(b => logoSelection.includes(b.naam));
 
-
   return (
     <div className="bg-white">
       {/* Header - hidden when printing */}
@@ -178,43 +177,53 @@ export default async function PrintAllQuizPage({
         </div>
       </div>
 
-      {/* ==================== RONDE 2: Feit of fabel ==================== */}
+      {/* ==================== RONDE 2: Feit of fabel (answer form only) ==================== */}
       <div className="print-section">
         <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
           <RondeKop nummer={2} titel="Feit of Fabel" mode={mode} />
 
           {stellingen.length > 0 && (
-            <div className="space-y-2 print:space-y-1.5">
+            <div className="space-y-1.5 print:space-y-1">
               {stellingen.map((s, idx) => {
                 const correctIsWaar = s.is_waar;
                 return (
-                  <div key={s.id} className="print:break-inside-avoid flex gap-2 items-start py-1.5 border-b border-slate-100">
-                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] mt-0.5">
+                  <div key={s.id} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
                       {idx + 1}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-800 leading-snug">{s.stelling}</p>
-                      {mode === 'antwoorden' && s.toelichting && (
-                        <p className="text-[10px] text-slate-500 italic mt-0.5">{s.toelichting}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-1.5 flex-shrink-0 items-center">
-                      {(['feit', 'fabel'] as const).map((optie) => {
-                        const isCorrect = optie === 'feit' ? correctIsWaar : !correctIsWaar;
-                        return (
+                    {mode === 'quiz' ? (
+                      <div className="flex gap-2 flex-shrink-0 items-center">
+                        {(['feit', 'fabel'] as const).map((optie) => (
                           <div
                             key={optie}
-                            className={`w-8 h-8 border-2 rounded-full flex items-center justify-center text-[10px] font-bold print:w-7 print:h-7 ${
-                              mode === 'antwoorden' && isCorrect
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                : 'border-slate-300 text-slate-400'
-                            }`}
+                            className="px-3 py-1 border-2 border-slate-300 rounded-full text-xs font-semibold text-slate-500"
                           >
-                            {optie === 'feit' ? 'F' : 'X'}
+                            {optie === 'feit' ? 'Feit' : 'Fabel'}
                           </div>
-                        );
-                      })}
-                    </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-slate-800 leading-snug flex-1 min-w-0">{s.stelling}</p>
+                        <div className="flex gap-2 flex-shrink-0 items-center">
+                          {(['feit', 'fabel'] as const).map((optie) => {
+                            const isCorrect = optie === 'feit' ? correctIsWaar : !correctIsWaar;
+                            return (
+                              <div
+                                key={optie}
+                                className={`px-3 py-1 border-2 rounded-full text-xs font-semibold ${
+                                  isCorrect
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                    : 'border-slate-200 text-slate-300'
+                                }`}
+                              >
+                                {optie === 'feit' ? 'Feit' : 'Fabel'}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -225,141 +234,129 @@ export default async function PrintAllQuizPage({
         </div>
       </div>
 
-      {/* ==================== RONDE 3: Cijferronde ==================== */}
+      {/* ==================== RONDE 3: Cijferronde (answer form only) ==================== */}
       <div className="print-section">
         <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
           <RondeKop nummer={3} titel="Cijferronde" mode={mode} />
 
           {cijferQuestions.length > 0 && (
-            <div className="space-y-8 print:space-y-5">
-              {cijferQuestions.map((q) => (
-                <div key={q.number} className="print:break-inside-avoid">
-                  <div className="flex gap-3">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
+            mode === 'quiz' ? (
+              <div className="space-y-3 print:space-y-2">
+                {cijferQuestions.map((q) => (
+                  <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
                       {q.number}
                     </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">{q.category}</span>
-                      <p className="font-medium text-slate-800 mt-0.5 whitespace-pre-line print:text-sm">{q.question}</p>
-                      {mode === 'quiz' ? (
-                        <div className="mt-3">
-                          {q.type === 'multiple_choice' && q.options ? (
-                            <div className="grid grid-cols-2 gap-2 print:gap-1">
-                              {q.options.map((opt, i) => (
-                                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-200 print:py-1.5 print:text-sm">
-                                  <span className="w-6 h-6 bg-white border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-500 flex-shrink-0 print:w-5 print:h-5">
-                                    {String.fromCharCode(65 + i)}
-                                  </span>
-                                  <span className="text-slate-700">{opt}</span>
-                                </div>
-                              ))}
-                            </div>
-                          ) : q.type === 'number' ? (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="text-slate-500 text-sm">Antwoord:</span>
-                              <div className="border-b-2 border-dashed border-slate-300 w-32 h-7 print:h-6" />
-                            </div>
-                          ) : (
-                            <div className="border-b-2 border-dashed border-slate-300 h-7 mt-2 print:h-6" />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
+                    {q.type === 'multiple_choice' && q.options ? (
+                      <div className="flex gap-1.5">
+                        {q.options.map((opt, i) => (
+                          <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200 text-xs">
+                            <span className="w-4 h-4 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
+                              {String.fromCharCode(65 + i)}
+                            </span>
+                            <span className="text-slate-600">{opt}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-5 print:space-y-3">
+                {cijferQuestions.map((q) => (
+                  <div key={q.number} className="print:break-inside-avoid">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        {q.number}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">{q.category}</span>
+                        <p className="font-medium text-slate-800 mt-0.5 whitespace-pre-line print:text-sm">{q.question}</p>
+                        <div className="mt-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
                           <span className="font-semibold text-emerald-700">{q.answer}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
 
           <ScoreSectie count={cijferQuestions.length} mode={mode} />
         </div>
       </div>
 
-      {/* ==================== RONDE 4: Hoe goed ken je elkaar ==================== */}
+      {/* ==================== RONDE 4: Hoe goed ken je elkaar (answer form only) ==================== */}
       <div className="print-section">
         <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
           <RondeKop nummer={4} titel="Hoe goed ken je elkaar?" mode={mode} />
 
           {kenJeElkaarVragen.length > 0 && (
-            <div className="space-y-6 print:space-y-4">
-              {kenJeElkaarVragen.map((v, idx) => {
-                const realAnswer = parseInt(v.answer);
-                const isMeer = v.threshold !== null && !isNaN(realAnswer) && realAnswer > v.threshold;
-                return (
-                  <div key={v.id} className="print:break-inside-avoid border border-slate-200 rounded-xl p-5 print:p-3 print:rounded-lg">
-                    <div className="flex gap-3 items-start">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
-                        {idx + 1}
+            mode === 'quiz' ? (
+              <div className="space-y-2 print:space-y-1.5">
+                {kenJeElkaarVragen.map((v, idx) => (
+                  <div key={v.id} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                      {idx + 1}
+                    </div>
+                    {v.threshold !== null ? (
+                      <div className="flex gap-2">
+                        {(['Meer', 'Minder'] as const).map((optie) => (
+                          <div key={optie} className="px-3 py-1 border-2 border-slate-300 rounded-full text-xs font-semibold text-slate-500">
+                            {optie}
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-slate-800 print:text-sm">{v.question}</p>
-                        {v.threshold !== null ? (
-                          <>
-                            <p className="text-sm text-slate-500 mt-1.5 font-medium">
-                              Meer of minder dan <span className="text-blue-600 font-bold text-base">{v.threshold}</span>?
-                            </p>
-                            <div className="flex gap-3 mt-3 print:mt-2">
+                    ) : (
+                      <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4 print:space-y-3">
+                {kenJeElkaarVragen.map((v, idx) => {
+                  const realAnswer = parseInt(v.answer);
+                  const isMeer = v.threshold !== null && !isNaN(realAnswer) && realAnswer > v.threshold;
+                  return (
+                    <div key={v.id} className="print:break-inside-avoid border border-slate-200 rounded-lg p-3">
+                      <div className="flex gap-2 items-start">
+                        <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                          {idx + 1}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-800 text-sm">{v.question}</p>
+                          {v.threshold !== null ? (
+                            <div className="flex gap-2 mt-1.5">
                               {(['meer', 'minder'] as const).map((optie) => {
                                 const isCorrect = optie === 'meer' ? isMeer : !isMeer;
                                 return (
-                                  <div key={optie} className={`flex-1 text-center px-3 py-3 rounded-lg border-2 print:py-2 ${mode === 'antwoorden' && isCorrect ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                                    <span className={`text-xs font-bold block mb-0.5 ${mode === 'antwoorden' && isCorrect ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                      {optie === 'meer' ? 'A' : 'B'}
-                                    </span>
-                                    <span className={`font-semibold text-sm print:text-xs uppercase tracking-wide ${mode === 'antwoorden' && isCorrect ? 'text-emerald-700' : 'text-slate-700'}`}>
-                                      {optie === 'meer' ? 'Meer' : 'Minder'}
-                                    </span>
-                                    {mode === 'antwoorden' && isCorrect && (
-                                      <span className="block text-emerald-600 text-xs mt-0.5">&#10003;</span>
-                                    )}
+                                  <div key={optie} className={`px-3 py-1 border-2 rounded-full text-xs font-semibold ${isCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-300'}`}>
+                                    {optie === 'meer' ? 'Meer' : 'Minder'}
                                   </div>
                                 );
                               })}
+                              <span className="text-sm font-semibold text-emerald-700 ml-2">{v.answer}</span>
                             </div>
-                            {mode === 'antwoorden' && (
-                              <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
-                                <span className="font-semibold text-emerald-700">{v.answer}</span>
-                                {v.toelichting && (
-                                  <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
-                                )}
-                              </div>
-                            )}
-                            {mode === 'quiz' && (
-                              <div className="flex items-center gap-2 mt-3 print:mt-2">
-                                <span className="text-xs text-slate-400">Mijn antwoord:</span>
-                                <div className="flex gap-2">
-                                  {['A', 'B'].map((letter) => (
-                                    <div key={letter} className="w-7 h-7 border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-400 print:w-6 print:h-6">
-                                      {letter}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        ) : mode === 'antwoorden' ? (
-                          <div className="mt-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
-                            <span className="font-semibold text-emerald-700">{v.answer}</span>
-                            {v.toelichting && (
-                              <p className="text-xs text-emerald-600 mt-1">{v.toelichting}</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 mt-3">
-                            <span className="text-slate-500 text-sm">Antwoord:</span>
-                            <div className="border-b-2 border-dashed border-slate-300 w-32 h-7 print:h-6" />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="mt-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm">
+                              <span className="font-semibold text-emerald-700">{v.answer}</span>
+                            </div>
+                          )}
+                          {v.toelichting && (
+                            <p className="text-[10px] text-slate-500 mt-1">{v.toelichting}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )
           )}
 
           <ScoreSectie count={kenJeElkaarVragen.length} mode={mode} />
@@ -406,10 +403,10 @@ export default async function PrintAllQuizPage({
           <RondeKop nummer={6} titel="Logo Quiz" mode={mode} />
 
           {selectedBedrijven.length > 0 && (
-            <div className="grid grid-cols-4 gap-1.5 print:gap-1">
+            <div className="grid grid-cols-5 gap-1.5 print:gap-1">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
-                  <div className="aspect-square bg-slate-50 rounded-lg overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                  <div className="aspect-[4/3] bg-slate-50 rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
                     <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
@@ -426,62 +423,58 @@ export default async function PrintAllQuizPage({
               ))}
             </div>
           )}
-
-          <ScoreSectie count={selectedBedrijven.length} mode={mode} />
         </div>
       </div>
 
-      {/* ==================== RONDE 7: Wie van de 3 ==================== */}
-      <div className="print-section">
+      {/* ==================== RONDE 7: Wie van de 3 (answer form only) ==================== */}
+      <div>
         <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
           <RondeKop nummer={7} titel="Wie van de 3?" mode={mode} />
 
           {wieVanDe3Questions.length > 0 && (
-            <div className="space-y-6 print:space-y-4">
-              {wieVanDe3Questions.map((q) => (
-                <div key={q.number} className="print:break-inside-avoid border border-slate-200 rounded-xl p-5 print:p-3 print:rounded-lg">
-                  <div className="flex gap-3 items-start">
-                    <div className="flex-shrink-0 w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
+            mode === 'quiz' ? (
+              <div className="space-y-2 print:space-y-1.5">
+                {wieVanDe3Questions.map((q) => (
+                  <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                      {q.number}
+                    </div>
+                    <div className="flex gap-1.5">
+                      {q.names.map((name, i) => (
+                        <div key={i} className="flex items-center gap-1 px-2 py-1 border-2 border-slate-200 rounded-full text-xs">
+                          <span className="font-bold text-slate-400">{String.fromCharCode(65 + i)}</span>
+                          <span className="text-slate-600">{name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3 print:space-y-2">
+                {wieVanDe3Questions.map((q) => (
+                  <div key={q.number} className="print:break-inside-avoid flex gap-2 items-start py-1 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] mt-0.5">
                       {q.number}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-slate-800 print:text-sm">{q.question}</p>
-                      <div className="flex gap-3 mt-3 print:mt-2">
+                      <p className="text-sm text-slate-800">{q.question}</p>
+                      <div className="flex gap-1.5 mt-1">
                         {q.names.map((name, i) => {
                           const isAnswer = i === q.answerIndex;
-                          const letter = String.fromCharCode(65 + i);
                           return (
-                            <div key={i} className={`flex-1 text-center px-3 py-3 rounded-lg border-2 print:py-2 ${mode === 'antwoorden' && isAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                              <span className={`text-xs font-bold block mb-0.5 ${mode === 'antwoorden' && isAnswer ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                {letter}
-                              </span>
-                              <span className={`font-semibold text-sm print:text-xs ${mode === 'antwoorden' && isAnswer ? 'text-emerald-700' : 'text-slate-700'}`}>
-                                {name}
-                              </span>
-                              {mode === 'antwoorden' && isAnswer && (
-                                <span className="block text-emerald-600 text-xs mt-0.5">&#10003;</span>
-                              )}
+                            <div key={i} className={`flex items-center gap-1 px-2 py-1 border-2 rounded-full text-xs ${isAnswer ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'}`}>
+                              <span className={`font-bold ${isAnswer ? 'text-emerald-600' : 'text-slate-400'}`}>{String.fromCharCode(65 + i)}</span>
+                              <span className={isAnswer ? 'text-emerald-700 font-semibold' : 'text-slate-400'}>{name}</span>
                             </div>
                           );
                         })}
                       </div>
-                      {mode === 'quiz' && (
-                        <div className="flex items-center gap-2 mt-3 print:mt-2">
-                          <span className="text-xs text-slate-400">Mijn antwoord:</span>
-                          <div className="flex gap-2">
-                            {['A', 'B', 'C'].map((letter) => (
-                              <div key={letter} className="w-7 h-7 border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-400 print:w-6 print:h-6">
-                                {letter}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
 
           <ScoreSectie count={wieVanDe3Questions.length} mode={mode} />
@@ -503,9 +496,6 @@ export default async function PrintAllQuizPage({
               }
               .print-section {
                 break-after: page;
-              }
-              .print-section:last-child {
-                break-after: auto;
               }
             }
           `,
