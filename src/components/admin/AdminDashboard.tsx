@@ -828,6 +828,7 @@ export default function AdminDashboard() {
                     { nummer: 4, titel: 'Hoe goed ken je elkaar', beschrijving: 'Vragen over familieleden — hoe goed ken je ze echt?', icon: '💬', links: [
                       { label: 'Quiz', href: '/admin/quiz/ken-je-elkaar?mode=quiz', variant: 'primary' as const },
                       { label: 'Antwoorden', href: '/admin/quiz/ken-je-elkaar?mode=antwoorden', variant: 'answer' as const },
+                      { label: 'PowerPoint', href: '/api/quiz/ken-je-elkaar-pptx', variant: 'secondary' as const },
                     ]},
                     { nummer: 5, titel: 'Raad de straat', beschrijving: 'Streetview foto\'s van adressen — raad wie er woont.', icon: '🏠', links: [
                       { label: 'Quiz', href: '/admin/quiz/straat?mode=quiz', variant: 'primary' as const },
@@ -2103,6 +2104,12 @@ export default function AdminDashboard() {
                           className={`px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium text-sm ${kenJeElkaarItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
                         >
                           Antwoorden
+                        </a>
+                        <a
+                          href="/api/quiz/ken-je-elkaar-pptx"
+                          className={`px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium text-sm ${kenJeElkaarItems.length === 0 ? 'pointer-events-none opacity-50' : ''}`}
+                        >
+                          PowerPoint
                         </a>
                         <button
                           onClick={fetchKenJeElkaar}
