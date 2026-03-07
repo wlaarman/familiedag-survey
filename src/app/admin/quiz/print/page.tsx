@@ -403,20 +403,20 @@ export default async function PrintAllQuizPage({
           <RondeKop nummer={6} titel="Logo Quiz" mode={mode} />
 
           {selectedBedrijven.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5 print:gap-1">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
-                  <div className="aspect-square bg-white rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                    <div className="w-16 h-16">
+                  <div className="aspect-[4/3] bg-white rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                    <div className="w-14 h-14">
                       <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
                     </div>
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
                     </div>
                   </div>
-                  <div className="mt-1">
+                  <div className="mt-0.5">
                     {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
+                      <div className="border-b-2 border-dashed border-slate-300 h-4" />
                     ) : (
                       <p className="font-semibold text-slate-800 text-[10px] leading-tight">{bedrijf.naam}</p>
                     )}
@@ -425,6 +425,8 @@ export default async function PrintAllQuizPage({
               ))}
             </div>
           )}
+
+          <ScoreSectie count={selectedBedrijven.length} mode={mode} />
         </div>
       </div>
 
