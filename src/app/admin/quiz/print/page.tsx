@@ -5,6 +5,7 @@ import { generateQuestions } from '@/lib/quiz-questions';
 import { generateWieVanDe3 } from '@/lib/quiz-wie-van-de-3';
 import { BEDRIJVEN } from '@/lib/bedrijven';
 import PrintButton from '../straat/PrintButton';
+import LogoImage from '../logos/LogoImage';
 
 export default async function PrintAllQuizPage({
   searchParams,
@@ -68,13 +69,6 @@ export default async function PrintAllQuizPage({
   const wieVanDe3Questions = generateWieVanDe3(responses, manualQuestions);
   const selectedBedrijven = BEDRIJVEN.filter(b => logoSelection.includes(b.naam));
 
-  // Pre-compute logo URLs server-side to avoid client-side loading issues
-  const logoUrls = selectedBedrijven.map(b => {
-    if (customLogos[b.naam]) return customLogos[b.naam];
-    if (b.logo) return b.logo;
-    const domain = new URL(b.website).hostname;
-    return `https://logo.clearbit.com/${domain}`;
-  });
 
   return (
     <div className="bg-white">
@@ -190,52 +184,40 @@ export default async function PrintAllQuizPage({
           <RondeKop nummer={2} titel="Feit of Fabel" mode={mode} />
 
           {stellingen.length > 0 && (
-            <div className="space-y-6 print:space-y-4">
-              {stellingen.map((s, idx) => (
-                <div key={s.id} className="print:break-inside-avoid border border-slate-200 rounded-xl p-5 print:p-3 print:rounded-lg">
-                  <div className="flex gap-3 items-start">
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm print:w-6 print:h-6 print:text-xs">
+            <div className="space-y-2 print:space-y-1.5">
+              {stellingen.map((s, idx) => {
+                const correctIsWaar = s.is_waar;
+                return (
+                  <div key={s.id} className="print:break-inside-avoid flex gap-2 items-start py-1.5 border-b border-slate-100">
+                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] mt-0.5">
                       {idx + 1}
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-800 print:text-sm">{s.stelling}</p>
-                      <div className="flex gap-3 mt-3 print:mt-2">
-                        {(['feit', 'fabel'] as const).map((optie) => {
-                          const isCorrect = optie === 'feit' ? s.is_waar : !s.is_waar;
-                          return (
-                            <div key={optie} className={`flex-1 text-center px-3 py-3 rounded-lg border-2 print:py-2 ${mode === 'antwoorden' && isCorrect ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
-                              <span className={`text-xs font-bold block mb-0.5 ${mode === 'antwoorden' && isCorrect ? 'text-emerald-600' : 'text-slate-400'}`}>
-                                {optie === 'feit' ? 'A' : 'B'}
-                              </span>
-                              <span className={`font-semibold text-sm print:text-xs uppercase tracking-wide ${mode === 'antwoorden' && isCorrect ? 'text-emerald-700' : 'text-slate-700'}`}>
-                                {optie === 'feit' ? 'Feit' : 'Fabel'}
-                              </span>
-                              {mode === 'antwoorden' && isCorrect && (
-                                <span className="block text-emerald-600 text-xs mt-0.5">&#10003;</span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-slate-800 leading-snug">{s.stelling}</p>
                       {mode === 'antwoorden' && s.toelichting && (
-                        <p className="text-xs text-slate-500 mt-2 italic print:mt-1">{s.toelichting}</p>
-                      )}
-                      {mode === 'quiz' && (
-                        <div className="flex items-center gap-2 mt-3 print:mt-2">
-                          <span className="text-xs text-slate-400">Mijn antwoord:</span>
-                          <div className="flex gap-2">
-                            {['A', 'B'].map((letter) => (
-                              <div key={letter} className="w-7 h-7 border-2 border-slate-300 rounded-full flex items-center justify-center text-xs font-bold text-slate-400 print:w-6 print:h-6">
-                                {letter}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        <p className="text-[10px] text-slate-500 italic mt-0.5">{s.toelichting}</p>
                       )}
                     </div>
+                    <div className="flex gap-1.5 flex-shrink-0 items-center">
+                      {(['feit', 'fabel'] as const).map((optie) => {
+                        const isCorrect = optie === 'feit' ? correctIsWaar : !correctIsWaar;
+                        return (
+                          <div
+                            key={optie}
+                            className={`w-8 h-8 border-2 rounded-full flex items-center justify-center text-[10px] font-bold print:w-7 print:h-7 ${
+                              mode === 'antwoorden' && isCorrect
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                : 'border-slate-300 text-slate-400'
+                            }`}
+                          >
+                            {optie === 'feit' ? 'F' : 'X'}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -428,12 +410,7 @@ export default async function PrintAllQuizPage({
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
                   <div className="aspect-square bg-slate-50 rounded-lg overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={logoUrls[idx]}
-                      alt=""
-                      className="w-full h-full object-contain p-2"
-                    />
+                    <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
                     </div>
