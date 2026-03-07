@@ -257,28 +257,25 @@ export function generateWieVanDe3(responses: SurveyResponse[], manualQuestions: 
   const MAX_SAME_ANSWER = 2;
   const TARGET_QUESTIONS = 15;
 
-  // Track all persons that appear (as answer or decoy)
-  const appearedPersons = new Set<string>();
-  // Also track from manual questions
-  for (const q of questions) {
-    for (const n of q.names) appearedPersons.add(n);
-  }
-
-  function tryAddCandidate(cand: typeof shuffledCandidates[0]): boolean {
-    if (usedQuestionKeys.has(cand.key)) return false;
+  for (const cand of shuffledCandidates) {
+    if (questions.length >= TARGET_QUESTIONS) break;
+    if (usedQuestionKeys.has(cand.key)) continue;
 
     const currentCount = answerCount.get(cand.correct.name) || 0;
-    if (currentCount >= MAX_SAME_ANSWER) return false;
+    if (currentCount >= MAX_SAME_ANSWER) continue;
 
+    // Find decoys - people who DON'T have the same value
     const decoys = pickDecoys(allPersons, cand.correct, usedNames, cand.seed);
-    if (decoys.length < 2) return false;
+    if (decoys.length < 2) continue;
 
+    // Build the 3 names and shuffle them
     const correctDisplay = displayNames.get(cand.correct.name) || firstName(cand.correct.name);
     const decoy1Display = displayNames.get(decoys[0].name) || firstName(decoys[0].name);
     const decoy2Display = displayNames.get(decoys[1].name) || firstName(decoys[1].name);
     const threeNames = [correctDisplay, decoy1Display, decoy2Display];
 
-    if (new Set(threeNames).size < 3) return false;
+    // Make sure all 3 names are different
+    if (new Set(threeNames).size < 3) continue;
 
     const shuffledNames = shuffle(threeNames, cand.seed + questions.length);
     const answerIndex = shuffledNames.indexOf(correctDisplay);
@@ -294,30 +291,6 @@ export function generateWieVanDe3(responses: SurveyResponse[], manualQuestions: 
     usedQuestionKeys.add(cand.key);
     answerCount.set(cand.correct.name, currentCount + 1);
     usedNames.add(cand.correct.name);
-    for (const n of threeNames) appearedPersons.add(n);
-    return true;
-  }
-
-  for (const cand of shuffledCandidates) {
-    if (questions.length >= TARGET_QUESTIONS) break;
-    tryAddCandidate(cand);
-  }
-
-  // Ensure every person appears at least once (as answer or decoy)
-  const allDisplayNames = new Set(allPersons.map(p => displayNames.get(p.name) || firstName(p.name)));
-  const missingPersons = [...allDisplayNames].filter(n => !appearedPersons.has(n));
-
-  for (const missing of missingPersons) {
-    // Find the original name for this display name
-    const origName = [...displayNames.entries()].find(([, v]) => v === missing)?.[0]
-      || allPersons.find(p => firstName(p.name) === missing)?.name;
-    if (!origName) continue;
-
-    // Find a candidate where this person is the correct answer
-    const cand = shuffledCandidates.find(c => c.correct.name === origName && !usedQuestionKeys.has(c.key));
-    if (cand) {
-      tryAddCandidate(cand);
-    }
   }
 
   return questions;
