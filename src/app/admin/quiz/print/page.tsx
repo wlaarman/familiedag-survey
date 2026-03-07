@@ -403,18 +403,18 @@ export default async function PrintAllQuizPage({
           <RondeKop nummer={6} titel="Logo Quiz" mode={mode} />
 
           {selectedBedrijven.length > 0 && (
-            <div className="grid grid-cols-5 gap-1.5 print:gap-1">
+            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
-                  <div className="aspect-[4/3] bg-slate-50 rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
+                  <div className="mx-auto w-3/4 aspect-square bg-slate-50 rounded overflow-hidden relative border border-slate-200 flex items-center justify-center">
                     <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
                     <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
                     </div>
                   </div>
-                  <div className="mt-0.5">
+                  <div className="mt-1">
                     {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-4" />
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
                     ) : (
                       <p className="font-semibold text-slate-800 text-[10px] leading-tight">{bedrijf.naam}</p>
                     )}
