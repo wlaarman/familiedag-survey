@@ -242,27 +242,39 @@ export default async function PrintAllQuizPage({
           {cijferQuestions.length > 0 && (
             mode === 'quiz' ? (
               <div className="space-y-3 print:space-y-2">
-                {cijferQuestions.map((q) => (
-                  <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
-                    <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
-                      {q.number}
-                    </div>
-                    {q.type === 'multiple_choice' && q.options ? (
-                      <div className="flex gap-1.5">
-                        {q.options.map((opt, i) => (
-                          <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200 text-xs">
-                            <span className="w-4 h-4 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
-                              {String.fromCharCode(65 + i)}
-                            </span>
-                            <span className="text-slate-600">{opt}</span>
-                          </div>
-                        ))}
+                {cijferQuestions.map((q) => {
+                  // Detect open questions with A) B) C) D) options in the question text
+                  const letterOptions = q.question.match(/^[A-D]\)\s.+/gm);
+                  return (
+                    <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                      <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                        {q.number}
                       </div>
-                    ) : (
-                      <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
-                    )}
-                  </div>
-                ))}
+                      {q.type === 'multiple_choice' && q.options ? (
+                        <div className="flex gap-1.5">
+                          {q.options.map((opt, i) => (
+                            <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200 text-xs">
+                              <span className="w-4 h-4 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
+                                {String.fromCharCode(65 + i)}
+                              </span>
+                              <span className="text-slate-600">{opt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : letterOptions && letterOptions.length > 0 ? (
+                        <div className="flex gap-1.5">
+                          {letterOptions.map((_, i) => (
+                            <div key={i} className="w-5 h-5 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400">
+                              {String.fromCharCode(65 + i)}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-5 print:space-y-3">
