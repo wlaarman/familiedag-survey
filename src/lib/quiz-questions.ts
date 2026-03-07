@@ -35,12 +35,27 @@ function parseSchoenmaat(s?: string): number | null {
   return n >= 28 && n <= 52 ? n : null;
 }
 
-const ACHTERNAMEN = ['Otten', 'Laarman', 'Beltman', 'Heringa', 'Rolleman', 'Maassen'];
+const ACHTERNAMEN = ['Otten', 'Laarman', 'Beltman', 'Heringa', 'Rolleman', 'Maassen van den Brink'];
+
+const NAME_OVERRIDES: Record<string, string> = {
+  'Janneke Maassen van den Brink': 'Janneke B.',
+};
 
 function firstName(name: string): string {
+  if (NAME_OVERRIDES[name]) return NAME_OVERRIDES[name];
   const parts = name.trim().split(/\s+/);
   // Remove known last names from the end
-  while (parts.length > 1 && ACHTERNAMEN.some(a => parts[parts.length - 1].toLowerCase().startsWith(a.toLowerCase()))) {
+  for (const achternaam of ACHTERNAMEN) {
+    const suffix = achternaam.toLowerCase().split(/\s+/);
+    if (parts.length > suffix.length) {
+      const tail = parts.slice(-suffix.length).map(p => p.toLowerCase());
+      if (suffix.every((s, i) => tail[i].startsWith(s.toLowerCase()))) {
+        parts.splice(-suffix.length);
+        break;
+      }
+    }
+  }
+  while (parts.length > 1 && ['van', 'den', 'de', 'het'].includes(parts[parts.length - 1].toLowerCase())) {
     parts.pop();
   }
   return parts.join(' ');

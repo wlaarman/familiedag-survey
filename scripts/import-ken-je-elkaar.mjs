@@ -3,10 +3,22 @@ import { neon } from '@neondatabase/serverless';
 const sql = neon(process.env.POSTGRES_URL);
 const responses = await sql`SELECT * FROM survey_responses ORDER BY id`;
 
-const ACHTERNAMEN = ['Otten', 'Laarman', 'Beltman', 'Heringa', 'Rolleman', 'Maassen'];
+const NAME_OVERRIDES = { 'Janneke Maassen van den Brink': 'Janneke B.' };
+const ACHTERNAMEN = ['Otten', 'Laarman', 'Beltman', 'Heringa', 'Rolleman', 'Maassen van den Brink', 'Maassen'];
 const fn = (name) => {
+  if (NAME_OVERRIDES[name]) return NAME_OVERRIDES[name];
   const parts = name.trim().split(/\s+/);
-  while (parts.length > 1 && ACHTERNAMEN.some(a => parts[parts.length - 1].toLowerCase().startsWith(a.toLowerCase()))) parts.pop();
+  for (const achternaam of ACHTERNAMEN) {
+    const suffix = achternaam.toLowerCase().split(/\s+/);
+    if (parts.length > suffix.length) {
+      const tail = parts.slice(-suffix.length).map(p => p.toLowerCase());
+      if (suffix.every((s, i) => tail[i].startsWith(s.toLowerCase()))) {
+        parts.splice(-suffix.length);
+        break;
+      }
+    }
+  }
+  while (parts.length > 1 && ['van', 'den', 'de', 'het'].includes(parts[parts.length - 1].toLowerCase())) parts.pop();
   return parts.join(' ');
 };
 
