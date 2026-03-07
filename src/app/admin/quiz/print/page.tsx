@@ -234,76 +234,37 @@ export default async function PrintAllQuizPage({
         </div>
       </div>
 
-      {/* ==================== RONDE 3: Cijferronde (answer form only) ==================== */}
+      {/* ==================== RONDE 3: Raad de straat ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
-          <RondeKop nummer={3} titel="Cijferronde" mode={mode} />
+        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={3} titel="Raad de Straat!" mode={mode} />
 
-          {cijferQuestions.length > 0 && (
-            mode === 'quiz' ? (
-              <div className="space-y-3 print:space-y-2">
-                {cijferQuestions.map((q) => {
-                  // Detect open questions with A) B) C) D) options in the question text
-                  const letterOptions = q.question.match(/^[A-D]\)\s.+/gm);
-                  return (
-                    <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
-                      <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
-                        {q.number}
-                      </div>
-                      {q.type === 'multiple_choice' && q.options ? (
-                        <div className="flex gap-1.5">
-                          {q.options.map((opt, i) => (
-                            <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200 text-xs">
-                              <span className="w-4 h-4 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
-                                {String.fromCharCode(65 + i)}
-                              </span>
-                              <span className="text-slate-600">{opt}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : letterOptions && letterOptions.length > 0 ? (
-                        <>
-                          <div className="flex gap-1.5 flex-wrap">
-                            {letterOptions.map((opt, i) => (
-                              <div key={i} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
-                                {opt.trim()}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-1 ml-auto flex-shrink-0">
-                            <div className="border-b-2 border-dashed border-slate-300 w-24 h-5" />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="space-y-5 print:space-y-3">
-                {cijferQuestions.map((q) => (
-                  <div key={q.number} className="print:break-inside-avoid">
-                    <div className="flex gap-3">
-                      <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
-                        {q.number}
-                      </div>
-                      <div className="flex-1">
-                        <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">{q.category}</span>
-                        <p className="font-medium text-slate-800 mt-0.5 whitespace-pre-line print:text-sm">{q.question}</p>
-                        <div className="mt-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
-                          <span className="font-semibold text-emerald-700">{q.answer}</span>
-                        </div>
-                      </div>
+          {streetviewItems.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 print:gap-1.5">
+              {streetviewItems.map((item) => (
+                <div key={item.id} className="border border-slate-200 rounded-lg overflow-hidden print:break-inside-avoid">
+                  <div className="aspect-[16/10] bg-slate-100 relative">
+                    <img src={item.blob_url_street || item.blob_url} alt={`Vraag ${item.question_number}`} className="w-full h-full object-cover" />
+                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
+                      {item.question_number}
                     </div>
                   </div>
-                ))}
-              </div>
-            )
+                  <div className="px-1.5 py-1">
+                    {mode === 'quiz' ? (
+                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
+                    ) : (
+                      <div>
+                        <p className="font-semibold text-slate-800 text-[11px] leading-tight">{item.names}</p>
+                        <p className="text-[10px] text-slate-500">{item.address}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
-          <ScoreSectie count={cijferQuestions.length} mode={mode} />
+          <ScoreSectie count={streetviewItems.length} mode={mode} />
         </div>
       </div>
 
@@ -380,39 +341,81 @@ export default async function PrintAllQuizPage({
         </div>
       </div>
 
-      {/* ==================== RONDE 5: Raad de straat ==================== */}
+      {/* ==================== RONDE 5: Cijferronde (answer form only) ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
-          <RondeKop nummer={5} titel="Raad de Straat!" mode={mode} />
+        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={5} titel="Cijferronde" mode={mode} />
 
-          {streetviewItems.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 print:gap-1.5">
-              {streetviewItems.map((item) => (
-                <div key={item.id} className="border border-slate-200 rounded-lg overflow-hidden print:break-inside-avoid">
-                  <div className="aspect-[16/10] bg-slate-100 relative">
-                    <img src={item.blob_url_street || item.blob_url} alt={`Vraag ${item.question_number}`} className="w-full h-full object-cover" />
-                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
-                      {item.question_number}
+          {cijferQuestions.length > 0 && (
+            mode === 'quiz' ? (
+              <div className="space-y-3 print:space-y-2">
+                {cijferQuestions.map((q) => {
+                  // Detect open questions with A) B) C) D) options in the question text
+                  const letterOptions = q.question.match(/^[A-D]\)\s.+/gm);
+                  return (
+                    <div key={q.number} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                      <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
+                        {q.number}
+                      </div>
+                      {q.type === 'multiple_choice' && q.options ? (
+                        <div className="flex gap-1.5">
+                          {q.options.map((opt, i) => (
+                            <div key={i} className="flex items-center gap-1 px-2 py-1 bg-slate-50 rounded border border-slate-200 text-xs">
+                              <span className="w-4 h-4 border-2 border-slate-300 rounded-full flex items-center justify-center text-[9px] font-bold text-slate-400 flex-shrink-0">
+                                {String.fromCharCode(65 + i)}
+                              </span>
+                              <span className="text-slate-600">{opt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : letterOptions && letterOptions.length > 0 ? (
+                        <>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {letterOptions.map((opt, i) => (
+                              <div key={i} className="flex items-center gap-1 px-2 py-0.5 bg-slate-50 rounded border border-slate-200 text-xs text-slate-600">
+                                {opt.trim()}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                            <div className="border-b-2 border-dashed border-slate-300 w-24 h-5" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="border-b-2 border-dashed border-slate-300 w-40 h-5" />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-5 print:space-y-3">
+                {cijferQuestions.map((q) => (
+                  <div key={q.number} className="print:break-inside-avoid">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        {q.number}
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">{q.category}</span>
+                        <p className="font-medium text-slate-800 mt-0.5 whitespace-pre-line print:text-sm">{q.question}</p>
+                        <div className="mt-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg print:text-sm">
+                          <span className="font-semibold text-emerald-700">{q.answer}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="px-1.5 py-1">
-                    {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
-                    ) : (
-                      <div>
-                        <p className="font-semibold text-slate-800 text-[11px] leading-tight">{item.names}</p>
-                        <p className="text-[10px] text-slate-500">{item.address}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
 
-          <ScoreSectie count={streetviewItems.length} mode={mode} />
+          <ScoreSectie count={cijferQuestions.length} mode={mode} />
         </div>
       </div>
+
+
+
 
       {/* ==================== RONDE 6: Logo ronde ==================== */}
       <div className="print-section">
