@@ -4,7 +4,6 @@ import { getAllResponses, getFeitOfFabel, getStreetviewQuiz, getCustomLogos, get
 import { generateQuestions } from '@/lib/quiz-questions';
 import { generateWieVanDe3 } from '@/lib/quiz-wie-van-de-3';
 import { BEDRIJVEN } from '@/lib/bedrijven';
-import LogoImage from '../logos/LogoImage';
 import PrintButton from '../straat/PrintButton';
 
 export default async function PrintAllQuizPage({
@@ -69,23 +68,31 @@ export default async function PrintAllQuizPage({
   const wieVanDe3Questions = generateWieVanDe3(responses, manualQuestions);
   const selectedBedrijven = BEDRIJVEN.filter(b => logoSelection.includes(b.naam));
 
+  // Pre-compute logo URLs server-side to avoid client-side loading issues
+  const logoUrls = selectedBedrijven.map(b => {
+    if (customLogos[b.naam]) return customLogos[b.naam];
+    if (b.logo) return b.logo;
+    const domain = new URL(b.website).hostname;
+    return `https://logo.clearbit.com/${domain}`;
+  });
+
   return (
     <div className="bg-white">
       {/* Header - hidden when printing */}
       <div className="print:hidden sticky top-0 bg-white border-b border-slate-200 z-10">
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
           <a
-            href="/admin?tab=quiz"
+            href="/admin/quiz"
             className="text-slate-600 hover:text-slate-800 font-medium"
           >
-            &larr; Terug naar admin
+            &larr; Terug naar overzicht
           </a>
           <div className="flex items-center gap-3">
             <a
               href={`/admin/quiz/print?mode=${mode === 'quiz' ? 'antwoorden' : 'quiz'}`}
               className="px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm"
             >
-              {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk quiz'}
+              {mode === 'quiz' ? 'Bekijk antwoorden' : 'Bekijk formulieren'}
             </a>
             <PrintButton />
           </div>
@@ -149,18 +156,10 @@ export default async function PrintAllQuizPage({
       {/* ==================== RONDE 1: Raad de kinderfoto ==================== */}
       <div className="print-section">
         <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 1</p>
-            <h1 className="text-lg font-bold text-slate-800">Wie is Wie?</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {mode === 'quiz'
-                ? 'Ken je alle familieleden? Schrijf de naam onder elke foto.'
-                : 'Antwoordblad — Wie is Wie?'}
-            </p>
-          </div>
+          <RondeKop nummer={1} titel="Wie is Wie?" mode={mode} />
 
           {photos.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
+            <div className="grid grid-cols-3 gap-2 print:gap-1.5">
               {photos.map((photo, idx) => (
                 <div key={`${photo.responseId}-${photo.name}`} className="text-center print:break-inside-avoid">
                   <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden relative">
@@ -181,35 +180,14 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && photos.length > 0 && (
-            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {photos.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={photos.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 2: Feit of fabel ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-10 print:mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 2</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Feit of Fabel</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
-              {mode === 'quiz'
-                ? 'Is de stelling waar of niet waar? Omcirkel je antwoord.'
-                : 'Antwoordblad — Feit of Fabel'}
-            </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {stellingen.length} stellingen
-            </p>
-          </div>
+        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={2} titel="Feit of Fabel" mode={mode} />
 
           {stellingen.length > 0 && (
             <div className="space-y-6 print:space-y-4">
@@ -261,35 +239,14 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && stellingen.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {stellingen.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={stellingen.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 3: Cijferronde ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-10 print:mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 3</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Cijferronde</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
-              {mode === 'quiz'
-                ? 'Hoe goed ken je de familie? Test je kennis met deze vragen!'
-                : 'Antwoordblad — Cijferronde'}
-            </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {cijferQuestions.length} vragen
-            </p>
-          </div>
+        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={3} titel="Cijferronde" mode={mode} />
 
           {cijferQuestions.length > 0 && (
             <div className="space-y-8 print:space-y-5">
@@ -336,35 +293,14 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && cijferQuestions.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {cijferQuestions.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={cijferQuestions.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 4: Hoe goed ken je elkaar ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-10 print:mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 4</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Hoe goed ken je elkaar?</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
-              {mode === 'quiz'
-                ? 'Meer of minder? Omcirkel je antwoord!'
-                : 'Antwoordblad — Hoe goed ken je elkaar?'}
-            </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {kenJeElkaarVragen.length} vragen
-            </p>
-          </div>
+        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={4} titel="Hoe goed ken je elkaar?" mode={mode} />
 
           {kenJeElkaarVragen.length > 0 && (
             <div className="space-y-6 print:space-y-4">
@@ -444,32 +380,14 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && kenJeElkaarVragen.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {kenJeElkaarVragen.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={kenJeElkaarVragen.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 5: Raad de straat ==================== */}
       <div className="print-section">
         <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 5</p>
-            <h1 className="text-lg font-bold text-slate-800">Raad de Straat!</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {mode === 'quiz'
-                ? 'Bij welk familielid hoort deze straat? Schrijf de naam op de stippellijn.'
-                : 'Antwoordblad — Raad de Straat'}
-            </p>
-          </div>
+          <RondeKop nummer={5} titel="Raad de Straat!" mode={mode} />
 
           {streetviewItems.length > 0 && (
             <div className="grid grid-cols-2 gap-2 print:gap-1.5">
@@ -496,48 +414,35 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && streetviewItems.length > 0 && (
-            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {streetviewItems.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={streetviewItems.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 6: Logo ronde ==================== */}
       <div className="print-section">
-        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-3">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 6</p>
-            <h1 className="text-lg font-bold text-slate-800">Logo Quiz — Rijssense Bedrijven</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              {mode === 'quiz'
-                ? 'Ken je alle logo\'s? Schrijf de naam van het bedrijf onder elk logo.'
-                : 'Antwoordblad — Logo Quiz'}
-            </p>
-          </div>
+        <div className="max-w-5xl mx-auto px-4 py-4 print:p-[0.8cm] print:max-w-none">
+          <RondeKop nummer={6} titel="Logo Quiz" mode={mode} />
 
           {selectedBedrijven.length > 0 && (
-            <div className="grid grid-cols-4 gap-2 print:gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5 print:gap-1">
               {selectedBedrijven.map((bedrijf, idx) => (
                 <div key={bedrijf.naam} className="text-center print:break-inside-avoid">
                   <div className="aspect-square bg-slate-50 rounded-lg overflow-hidden relative border border-slate-200 flex items-center justify-center">
-                    <LogoImage bedrijf={bedrijf} customLogos={customLogos} />
-                    <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={logoUrls[idx]}
+                      alt=""
+                      className="w-full h-full object-contain p-2"
+                    />
+                    <div className="absolute top-0.5 left-0.5 w-4 h-4 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[8px] shadow">
                       {idx + 1}
                     </div>
                   </div>
                   <div className="mt-0.5">
                     {mode === 'quiz' ? (
-                      <div className="border-b-2 border-dashed border-slate-300 h-5" />
+                      <div className="border-b-2 border-dashed border-slate-300 h-4" />
                     ) : (
-                      <p className="font-semibold text-slate-800 text-[11px] leading-tight">{bedrijf.naam}</p>
+                      <p className="font-semibold text-slate-800 text-[10px] leading-tight">{bedrijf.naam}</p>
                     )}
                   </div>
                 </div>
@@ -545,35 +450,14 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && selectedBedrijven.length > 0 && (
-            <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {selectedBedrijven.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={selectedBedrijven.length} mode={mode} />
         </div>
       </div>
 
       {/* ==================== RONDE 7: Wie van de 3 ==================== */}
       <div className="print-section">
-        <div className="max-w-4xl mx-auto px-6 py-8 print:p-[1cm] print:max-w-none">
-          <div className="text-center mb-10 print:mb-6">
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ronde 7</p>
-            <h1 className="text-3xl font-bold text-slate-800 print:text-2xl">Wie van de 3?</h1>
-            <p className="text-slate-500 mt-2 print:text-sm">
-              {mode === 'quiz'
-                ? 'Bij elke vraag horen 3 namen. Slechts 1 is het juiste antwoord!'
-                : 'Antwoordblad — Wie van de 3?'}
-            </p>
-            <p className="text-sm text-slate-400 mt-1 print:text-xs">
-              Familiedag 2026 &bull; {wieVanDe3Questions.length} vragen
-            </p>
-          </div>
+        <div className="max-w-4xl mx-auto px-6 py-4 print:p-[1cm] print:max-w-none">
+          <RondeKop nummer={7} titel="Wie van de 3?" mode={mode} />
 
           {wieVanDe3Questions.length > 0 && (
             <div className="space-y-6 print:space-y-4">
@@ -623,17 +507,7 @@ export default async function PrintAllQuizPage({
             </div>
           )}
 
-          {mode === 'quiz' && wieVanDe3Questions.length > 0 && (
-            <div className="mt-10 pt-6 border-t-2 border-dashed border-slate-300 print:mt-6 print:pt-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-slate-600">Totaal score:</p>
-                <div className="flex items-center gap-2">
-                  <div className="border-b-2 border-dashed border-slate-300 w-12 h-7" />
-                  <span className="text-slate-500">/ {wieVanDe3Questions.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
+          <ScoreSectie count={wieVanDe3Questions.length} mode={mode} />
         </div>
       </div>
 
@@ -660,6 +534,38 @@ export default async function PrintAllQuizPage({
           `,
         }}
       />
+    </div>
+  );
+}
+
+function RondeKop({ nummer, titel, mode }: { nummer: number; titel: string; mode: string }) {
+  return (
+    <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-200">
+      <h2 className="text-base font-bold text-slate-800">
+        <span className="text-blue-600">Ronde {nummer}:</span> {titel}
+        {mode === 'antwoorden' && <span className="text-emerald-600 text-sm font-medium ml-2">(antwoorden)</span>}
+      </h2>
+      {mode === 'quiz' && (
+        <div className="flex items-center gap-1 text-xs text-slate-400">
+          <span>Team:</span>
+          <div className="border-b border-slate-300 w-24 h-4" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScoreSectie({ count, mode }: { count: number; mode: string }) {
+  if (mode !== 'quiz' || count === 0) return null;
+  return (
+    <div className="mt-4 pt-2 border-t-2 border-dashed border-slate-300">
+      <div className="flex items-center justify-between">
+        <p className="font-medium text-slate-600 text-sm">Score:</p>
+        <div className="flex items-center gap-1">
+          <div className="border-b-2 border-dashed border-slate-300 w-8 h-5" />
+          <span className="text-sm text-slate-400">/ {count}</span>
+        </div>
+      </div>
     </div>
   );
 }
