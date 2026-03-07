@@ -156,7 +156,7 @@ export default async function PrintAllQuizPage({
               {photos.map((photo, idx) => (
                 <div key={`${photo.responseId}-${photo.name}`} className="text-center print:break-inside-avoid">
                   <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden relative">
-                    <img src={photo.url} alt={mode === 'antwoorden' ? photo.name : `Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                    <img src={photo.url} alt={mode === 'antwoorden' ? photo.name : `Foto ${idx + 1}`} className="w-full h-full object-cover grayscale" />
                     <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {idx + 1}
                     </div>
@@ -183,20 +183,20 @@ export default async function PrintAllQuizPage({
           <RondeKop nummer={2} titel="Feit of Fabel" mode={mode} />
 
           {stellingen.length > 0 && (
-            <div className="space-y-1.5 print:space-y-1">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0">
               {stellingen.map((s, idx) => {
                 const correctIsWaar = s.is_waar;
                 return (
-                  <div key={s.id} className="print:break-inside-avoid flex gap-2 items-center py-1 border-b border-slate-100">
+                  <div key={s.id} className="flex gap-1.5 items-center py-1.5 border-b border-slate-100">
                     <div className="flex-shrink-0 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px]">
                       {idx + 1}
                     </div>
                     {mode === 'quiz' ? (
-                      <div className="flex gap-2 flex-shrink-0 items-center">
+                      <div className="flex gap-1.5 flex-shrink-0 items-center">
                         {(['feit', 'fabel'] as const).map((optie) => (
                           <div
                             key={optie}
-                            className="px-3 py-1 border-2 border-slate-300 rounded-full text-xs font-semibold text-slate-500"
+                            className="px-2.5 py-0.5 border-2 border-slate-300 rounded-full text-xs font-semibold text-slate-500"
                           >
                             {optie === 'feit' ? 'Feit' : 'Fabel'}
                           </div>
@@ -204,14 +204,14 @@ export default async function PrintAllQuizPage({
                       </div>
                     ) : (
                       <>
-                        <p className="text-sm text-slate-800 leading-snug flex-1 min-w-0">{s.stelling}</p>
-                        <div className="flex gap-2 flex-shrink-0 items-center">
+                        <p className="text-xs text-slate-800 leading-snug flex-1 min-w-0">{s.stelling}</p>
+                        <div className="flex gap-1.5 flex-shrink-0 items-center">
                           {(['feit', 'fabel'] as const).map((optie) => {
                             const isCorrect = optie === 'feit' ? correctIsWaar : !correctIsWaar;
                             return (
                               <div
                                 key={optie}
-                                className={`px-3 py-1 border-2 rounded-full text-xs font-semibold ${
+                                className={`px-2 py-0.5 border-2 rounded-full text-[10px] font-semibold ${
                                   isCorrect
                                     ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                     : 'border-slate-200 text-slate-300'
