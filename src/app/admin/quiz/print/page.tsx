@@ -229,7 +229,7 @@ export default async function PrintAllQuizPage({
               {photos.map((photo, idx) => (
                 <div key={`${photo.responseId}-${photo.name}`} className="text-center print:break-inside-avoid">
                   <div className="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden relative">
-                    <img src={photo.url} alt={mode === 'antwoorden' ? photo.name : `Foto ${idx + 1}`} className="w-full h-full object-cover grayscale" />
+                    <img src={photo.url} alt={mode === 'antwoorden' ? photo.name : `Foto ${idx + 1}`} className={`w-full h-full object-cover ${mode === 'quiz' ? 'grayscale' : ''}`} />
                     <div className="absolute top-1 left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-[10px] shadow">
                       {idx + 1}
                     </div>
@@ -296,6 +296,9 @@ export default async function PrintAllQuizPage({
                           })}
                         </div>
                       </>
+                    )}
+                    {mode === 'antwoorden' && !correctIsWaar && s.toelichting && (
+                      <p className="text-[9px] text-slate-500 mt-0.5 col-span-full">{s.toelichting}</p>
                     )}
                   </div>
                 );
