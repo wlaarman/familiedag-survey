@@ -2415,75 +2415,36 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* Print version - styled A4 page with family photo background */}
+                          {/* Print version - clean layout */}
                           <div className="hidden print:block">
-                            <div className="relative w-full min-h-[calc(100vh-2cm)] p-[1.5cm] overflow-hidden">
-                              {/* Background family photo */}
-                              <div
-                                className="absolute inset-0 bg-center bg-cover"
-                                style={{
-                                  backgroundImage: 'url(/familieportret.png)',
-                                  opacity: 0.08,
-                                }}
-                              />
-                              {/* Decorative border */}
-                              <div className="absolute inset-[0.8cm] border-2 border-blue-200 rounded-2xl" />
+                            <div className="p-[1.5cm]">
+                              <div className="text-center mb-8">
+                                <h1 className="text-3xl font-bold text-slate-800">Groepsindeling</h1>
+                                <p className="text-sm text-slate-400 mt-1">Familiedag 2026</p>
+                              </div>
 
-                              {/* Content */}
-                              <div className="relative z-10">
-                                {/* Header */}
-                                <div className="text-center mb-6">
-                                  <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Groepsindeling</h1>
-                                  <p className="text-sm text-slate-500 mt-1">Familiedag 2026</p>
-                                  <div className="w-16 h-0.5 bg-blue-400 mx-auto mt-3" />
-                                </div>
-
-                                {/* Group cards grid */}
-                                <div className={`grid gap-4 ${maxGroep <= 4 ? 'grid-cols-2' : maxGroep <= 6 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-                                  {Array.from({ length: maxGroep }, (_, i) => {
-                                    const members = participants.filter(p => p.groep === i + 1);
-                                    const GROEP_ACCENTEN = [
-                                      { header: 'bg-blue-600', badge: 'bg-blue-50 border-blue-200 text-blue-800' },
-                                      { header: 'bg-emerald-600', badge: 'bg-emerald-50 border-emerald-200 text-emerald-800' },
-                                      { header: 'bg-amber-600', badge: 'bg-amber-50 border-amber-200 text-amber-800' },
-                                      { header: 'bg-rose-600', badge: 'bg-rose-50 border-rose-200 text-rose-800' },
-                                      { header: 'bg-violet-600', badge: 'bg-violet-50 border-violet-200 text-violet-800' },
-                                      { header: 'bg-cyan-600', badge: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
-                                      { header: 'bg-orange-600', badge: 'bg-orange-50 border-orange-200 text-orange-800' },
-                                      { header: 'bg-indigo-600', badge: 'bg-indigo-50 border-indigo-200 text-indigo-800' },
-                                    ];
-                                    const accent = GROEP_ACCENTEN[i % GROEP_ACCENTEN.length];
-                                    return (
-                                      <div key={i + 1} className="bg-white/90 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                                        <div className={`${accent.header} text-white px-4 py-2.5 flex items-center gap-2`}>
-                                          <span className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center font-bold text-sm">{i + 1}</span>
-                                          <span className="font-semibold text-sm">Groep {i + 1}</span>
-                                          <span className="ml-auto text-xs opacity-80">{members.length} pers.</span>
-                                        </div>
-                                        <div className="p-3 space-y-1.5">
-                                          {members.map(m => (
-                                            <div
-                                              key={m.id}
-                                              className={`px-3 py-1.5 rounded-lg text-xs border font-medium ${FAMILIE_KLEUREN[m.familie] || 'bg-gray-50 text-gray-800 border-gray-200'}`}
-                                            >
-                                              {m.naam}
-                                            </div>
-                                          ))}
-                                        </div>
+                              <div className={`grid gap-5 ${maxGroep <= 4 ? 'grid-cols-2' : maxGroep <= 6 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                                {Array.from({ length: maxGroep }, (_, i) => {
+                                  const members = participants.filter(p => p.groep === i + 1);
+                                  return (
+                                    <div key={i + 1} className="border border-slate-300 rounded-lg overflow-hidden">
+                                      <div className="bg-slate-800 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
+                                        <span>Groep {i + 1}</span>
+                                        <span className="text-xs font-normal opacity-70">{members.length} pers.</span>
                                       </div>
-                                    );
-                                  })}
-                                </div>
-
-                                {/* Footer legend */}
-                                <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-slate-500">
-                                  {Object.entries(FAMILIE_KLEUREN).map(([familie, kleur]) => (
-                                    <div key={familie} className="flex items-center gap-1.5">
-                                      <span className={`w-3 h-3 rounded-sm border ${kleur}`} />
-                                      <span>{familie}</span>
+                                      <div className="p-2">
+                                        {members.map((m, idx) => (
+                                          <div
+                                            key={m.id}
+                                            className={`px-3 py-1.5 text-sm text-slate-800 ${idx < members.length - 1 ? 'border-b border-slate-100' : ''}`}
+                                          >
+                                            {m.naam}
+                                          </div>
+                                        ))}
+                                      </div>
                                     </div>
-                                  ))}
-                                </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           </div>
