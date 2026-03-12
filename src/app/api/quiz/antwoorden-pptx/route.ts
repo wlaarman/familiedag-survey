@@ -29,16 +29,42 @@ export async function GET() {
   const selectedBedrijven = BEDRIJVEN.filter(b => logoSelection.includes(b.naam));
 
   // Photos for Wie is Wie
-  const photos: { name: string; responseId: number }[] = [];
+  const photos: { name: string; url: string; responseId: number }[] = [];
   for (const r of responses) {
-    if (r.foto_1_url) photos.push({ name: r.naam_1, responseId: r.id });
-    if (r.foto_2_url && r.naam_2) photos.push({ name: r.naam_2, responseId: r.id });
+    if (r.foto_1_url) photos.push({ name: r.naam_1, url: r.foto_1_url, responseId: r.id });
+    if (r.foto_2_url && r.naam_2) photos.push({ name: r.naam_2, url: r.foto_2_url, responseId: r.id });
   }
   photos.sort((a, b) => {
     const hashA = a.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) * 31 + a.responseId;
     const hashB = b.name.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) * 31 + b.responseId;
     return hashA - hashB;
   });
+
+  // Pre-fetch images as base64 for embedding in PPTX
+  async function fetchImageBase64(url: string): Promise<string | null> {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const buf = await res.arrayBuffer();
+      const contentType = res.headers.get('content-type') || 'image/jpeg';
+      const ext = contentType.includes('png') ? 'png' : 'jpeg';
+      return `image/${ext};base64,${Buffer.from(buf).toString('base64')}`;
+    } catch {
+      return null;
+    }
+  }
+
+  // Fetch all photo images in parallel
+  const photoImages = await Promise.all(photos.map(p => fetchImageBase64(p.url)));
+  const streetviewImages = await Promise.all(streetviewItems.map(item => fetchImageBase64(item.blob_url)));
+
+  // Fetch logo images
+  const logoImages = await Promise.all(selectedBedrijven.map(b => {
+    const customUrl = customLogos[b.naam];
+    if (customUrl || b.logo) return fetchImageBase64(customUrl || b.logo!);
+    const domain = new URL(b.website).hostname;
+    return fetchImageBase64(`https://logo.clearbit.com/${domain}`);
+  }));
 
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_16x9';
@@ -125,7 +151,10 @@ export async function GET() {
   // RONDE 2: WIE IS WIE?
   // ============================================================
   addRondeDivider('Ronde 2', 'Wie is Wie?', BLUE);
-  addNumberedList(photos.map((p, i) => ({ num: i + 1, text: p.name })), 'RONDE 2  •  WIE IS WIE?', BLUE);
+  addImageGrid(
+    photos.map((p, i) => ({ num: i + 1, label: p.name, image: photoImages[i] })),
+    'RONDE 2  •  WIE IS WIE?', BLUE, 8, 1.3,
+  );
 
   // ============================================================
   // RONDE 3: FEIT OF FABEL
@@ -175,9 +204,9 @@ export async function GET() {
   // RONDE 4: RAAD DE STRAAT
   // ============================================================
   addRondeDivider('Ronde 4', 'Raad de Straat!', BLUE);
-  addNumberedList(
-    streetviewItems.map(item => ({ num: item.question_number, text: `${item.names} — ${item.address}` })),
-    'RONDE 4  •  RAAD DE STRAAT', BLUE,
+  addImageGrid(
+    streetviewItems.map((item, i) => ({ num: item.question_number, label: item.names, image: streetviewImages[i] })),
+    'RONDE 4  •  RAAD DE STRAAT', BLUE, 4, 1.8,
   );
 
   // ============================================================
@@ -238,9 +267,9 @@ export async function GET() {
   // RONDE 6: LOGO QUIZ
   // ============================================================
   addRondeDivider('Ronde 6', 'Logo Quiz', BLUE);
-  addNumberedList(
-    selectedBedrijven.map((b, i) => ({ num: i + 1, text: b.naam })),
-    'RONDE 6  •  LOGO QUIZ', BLUE,
+  addImageGrid(
+    selectedBedrijven.map((b, i) => ({ num: i + 1, label: b.naam, image: logoImages[i] })),
+    'RONDE 6  •  LOGO QUIZ', BLUE, 6, 1.0,
   );
 
   // ============================================================
@@ -361,33 +390,63 @@ export async function GET() {
     });
   }
 
-  function addNumberedList(items: { num: number; text: string }[], headerText: string, color: string) {
-    const perSlide = 15;
+  function addImageGrid(
+    items: { num: number; label: string; image: string | null }[],
+    headerText: string, color: string, cols: number, imgHeight: number,
+  ) {
+    const SLIDE_W = 10;
+    const SLIDE_H = 5.63;
+    const MARGIN_X = 0.4;
+    const START_Y = 0.85;
+    const gap = 0.15;
+    const cellW = (SLIDE_W - 2 * MARGIN_X - (cols - 1) * gap) / cols;
+    const labelH = 0.3;
+    const cellH = imgHeight + labelH + 0.05;
+    const rows = Math.floor((SLIDE_H - START_Y - 0.1) / (cellH + gap));
+    const perSlide = rows * cols;
+
     for (let page = 0; page < items.length; page += perSlide) {
       const pageItems = items.slice(page, page + perSlide);
       const slide = pptx.addSlide();
       slide.background = { color: 'FFFFFF' };
-
       addHeader(slide, headerText, color);
 
-      // Two columns
-      const colItems = [
-        pageItems.slice(0, Math.ceil(pageItems.length / 2)),
-        pageItems.slice(Math.ceil(pageItems.length / 2)),
-      ];
+      pageItems.forEach((item, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const x = MARGIN_X + col * (cellW + gap);
+        const y = START_Y + row * (cellH + gap);
 
-      colItems.forEach((col, colIdx) => {
-        const x = colIdx === 0 ? 0.5 : 5.0;
-        col.forEach((item, i) => {
-          const y = 0.9 + i * 0.3;
-          slide.addText(`${item.num}.`, {
-            x, y, w: 0.5, h: 0.28,
-            fontSize: 11, fontFace: 'Arial', color: BLUE, bold: true, align: 'right',
+        // Image
+        if (item.image) {
+          slide.addImage({
+            data: item.image,
+            x, y, w: cellW, h: imgHeight,
+            rounding: true,
           });
-          slide.addText(item.text, {
-            x: x + 0.55, y, w: 4, h: 0.28,
-            fontSize: 11, fontFace: 'Arial', color: DARK,
+        } else {
+          slide.addShape(pptx.ShapeType.rect, {
+            x, y, w: cellW, h: imgHeight,
+            fill: { color: 'F1F5F9' },
+            rectRadius: 0.05,
           });
+        }
+
+        // Number badge
+        slide.addShape(pptx.ShapeType.rect, {
+          x: x + 0.05, y: y + 0.05, w: 0.25, h: 0.25,
+          fill: { color: BLUE },
+          rectRadius: 0.12,
+        });
+        slide.addText(`${item.num}`, {
+          x: x + 0.05, y: y + 0.05, w: 0.25, h: 0.25,
+          fontSize: 8, fontFace: 'Arial', color: 'FFFFFF', bold: true, align: 'center', valign: 'middle',
+        });
+
+        // Label
+        slide.addText(item.label, {
+          x, y: y + imgHeight + 0.05, w: cellW, h: labelH,
+          fontSize: 8, fontFace: 'Arial', color: DARK, bold: true, align: 'center', valign: 'top', wrap: true,
         });
       });
     }
