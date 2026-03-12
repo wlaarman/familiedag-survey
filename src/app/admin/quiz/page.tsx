@@ -119,6 +119,13 @@ export default async function QuizOverzichtPage() {
           />
         </div>
 
+        {/* Combined links */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <a href="/admin/quiz/print?mode=quiz" target="_blank" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Printversie formulieren</a>
+          <a href="/admin/quiz/print?mode=antwoorden" target="_blank" className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700">Printversie antwoorden</a>
+          <a href="/api/quiz/antwoorden-pptx" className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600">PowerPoint antwoorden</a>
+        </div>
+
         <div className="space-y-4">
           {RONDES.map((ronde) => (
             <div
