@@ -2415,33 +2415,25 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* Print version - clean layout */}
+                          {/* Print version */}
                           <div className="hidden print:block">
-                            <div className="p-[1.5cm]">
-                              <div className="text-center mb-8">
-                                <h1 className="text-3xl font-bold text-slate-800">Groepsindeling</h1>
-                                <p className="text-sm text-slate-400 mt-1">Familiedag 2026</p>
-                              </div>
+                            <div className="px-[2cm] py-[1.5cm]">
+                              <h1 className="text-2xl font-semibold text-center tracking-wide uppercase text-slate-700 mb-1">Groepsindeling</h1>
+                              <p className="text-xs text-center text-slate-400 tracking-widest uppercase mb-10">Familiedag 2026</p>
 
-                              <div className={`grid gap-5 ${maxGroep <= 4 ? 'grid-cols-2' : maxGroep <= 6 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+                              <div className={`grid gap-x-8 gap-y-6 ${maxGroep <= 4 ? 'grid-cols-2' : maxGroep <= 6 ? 'grid-cols-3' : 'grid-cols-4'}`}>
                                 {Array.from({ length: maxGroep }, (_, i) => {
                                   const members = participants.filter(p => p.groep === i + 1);
                                   return (
-                                    <div key={i + 1} className="border border-slate-300 rounded-lg overflow-hidden">
-                                      <div className="bg-slate-800 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
-                                        <span>Groep {i + 1}</span>
-                                        <span className="text-xs font-normal opacity-70">{members.length} pers.</span>
+                                    <div key={i + 1}>
+                                      <div className="text-xs font-semibold uppercase tracking-widest text-slate-400 pb-1.5 border-b-2 border-slate-800 mb-2">
+                                        Groep {i + 1}
                                       </div>
-                                      <div className="p-2">
-                                        {members.map((m, idx) => (
-                                          <div
-                                            key={m.id}
-                                            className={`px-3 py-1.5 text-sm text-slate-800 ${idx < members.length - 1 ? 'border-b border-slate-100' : ''}`}
-                                          >
-                                            {m.naam}
-                                          </div>
-                                        ))}
-                                      </div>
+                                      {members.map(m => (
+                                        <div key={m.id} className="py-1 text-sm text-slate-800">
+                                          {m.naam}
+                                        </div>
+                                      ))}
                                     </div>
                                   );
                                 })}
