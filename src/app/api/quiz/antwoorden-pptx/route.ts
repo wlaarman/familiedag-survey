@@ -56,7 +56,7 @@ export async function GET() {
 
   // Fetch all photo images in parallel
   const photoImages = await Promise.all(photos.map(p => fetchImageBase64(p.url)));
-  const streetviewImages = await Promise.all(streetviewItems.map(item => fetchImageBase64(item.blob_url)));
+  const streetviewImages = await Promise.all(streetviewItems.map(item => fetchImageBase64(item.blob_url_street || item.blob_url)));
 
   // Fetch logo images
   const logoImages = await Promise.all(selectedBedrijven.map(b => {
@@ -433,13 +433,14 @@ export async function GET() {
         }
 
         // Number badge
+        const badgeW = item.num >= 10 ? 0.35 : 0.25;
         slide.addShape(pptx.ShapeType.rect, {
-          x: x + 0.05, y: y + 0.05, w: 0.25, h: 0.25,
+          x: x + 0.05, y: y + 0.05, w: badgeW, h: 0.25,
           fill: { color: BLUE },
           rectRadius: 0.12,
         });
         slide.addText(`${item.num}`, {
-          x: x + 0.05, y: y + 0.05, w: 0.25, h: 0.25,
+          x: x + 0.05, y: y + 0.05, w: badgeW, h: 0.25,
           fontSize: 8, fontFace: 'Arial', color: 'FFFFFF', bold: true, align: 'center', valign: 'middle',
         });
 
